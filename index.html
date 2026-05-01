@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryoFinance Pro v10.9.1</title>
+    <title>CryoFinance Pro v10.9.2</title>
     <!-- Bibliotecas Externas -->
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -29,6 +29,7 @@
             overflow: hidden; 
         }
         
+        /* Sidebar Responsiva */
         aside { 
             width: var(--sidebar-w); 
             background: var(--dark); 
@@ -37,6 +38,8 @@
             display: flex; 
             flex-direction: column; 
             box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            z-index: 1000;
         }
 
         .brand { 
@@ -46,8 +49,12 @@
             font-size: 1.3rem; 
             color: var(--primary); 
             border-bottom: 1px solid #1d402f; 
-            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+
+        .close-menu { display: none; cursor: pointer; font-size: 1.5rem; }
 
         nav { flex: 1; padding: 15px 0; }
 
@@ -69,7 +76,19 @@
         .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
         .menu-item.active { background: var(--primary); color: white; font-weight: 600; }
         
-        main { flex: 1; overflow-y: auto; padding: 30px; }
+        main { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
+        
+        /* Header Mobile */
+        .mobile-header {
+            display: none;
+            background: var(--dark);
+            color: white;
+            padding: 15px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Ajustes de Layout */
         .view-section { display: none; }
         .view-section.active { display: block; animation: fadeIn 0.4s ease; }
 
@@ -78,18 +97,19 @@
         .card { 
             background: white; 
             border-radius: 12px; 
-            padding: 20px; 
+            padding: 15px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-            margin-bottom: 25px; 
+            margin-bottom: 20px; 
             border: 1px solid var(--border); 
+            overflow-x: auto; /* Para tabelas não quebrarem */
         }
 
         .grid-header { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-            gap: 15px; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 12px; 
             align-items: flex-end; 
-            margin-bottom: 20px; 
+            margin-bottom: 15px; 
         }
 
         label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
@@ -98,7 +118,7 @@
             padding: 10px; 
             border: 1px solid var(--border); 
             border-radius: 8px; 
-            font-size: 13px; 
+            font-size: 14px; /* Melhor para toque */
             outline: none; 
             box-sizing: border-box; 
         }
@@ -134,14 +154,14 @@
             margin-top: 5px; 
         }
         .filter-options.show { display: block; }
-        .opt { padding: 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
+        .opt { padding: 10px 12px; display: flex; align-items: center; gap: 10px; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 14px; background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--border); text-transform: uppercase; }
-        td { padding: 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
         
         .btn { 
-            padding: 10px 20px; 
+            padding: 12px 18px; 
             border-radius: 8px; 
             border: none; 
             cursor: pointer; 
@@ -149,36 +169,70 @@
             font-size: 12px; 
             display: inline-flex; 
             align-items: center; 
+            justify-content: center;
             gap: 8px; 
             transition: all 0.2s;
+            white-space: nowrap;
         }
         .btn-primary { background: var(--primary); color: white; }
         .btn-ghost { background: transparent; color: #64748b; }
-        .btn-ghost:hover { background: #f1f5f9; }
 
-        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { 
             background: white; 
-            padding: 25px; 
+            padding: 20px; 
             border-radius: 12px; 
             border-left: 5px solid var(--primary); 
             box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
         }
-        .stat-card span { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        .stat-card h2 { margin: 10px 0 0; font-size: 1.7rem; }
+        .stat-card h2 { margin: 8px 0 0; font-size: 1.4rem; }
         
-        .row-editing { background: #f0fff4 !important; outline: 1px solid var(--primary); }
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
         .badge-rec { background: #dcfce7; color: #166534; }
         .badge-cus { background: #fee2e2; color: #991b1b; }
-        .badge-ati { background: #f1f5f9; color: #475569; }
-        .badge-est { background: #e0f2fe; color: #0369a1; }
+
+        /* MEDIA QUERIES PARA CELULAR */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            
+            aside {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+            }
+            
+            aside.open { transform: translateX(0); }
+
+            .mobile-header { display: flex; }
+            .close-menu { display: block; }
+
+            .grid-header { grid-template-columns: 1fr; }
+            
+            .dash-grid { grid-template-columns: 1fr; }
+            
+            .dre-container { grid-template-columns: 1fr !important; }
+            
+            main { padding: 15px; }
+
+            canvas { max-height: 250px; }
+        }
     </style>
 </head>
 <body>
 
-<aside>
-    <div class="brand">CRYO FINANCE</div>
+<!-- Header exclusivo para Mobile -->
+<div class="mobile-header">
+    <div style="font-weight: 800; color: var(--primary)">CRYO FINANCE</div>
+    <i class="fas fa-bars" onclick="toggleSidebar()"></i>
+</div>
+
+<aside id="sidebar">
+    <div class="brand">
+        CRYO FINANCE
+        <i class="fas fa-times close-menu" onclick="toggleSidebar()"></i>
+    </div>
     <nav>
         <button class="menu-item active" onclick="showView('dashboard', this)"><i class="fas fa-chart-line"></i> Dashboard</button>
         <button class="menu-item" onclick="showView('plano', this)"><i class="fas fa-list-ul"></i> Plano de Contas</button>
@@ -196,7 +250,7 @@
                     <select id="dash-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
                 </div>
                 <div class="excel-filter">
-                    <label>Filtro de Contas</label>
+                    <label>Contas</label>
                     <div class="filter-box" onclick="toggleDropdown('dash-opt')"><span id="dash-sel-txt">Todas</span><i class="fas fa-chevron-down"></i></div>
                     <div id="dash-opt" class="filter-options">
                         <div class="opt"><b><input type="checkbox" id="dash-all" checked onchange="toggleAll('dash')"> Selecionar Todas</b></div>
@@ -209,10 +263,10 @@
             </div>
         </div>
         <div id="dash-cards" class="dash-grid"></div>
-        <div class="card"><h3>Visão Geral Consolidada</h3><canvas id="chartGeral" height="100"></canvas></div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div class="card"><h4>Resultado: Santos</h4><canvas id="chartSantos" height="150"></canvas></div>
-            <div class="card"><h4>Resultado: Camaçari</h4><canvas id="chartCamacari" height="150"></canvas></div>
+        <div class="card"><h3>Consolidado</h3><canvas id="chartGeral" height="100"></canvas></div>
+        <div class="dre-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card"><h4>Santos</h4><canvas id="chartSantos" height="150"></canvas></div>
+            <div class="card"><h4>Camaçari</h4><canvas id="chartCamacari" height="150"></canvas></div>
         </div>
     </section>
 
@@ -220,16 +274,16 @@
     <section id="plano" class="view-section">
         <div class="card">
             <form id="formPlano" class="grid-header" onsubmit="event.preventDefault(); criarPlano();">
-                <input type="text" id="p-codigo" placeholder="Código (Ex: 3.1.1.01)" required>
-                <input type="text" id="p-desc" placeholder="Descrição da Conta" required style="grid-column: span 2">
-                <input type="text" id="p-estoque" placeholder="Descrição Estoque">
+                <input type="text" id="p-codigo" placeholder="Código" required>
+                <input type="text" id="p-desc" placeholder="Descrição da Conta" required>
+                <input type="text" id="p-estoque" placeholder="Estoque">
                 <select id="p-natureza">
                     <option value="recebimento">Recebimento (+)</option>
                     <option value="custo">Custo (-)</option>
                     <option value="estoque">Estoque</option>
                     <option value="ativo">Ativo</option>
                 </select>
-                <button type="submit" class="btn btn-primary">Adicionar Conta</button>
+                <button type="submit" class="btn btn-primary">Adicionar</button>
             </form>
         </div>
         <div class="card">
@@ -248,9 +302,9 @@
                 <select id="l-uni"><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
                 <select id="l-conta" required></select>
                 <input type="text" id="l-estoque-desc" placeholder="Descr. Estoque">
-                <input type="text" id="l-desc" placeholder="Histórico / Referência" required>
+                <input type="text" id="l-desc" placeholder="Histórico" required>
                 <input type="number" step="0.01" id="l-valor" placeholder="R$ 0,00" required>
-                <button type="submit" class="btn btn-primary">Salvar Lançamento</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
             </form>
         </div>
         <div class="card">
@@ -267,19 +321,19 @@
             <div class="grid-header">
                 <div><label>Unidade</label><select id="dre-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select></div>
                 <div class="excel-filter">
-                    <label>Filtro de Contas (DRE)</label>
+                    <label>Filtro Contas</label>
                     <div class="filter-box" onclick="toggleDropdown('dre-opt')"><span id="dre-sel-txt">Todas</span><i class="fas fa-chevron-down"></i></div>
                     <div id="dre-opt" class="filter-options">
-                        <div class="opt"><b><input type="checkbox" id="dre-all" checked onchange="toggleAll('dre')"> Selecionar Todas</b></div>
+                        <div class="opt"><b><input type="checkbox" id="dre-all" checked onchange="toggleAll('dre')"> Todas</b></div>
                         <div id="dre-list"></div>
                     </div>
                 </div>
                 <div><label>Início</label><input type="date" id="dre-ini"></div>
                 <div><label>Fim</label><input type="date" id="dre-fim"></div>
-                <button class="btn btn-primary" onclick="gerarDRE()"><i class="fas fa-file-invoice"></i> Gerar DRE</button>
+                <button class="btn btn-primary" onclick="gerarDRE()"><i class="fas fa-file-invoice"></i> Gerar</button>
             </div>
         </div>
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+        <div class="dre-container" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
             <div class="card">
                 <table><thead><tr><th>ESTRUTURA DRE</th><th style="text-align:right">VALOR</th></tr></thead><tbody id="dre-corpo"></tbody></table>
             </div>
@@ -301,12 +355,15 @@
 
     async function init() { setDatasPadrao(); await carregarContas(); processarDashboard(); }
 
+    // Funções de UI Mobile
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
     function toggleDropdown(id) { document.getElementById(id).classList.toggle('show'); }
     function toggleAll(p) { const c = document.getElementById(`${p}-all`).checked; document.querySelectorAll(`.${p}-ck`).forEach(x => x.checked = c); updateTxt(p); }
     function updateTxt(p) { 
         const s = document.querySelectorAll(`.${p}-ck:checked`).length;
         const tot = document.querySelectorAll(`.${p}-ck`).length;
-        document.getElementById(`${p}-sel-txt`).innerText = s === tot ? "Todas" : `${s} selecionadas`;
+        document.getElementById(`${p}-sel-txt`).innerText = s === tot ? "Todas" : `${s} sel.`;
     }
 
     async function carregarContas() {
@@ -325,14 +382,13 @@
                 lConta.innerHTML += `<option value="${d.code}">${d.code} - ${d.description}</option>`;
                 dList.innerHTML += `<div class="opt"><input type="checkbox" class="dash-ck" value="${d.code}" checked onchange="updateTxt('dash')"> <label>${d.code}</label></div>`;
                 drList.innerHTML += `<div class="opt"><input type="checkbox" class="dre-ck" value="${d.code}" checked onchange="updateTxt('dre')"> <label>${d.code}</label></div>`;
-                pCorpo.innerHTML += `<tr id="row-p-${d.$id}">
+                pCorpo.innerHTML += `<tr>
                     <td>${d.code}</td><td>${d.description}</td><td>${d.stock_desc || ''}</td><td>${nat}</td>
                     <td style="text-align:right">
-                        <button class="btn btn-ghost" onclick="ativarEdicaoPlano('${d.$id}')"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_ACC}','${d.$id}')"><i class="fas fa-trash"></i></button>
                     </td></tr>`;
             });
-        } catch (e) { console.error("Falha ao carregar contas", e); }
+        } catch (e) { console.error(e); }
     }
 
     async function processarDashboard() {
@@ -352,13 +408,12 @@
 
         document.getElementById('dash-cards').innerHTML = `
             <div class="stat-card"><span>Receitas</span><h2 style="color:var(--primary)">R$ ${exR.toLocaleString()}</h2></div>
-            <div class="stat-card" style="border-left-color:var(--danger)"><span>Custos/Estoques</span><h2 style="color:var(--danger)">R$ ${exC.toLocaleString()}</h2></div>
-            <div class="stat-card" style="border-left-color:var(--dark)"><span>Resultado Líquido</span><h2>R$ ${(exR - exC).toLocaleString()}</h2></div>`;
+            <div class="stat-card" style="border-left-color:var(--danger)"><span>Custos</span><h2 style="color:var(--danger)">R$ ${exC.toLocaleString()}</h2></div>
+            <div class="stat-card" style="border-left-color:var(--dark)"><span>Saldo</span><h2>R$ ${(exR - exC).toLocaleString()}</h2></div>`;
 
         renderChart('chartGeral', stats.Geral, 'Consolidado');
         renderChart('chartSantos', stats.Santos, 'Santos');
         renderChart('chartCamacari', stats.Camaçari, 'Camaçari');
-        document.getElementById('dash-opt').classList.remove('show');
     }
 
     function renderChart(id, data, label) {
@@ -369,8 +424,8 @@
 
         const config = {
             type: 'bar',
-            data: { labels: ['Receita', 'Custo/Estoque', 'Resultado'], datasets: [{ label: label, data: [data.r, data.c, data.r - data.c], backgroundColor: ['#22c55e', '#ef4444', '#0f2419'], borderRadius: 5 }] },
-            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            data: { labels: ['R', 'C', 'S'], datasets: [{ label: label, data: [data.r, data.c, data.r - data.c], backgroundColor: ['#22c55e', '#ef4444', '#0f2419'] }] },
+            options: { responsive: true, plugins: { legend: { display: false } } }
         };
 
         if(id === 'chartGeral') chartGeral = new Chart(ctx, config);
@@ -391,27 +446,13 @@
             resumo[d.account_id].v += d.amount;
         });
 
-        html += `<tr style="font-weight:bold; background:#f1f5f9"><td>(+) RECEITAS OPERACIONAIS</td><td style="text-align:right">---</td></tr>`;
-        Object.values(resumo).filter(x => x.n === 'recebimento').forEach(x => { rTot += x.v; html += `<tr><td style="padding-left:25px">${x.d}</td><td style="text-align:right">R$ ${x.v.toLocaleString()}</td></tr>`; });
-        html += `<tr style="font-weight:bold; background:#f1f5f9"><td>(-) CUSTOS E ESTOQUES</td><td style="text-align:right">---</td></tr>`;
-        Object.values(resumo).filter(x => x.n === 'custo' || x.n === 'estoque').forEach(x => { cTot += x.v; html += `<tr><td style="padding-left:25px">${x.d}</td><td style="text-align:right; color:var(--danger)">R$ (${x.v.toLocaleString()})</td></tr>`; });
-        html += `<tr style="background:var(--dark); color:white; font-weight:bold"><td>RESULTADO DO EXERCÍCIO</td><td style="text-align:right">R$ ${(rTot - cTot).toLocaleString()}</td></tr>`;
-        document.getElementById('dre-corpo').innerHTML = html;
-
-        if(chartDRE) chartDRE.destroy();
-        chartDRE = new Chart(document.getElementById('chartDRE'), { 
-            type: 'doughnut', 
-            data: { labels: ['Receitas','Custos/Estoque'], datasets:[{data:[rTot, cTot], backgroundColor:['#22c55e','#ef4444']}] },
-            options: { plugins: { 
-                legend: { position: 'bottom' },
-                tooltip: { callbacks: { label: (ctx) => {
-                    const sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                    const perc = sum > 0 ? ((ctx.raw / sum) * 100).toFixed(1) : 0;
-                    return `${ctx.label}: R$ ${ctx.raw.toLocaleString()} (${perc}%)`;
-                }}}
-            }}
+        Object.values(resumo).forEach(x => {
+            if(x.n === 'recebimento') rTot += x.v;
+            else cTot += x.v;
+            html += `<tr><td>${x.d}</td><td style="text-align:right">R$ ${x.v.toLocaleString()}</td></tr>`;
         });
-        document.getElementById('dre-opt').classList.remove('show');
+        html += `<tr style="background:var(--dark); color:white"><td>RESULTADO</td><td style="text-align:right">R$ ${(rTot - cTot).toLocaleString()}</td></tr>`;
+        document.getElementById('dre-corpo').innerHTML = html;
     }
 
     async function criarPlano() { 
@@ -421,7 +462,7 @@
             stock_desc: document.getElementById('p-estoque').value,
             nature: document.getElementById('p-natureza').value 
         }); 
-        document.getElementById('formPlano').reset(); carregarContas(); 
+        carregarContas(); 
     }
 
     async function criarLan() { 
@@ -433,98 +474,37 @@
             stock_desc: document.getElementById('l-estoque-desc').value,
             amount: parseFloat(document.getElementById('l-valor').value) 
         }); 
-        document.getElementById('formLan').reset(); setDatasPadrao(); await renderLanTable(); processarDashboard(); 
-    }
-
-    function ativarEdicaoPlano(id) {
-        const tr = document.getElementById(`row-p-${id}`);
-        const code = tr.cells[0].innerText, desc = tr.cells[1].innerText, st = tr.cells[2].innerText, nat = tr.cells[3].innerText;
-        tr.classList.add('row-editing');
-        tr.innerHTML = `
-            <td><input id="ed-p-c-${id}" value="${code}" style="width:100px"></td>
-            <td><input id="ed-p-d-${id}" value="${desc}" style="width:100%"></td>
-            <td><input id="ed-p-s-${id}" value="${st}" style="width:100%"></td>
-            <td><select id="ed-p-n-${id}">
-                <option value="recebimento" ${nat=='recebimento'?'selected':''}>Recebimento</option>
-                <option value="custo" ${nat=='custo'?'selected':''}>Custo</option>
-                <option value="estoque" ${nat=='estoque'?'selected':''}>Estoque</option>
-                <option value="ativo" ${nat=='ativo'?'selected':''}>Ativo</option>
-            </select></td>
-            <td style="text-align:right"><button class="btn btn-primary" onclick="salvarEdicaoPlano('${id}')">✔</button></td>`;
-    }
-
-    async function salvarEdicaoPlano(id) {
-        const d = { 
-            code: document.getElementById(`ed-p-c-${id}`).value, 
-            description: document.getElementById(`ed-p-d-${id}`).value, 
-            stock_desc: document.getElementById(`ed-p-s-${id}`).value,
-            nature: document.getElementById(`ed-p-n-${id}`).value 
-        };
-        await databases.updateDocument(DB_ID, COLL_ACC, id, d); carregarContas();
+        renderLanTable(); processarDashboard(); 
     }
 
     async function renderLanTable() {
         const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.orderDesc('date'), Query.limit(50)]);
-        document.getElementById('l-corpo').innerHTML = res.documents.map(d => {
-            const acc = cacheAcc[d.account_id];
-            const nat = acc?.nature || 'N/A';
-            let badgeClass = 'badge-ati';
-            if(nat === 'recebimento') badgeClass = 'badge-rec';
-            else if(nat === 'custo') badgeClass = 'badge-cus';
-            else if(nat === 'estoque') badgeClass = 'badge-est';
-
-            return `<tr id="row-l-${d.$id}">
+        document.getElementById('l-corpo').innerHTML = res.documents.map(d => `
+            <tr>
                 <td>${d.date.split('-').reverse().join('/')}</td>
                 <td>${d.unit}</td>
                 <td>${d.account_id}</td>
-                <td><span class="badge ${badgeClass}">${nat}</span></td>
-                <td>${d.description} ${d.stock_desc ? ' - ('+d.stock_desc+')' : ''}</td>
-                <td style="font-weight:bold">R$ ${d.amount.toLocaleString()}</td>
-                <td style="text-align:right">
-                    <button class="btn btn-ghost" onclick="ativarEdicaoLan('${d.$id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_TRANS}','${d.$id}')"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            </tr>`;
-        }).join('');
+                <td>${cacheAcc[d.account_id]?.nature || ''}</td>
+                <td>${d.description}</td>
+                <td>R$ ${d.amount.toLocaleString()}</td>
+                <td><button class="btn btn-ghost" onclick="excluirDoc('${COLL_TRANS}','${d.$id}')">X</button></td>
+            </tr>`).join('');
     }
 
-    function ativarEdicaoLan(id) {
-        const tr = document.getElementById(`row-l-${id}`);
-        const d = tr.cells[0].innerText.split('/').reverse().join('-'), u = tr.cells[1].innerText, h = tr.cells[4].innerText, v = tr.cells[5].innerText.replace('R$ ','').replace(/\./g,'').replace(',','.');
-        tr.classList.add('row-editing');
-        tr.innerHTML = `<td colspan="7">
-            <div style="display:flex; gap:8px">
-                <input type="date" id="ed-l-dat-${id}" value="${d}">
-                <select id="ed-l-uni-${id}"><option value="Santos" ${u=='Santos'?'selected':''}>Santos</option><option value="Camaçari" ${u=='Camaçari'?'selected':''}>Camaçari</option></select>
-                <input id="ed-l-his-${id}" value="${h}" style="flex:1">
-                <input type="number" id="ed-l-val-${id}" value="${v}" style="width:110px">
-                <button class="btn btn-primary" onclick="salvarEdicaoLan('${id}')">✔</button>
-                <button class="btn btn-ghost" onclick="renderLanTable()">✖</button>
-            </div>
-        </td>`;
-    }
-
-    async function salvarEdicaoLan(id) {
-        const d = { date: document.getElementById(`ed-l-dat-${id}`).value, unit: document.getElementById(`ed-l-uni-${id}`).value, description: document.getElementById(`ed-l-his-${id}`).value, amount: parseFloat(document.getElementById(`ed-l-val-${id}`).value) };
-        await databases.updateDocument(DB_ID, COLL_TRANS, id, d); renderLanTable(); processarDashboard();
-    }
-
-    async function excluirDoc(c, id) { if(confirm("Confirmar exclusão permanente?")) { await databases.deleteDocument(DB_ID, c, id); c === COLL_ACC ? carregarContas() : renderLanTable(); processarDashboard(); } }
+    async function excluirDoc(c, id) { if(confirm("Excluir?")) { await databases.deleteDocument(DB_ID, c, id); c === COLL_ACC ? carregarContas() : renderLanTable(); processarDashboard(); } }
     
     function showView(v, b) { 
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active')); 
         document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active')); 
         document.getElementById(v).classList.add('active'); 
         b.classList.add('active'); 
+        if(window.innerWidth <= 768) toggleSidebar(); 
         if(v === 'lancamentos') renderLanTable(); 
     }
 
     function setDatasPadrao() { 
         const h = new Date().toISOString().split('T')[0]; 
-        const prim = h.substring(0,8)+'01';
-        document.getElementById('dash-ini').value = prim; document.getElementById('dash-fim').value = h; 
-        document.getElementById('dre-ini').value = prim; document.getElementById('dre-fim').value = h; 
-        document.getElementById('l-data').value = h; 
+        document.querySelectorAll('input[type="date"]').forEach(i => i.value = h);
     }
 
     window.onload = init;
