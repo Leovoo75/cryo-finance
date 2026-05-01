@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryoFinance Pro v10.9.3</title>
+    <title>CryoFinance Pro v10.9.4</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
@@ -16,61 +15,60 @@
 
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
         
-        /* Layout */
-        aside { 
-            width: var(--sidebar-w); background: var(--dark); color: white; display: flex; flex-direction: column; 
-            transition: transform 0.3s ease; z-index: 1000;
-        }
+        /* Layout Base */
+        aside { width: var(--sidebar-w); background: var(--dark); color: white; display: flex; flex-direction: column; transition: 0.3s; z-index: 1000; }
         main { flex: 1; overflow-y: auto; padding: 20px; }
         .mobile-header { display: none; background: var(--dark); color: white; padding: 15px; justify-content: space-between; align-items: center; }
 
-        /* Componentes */
+        /* Estilo das Tabelas e Botões */
         .card { background: white; border-radius: 12px; padding: 15px; border: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto; }
-        .grid-header { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; align-items: flex-end; }
-        
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; font-size: 11px; border-bottom: 2px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { text-align: left; padding: 12px; background: #f8fafc; font-size: 11px; color: #64748b; border-bottom: 2px solid var(--border); }
         td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
 
-        .btn { padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-edit { background: var(--info); color: white; padding: 5px 8px; font-size: 11px; }
-        .btn-del { background: var(--danger); color: white; padding: 5px 8px; font-size: 11px; }
+        /* Botões de Ação Visíveis */
+        .actions-cell { display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-icon { padding: 6px 10px; border-radius: 4px; border: none; cursor: pointer; transition: 0.2s; color: white; }
+        .btn-edit { background: var(--info); }
+        .btn-del { background: var(--danger); }
+        .btn-edit:hover { background: #2563eb; }
+        .btn-del:hover { background: #dc2626; }
 
-        /* Media Queries */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; align-items: flex-end; }
+        input, select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; }
+
         @media (max-width: 768px) {
             body { flex-direction: column; }
             aside { position: fixed; left: 0; top: 0; height: 100vh; transform: translateX(-100%); }
             aside.open { transform: translateX(0); }
             .mobile-header { display: flex; }
-            .grid-header { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
 <div class="mobile-header">
-    <span>CRYO FINANCE</span>
+    <strong>CRYO FINANCE</strong>
     <i class="fas fa-bars" onclick="toggleSidebar()"></i>
 </div>
 
 <aside id="sidebar">
-    <div style="padding: 20px; font-weight: 800; color: var(--primary); border-bottom: 1px solid #1d402f;">
-        MENU <i class="fas fa-times" style="float:right; cursor:pointer" onclick="toggleSidebar()"></i>
+    <div style="padding: 20px; border-bottom: 1px solid #1d402f; display: flex; justify-content: space-between;">
+        <span>PAINEL</span>
+        <i class="fas fa-times" onclick="toggleSidebar()" style="cursor:pointer"></i>
     </div>
-    <nav style="display:flex; flex-direction:column; padding: 10px;">
-        <button class="btn btn-primary" style="margin-bottom:10px" onclick="showView('dashboard')">Dashboard</button>
-        <button class="btn btn-primary" style="margin-bottom:10px" onclick="showView('plano')">Plano de Contas</button>
-        <button class="btn btn-primary" style="margin-bottom:10px" onclick="showView('lancamentos')">Lançamentos</button>
+    <nav style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
+        <button onclick="showView('plano')" style="padding: 10px; background: none; border: 1px solid #1d402f; color: white; cursor: pointer; text-align: left;"><i class="fas fa-list"></i> Plano de Contas</button>
+        <button onclick="showView('lancamentos')" style="padding: 10px; background: none; border: 1px solid #1d402f; color: white; cursor: pointer; text-align: left;"><i class="fas fa-exchange-alt"></i> Lançamentos</button>
     </nav>
 </aside>
 
 <main>
-    <!-- PLANO DE CONTAS COM EDIÇÃO -->
-    <section id="plano" class="view-section" style="display:none">
+    <!-- PLANO DE CONTAS -->
+    <section id="plano" class="view-section">
         <div class="card">
-            <h3>Gerenciar Conta</h3>
-            <form id="formPlano" class="grid-header" onsubmit="event.preventDefault(); salvarPlano();">
+            <h3><i class="fas fa-edit"></i> Cadastro de Conta</h3>
+            <form id="formPlano" class="form-grid" onsubmit="event.preventDefault(); salvarPlano();">
                 <input type="hidden" id="p-id">
                 <div><label>Código</label><input type="text" id="p-codigo" required></div>
                 <div><label>Descrição</label><input type="text" id="p-desc" required></div>
@@ -80,34 +78,43 @@
                         <option value="custo">Custo (-)</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Salvar Conta</button>
+                <button type="submit" style="background: var(--primary); color: white; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">SALVAR</button>
             </form>
         </div>
         <div class="card">
-            <table id="tabela-plano">
-                <thead><tr><th>CÓDIGO</th><th>DESCRIÇÃO</th><th>NATUREZA</th><th>AÇÕES</th></tr></thead>
+            <table>
+                <thead>
+                    <tr><th>CÓDIGO</th><th>DESCRIÇÃO</th><th>NATUREZA</th><th style="text-align:right">AÇÕES</th></tr>
+                </thead>
                 <tbody id="p-corpo"></tbody>
             </table>
         </div>
     </section>
 
-    <!-- LANÇAMENTOS COM EDIÇÃO -->
+    <!-- LANÇAMENTOS -->
     <section id="lancamentos" class="view-section" style="display:none">
         <div class="card">
-            <h3>Novo Lançamento</h3>
-            <form id="formLan" class="grid-header" onsubmit="event.preventDefault(); salvarLan();">
+            <h3><i class="fas fa-plus-circle"></i> Novo Lançamento</h3>
+            <form id="formLan" class="form-grid" onsubmit="event.preventDefault(); salvarLan();">
                 <input type="hidden" id="l-id">
-                <input type="date" id="l-data" required>
-                <select id="l-uni"><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
-                <select id="l-conta" required></select>
-                <input type="text" id="l-desc" placeholder="Histórico" required>
-                <input type="number" step="0.01" id="l-valor" placeholder="R$" required>
-                <button type="submit" class="btn btn-primary">Lançar</button>
+                <div><label>Data</label><input type="date" id="l-data" required></div>
+                <div><label>Unidade</label>
+                    <select id="l-uni">
+                        <option value="Santos">Santos</option>
+                        <option value="Camaçari">Camaçari</option>
+                    </select>
+                </div>
+                <div><label>Conta</label><select id="l-conta" required></select></div>
+                <div><label>Histórico</label><input type="text" id="l-desc" required></div>
+                <div><label>Valor (R$)</label><input type="number" step="0.01" id="l-valor" required></div>
+                <button type="submit" style="background: var(--primary); color: white; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">LANÇAR</button>
             </form>
         </div>
         <div class="card">
-            <table id="tabela-lan">
-                <thead><tr><th>DATA</th><th>UNIDADE</th><th>CONTA</th><th>VALOR</th><th>AÇÕES</th></tr></thead>
+            <table>
+                <thead>
+                    <tr><th>DATA</th><th>UNIDADE</th><th>CONTA</th><th>HISTÓRICO</th><th>VALOR</th><th style="text-align:right">AÇÕES</th></tr>
+                </thead>
                 <tbody id="l-corpo"></tbody>
             </table>
         </div>
@@ -120,20 +127,11 @@
     const databases = new Databases(client);
     const DB_ID = '69f35a670029fa96fd5f', COLL_ACC = 'accounts', COLL_TRANS = 'transactions';
 
-    // Funções de Persistência (Salvar / Editar)
+    // Persistência
     async function salvarPlano() {
         const id = document.getElementById('p-id').value;
-        const data = {
-            code: document.getElementById('p-codigo').value,
-            description: document.getElementById('p-desc').value,
-            nature: document.getElementById('p-natureza').value
-        };
-
-        if (id) {
-            await databases.updateDocument(DB_ID, COLL_ACC, id, data);
-        } else {
-            await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), data);
-        }
+        const data = { code: document.getElementById('p-codigo').value, description: document.getElementById('p-desc').value, nature: document.getElementById('p-natureza').value };
+        id ? await databases.updateDocument(DB_ID, COLL_ACC, id, data) : await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), data);
         document.getElementById('formPlano').reset();
         document.getElementById('p-id').value = "";
         carregarContas();
@@ -141,35 +139,24 @@
 
     async function salvarLan() {
         const id = document.getElementById('l-id').value;
-        const data = {
-            date: document.getElementById('l-data').value,
-            unit: document.getElementById('l-uni').value,
-            account_id: document.getElementById('l-conta').value,
-            description: document.getElementById('l-desc').value,
-            amount: parseFloat(document.getElementById('l-valor').value)
-        };
-
-        if (id) {
-            await databases.updateDocument(DB_ID, COLL_TRANS, id, data);
-        } else {
-            await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), data);
-        }
+        const data = { date: document.getElementById('l-data').value, unit: document.getElementById('l-uni').value, account_id: document.getElementById('l-conta').value, description: document.getElementById('l-desc').value, amount: parseFloat(document.getElementById('l-valor').value) };
+        id ? await databases.updateDocument(DB_ID, COLL_TRANS, id, data) : await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), data);
         document.getElementById('formLan').reset();
         document.getElementById('l-id').value = "";
-        renderLanTable();
+        carregarLancamentos();
     }
 
-    // Carregar para Edição
-    async function editarPlano(docId) {
+    // Edição (Puxa os dados para o formulário)
+    async function prepararEdicaoPlano(docId) {
         const doc = await databases.getDocument(DB_ID, COLL_ACC, docId);
         document.getElementById('p-id').value = doc.$id;
         document.getElementById('p-codigo').value = doc.code;
         document.getElementById('p-desc').value = doc.description;
         document.getElementById('p-natureza').value = doc.nature;
-        window.scrollTo(0,0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    async function editarLan(docId) {
+    async function prepararEdicaoLan(docId) {
         const doc = await databases.getDocument(DB_ID, COLL_TRANS, docId);
         document.getElementById('l-id').value = doc.$id;
         document.getElementById('l-data').value = doc.date;
@@ -177,51 +164,54 @@
         document.getElementById('l-conta').value = doc.account_id;
         document.getElementById('l-desc').value = doc.description;
         document.getElementById('l-valor').value = doc.amount;
-        window.scrollTo(0,0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Renderização com botões de ação
+    // Listagem com Ações
     async function carregarContas() {
-        const res = await databases.listDocuments(DB_ID, COLL_ACC);
+        const res = await databases.listDocuments(DB_ID, COLL_ACC, [Query.orderAsc('code')]);
+        const selectLan = document.getElementById('l-conta');
+        selectLan.innerHTML = res.documents.map(d => `<option value="${d.code}">${d.code} - ${d.description}</option>`).join('');
+        
         document.getElementById('p-corpo').innerHTML = res.documents.map(d => `
             <tr>
                 <td>${d.code}</td><td>${d.description}</td><td>${d.nature}</td>
-                <td>
-                    <button class="btn btn-edit" onclick="editarPlano('${d.$id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-del" onclick="excluirDoc('${COLL_ACC}','${d.$id}')"><i class="fas fa-trash"></i></button>
+                <td class="actions-cell">
+                    <button class="btn-icon btn-edit" onclick="prepararEdicaoPlano('${d.$id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon btn-del" onclick="excluirDoc('${COLL_ACC}','${d.$id}')"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>`).join('');
     }
 
-    async function renderLanTable() {
-        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.limit(50), Query.orderDesc('date')]);
+    async function carregarLancamentos() {
+        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.orderDesc('date'), Query.limit(100)]);
         document.getElementById('l-corpo').innerHTML = res.documents.map(d => `
             <tr>
-                <td>${d.date}</td><td>${d.unit}</td><td>${d.account_id}</td><td>${d.amount}</td>
-                <td>
-                    <button class="btn btn-edit" onclick="editarLan('${d.$id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-del" onclick="excluirDoc('${COLL_TRANS}','${d.$id}')"><i class="fas fa-trash"></i></button>
+                <td>${d.date}</td><td>${d.unit}</td><td>${d.account_id}</td><td>${d.description}</td><td>R$ ${d.amount.toLocaleString()}</td>
+                <td class="actions-cell">
+                    <button class="btn-icon btn-edit" onclick="prepararEdicaoLan('${d.$id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon btn-del" onclick="excluirDoc('${COLL_TRANS}','${d.$id}')"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>`).join('');
     }
 
-    async function excluirDoc(c, id) { 
-        if(confirm("Deseja excluir este registro?")) { 
-            await databases.deleteDocument(DB_ID, c, id); 
-            c === COLL_ACC ? carregarContas() : renderLanTable(); 
-        } 
+    async function excluirDoc(coll, id) {
+        if(confirm("Deseja realmente excluir?")) {
+            await databases.deleteDocument(DB_ID, coll, id);
+            coll === COLL_ACC ? carregarContas() : carregarLancamentos();
+        }
     }
 
-    function showView(v) { 
-        document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none'); 
+    function showView(v) {
+        document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
         document.getElementById(v).style.display = 'block';
         if(v === 'plano') carregarContas();
-        if(v === 'lancamentos') renderLanTable();
+        if(v === 'lancamentos') carregarLancamentos();
     }
 
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-    
-    window.onload = () => showView('plano');
+
+    window.onload = () => { carregarContas(); carregarLancamentos(); };
 </script>
 </body>
 </html>
