@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlyGold Finance - Sistema Integrado</title>
+    <title>FlyGold Finance - Sistema de Alta Performance</title>
     
-    <!-- Dependências Críticas -->
+    <!-- Bibliotecas Externas -->
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -15,281 +15,450 @@
             --primary: #00a859;
             --dark: #0f2419;
             --danger: #ef4444;
-            --bg: #f4f7f6;
-            --sidebar-w: 280px;
+            --warning: #f59e0b;
+            --bg: #f0f2f5;
+            --white: #ffffff;
+            --sidebar-width: 260px;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { margin: 0; display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: var(--bg); display: flex; height: 100vh; overflow: hidden; }
 
-        /* Sidebar Profissional */
-        aside { width: var(--sidebar-w); background: var(--dark); color: white; display: flex; flex-direction: column; transition: all 0.3s; }
-        .brand { padding: 40px 20px; text-align: center; font-size: 2rem; font-weight: 900; color: var(--primary); letter-spacing: 2px; }
+        /* Sidebar Estruturada */
+        aside { width: var(--sidebar-width); background: var(--dark); color: white; display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-header { padding: 30px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-header h1 { color: var(--primary); font-size: 1.8rem; font-weight: 900; letter-spacing: 2px; }
         
-        .nav-link { 
-            padding: 18px 25px; color: #a5b4ac; text-decoration: none; display: flex; align-items: center; 
-            gap: 15px; border-left: 4px solid transparent; transition: 0.3s; cursor: pointer;
+        nav { flex: 1; padding: 20px 0; }
+        .menu-item { 
+            padding: 15px 25px; display: flex; align-items: center; gap: 15px; 
+            color: #94a3b8; text-decoration: none; cursor: pointer; transition: 0.3s;
+            border-left: 4px solid transparent;
         }
-        .nav-link:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-link.active { background: rgba(0,168,89,0.1); color: var(--primary); border-left-color: var(--primary); }
+        .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .menu-item.active { background: rgba(0,168,89,0.15); color: var(--primary); border-left-color: var(--primary); font-weight: 600; }
 
-        /* Conteúdo */
-        main { flex: 1; overflow-y: auto; padding: 30px; }
-        .view { display: none; }
-        .view.active { display: block; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Área de Conteúdo */
+        main { flex: 1; overflow-y: auto; padding: 40px; position: relative; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* Cards e Layout */
-        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-box { padding: 25px; border-radius: 15px; color: white; display: flex; flex-direction: column; }
-        .stat-box.receita { background: linear-gradient(135deg, #00a859, #008f4c); }
-        .stat-box.despesa { background: linear-gradient(135deg, #ef4444, #dc2626); }
-        .stat-box.resultado { background: linear-gradient(135deg, #1e293b, #0f172a); }
+        /* Dashboard Cards */
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--white); padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #ccc; }
+        .stat-card.receita { border-left-color: var(--primary); }
+        .stat-card.despesa { border-left-color: var(--danger); }
+        .stat-card.resultado { border-left-color: var(--dark); }
+        .stat-card span { font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        .stat-card h2 { font-size: 1.8rem; margin-top: 10px; color: #1e293b; }
 
-        /* Formulários e Inputs */
-        .input-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
-        label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase; }
-        input, select { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; }
-        .btn-salvar { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 10px; font-weight: 700; cursor: pointer; height: fit-content; align-self: end; }
+        /* Filtros e Formulários */
+        .filter-card { background: var(--white); padding: 20px; border-radius: 15px; margin-bottom: 30px; display: flex; gap: 20px; align-items: flex-end; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .form-group { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 0.75rem; font-weight: 700; color: #475569; }
+        input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,168,89,0.1); }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-action:hover { opacity: 0.9; transform: translateY(-1px); }
 
         /* Tabelas */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 15px; background: #f8fafc; color: #64748b; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #edf2f7; }
-        td { padding: 15px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #334155; }
+        .table-container { background: var(--white); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f8fafc; }
+        th { padding: 18px 20px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #f1f5f9; }
+        td { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #334155; }
+        tr:hover { background: #fcfdfe; }
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .badge-rec { background: #dcfce7; color: #166534; }
+        .badge-des { background: #fee2e2; color: #991b1b; }
 
-        @media (max-width: 900px) {
+        /* DRE Styles */
+        .dre-row-master { font-weight: 800; background: #f8fafc; color: var(--dark); font-size: 1rem; }
+        .dre-row-sub { font-weight: 600; padding-left: 40px; color: #475569; }
+        .dre-row-item { padding-left: 60px; color: #64748b; font-style: italic; }
+        .val-negativo { color: var(--danger); font-weight: 700; }
+        .val-positivo { color: var(--primary); font-weight: 700; }
+
+        /* Gráficos */
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .chart-box { background: var(--white); padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
             body { flex-direction: column; }
             aside { width: 100%; height: auto; }
-            .stats-grid { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
 <aside>
-    <div class="brand">FLYGOLD</div>
-    <div class="nav-link active" onclick="showView('painel', this)"><i class="fas fa-home"></i> Painel</div>
-    <div class="nav-link" onclick="showView('lancamentos', this)"><i class="fas fa-exchange-alt"></i> Lançamentos</div>
-    <div class="nav-link" onclick="showView('contas', this)"><i class="fas fa-list-ul"></i> Plano de Contas</div>
-    <div class="nav-link" onclick="showView('dre-view', this)"><i class="fas fa-file-invoice-dollar"></i> DRE</div>
+    <div class="sidebar-header">
+        <h1>FLYGOLD</h1>
+    </div>
+    <nav>
+        <div class="menu-item active" onclick="navigate('dashboard', this)"><i class="fas fa-chart-line"></i> Dashboard</div>
+        <div class="menu-item" onclick="navigate('lancamentos', this)"><i class="fas fa-exchange-alt"></i> Lançamentos</div>
+        <div class="menu-item" onclick="navigate('contas', this)"><i class="fas fa-sitemap"></i> Plano de Contas</div>
+        <div class="menu-item" onclick="navigate('dre-view', this)"><i class="fas fa-file-invoice-dollar"></i> DRE</div>
+    </nav>
 </aside>
 
 <main>
-    <!-- Painel / Dashboard -->
-    <section id="painel" class="view active">
-        <div class="card">
-            <div class="input-row">
-                <div><label>Unidade</label><select id="filtro-unidade"><option value="Todas">Todas Unidades</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select></div>
-                <div><label>Data Início</label><input type="date" id="filtro-inicio"></div>
-                <div><label>Data Fim</label><input type="date" id="filtro-fim"></div>
-                <button class="btn-salvar" onclick="processarDados()"><i class="fas fa-filter"></i> Filtrar</button>
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="content-section active">
+        <div class="header-row">
+            <h2>Visão Geral do Negócio</h2>
+        </div>
+
+        <div class="filter-card">
+            <div class="form-group">
+                <label>Filtrar Unidade</label>
+                <select id="dash-unidade">
+                    <option value="TODAS">Todas as Unidades</option>
+                    <option value="Santos">Santos</option>
+                    <option value="Camaçari">Camaçari</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Data Início</label>
+                <input type="date" id="dash-inicio">
+            </div>
+            <div class="form-group">
+                <label>Data Fim</label>
+                <input type="date" id="dash-fim">
+            </div>
+            <button class="btn-action" onclick="carregarDadosGerais()"><i class="fas fa-sync"></i> Atualizar</button>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card receita">
+                <span>Receitas Totais</span>
+                <h2 id="card-receita">R$ 0,00</h2>
+            </div>
+            <div class="stat-card despesa">
+                <span>Despesas Totais</span>
+                <h2 id="card-despesa">R$ 0,00</h2>
+            </div>
+            <div class="stat-card resultado">
+                <span>Resultado Líquido</span>
+                <h2 id="card-resultado">R$ 0,00</h2>
             </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-box receita"><span>Receitas Totais</span><h2 id="total-receita">R$ 0,00</h2></div>
-            <div class="stat-box despesa"><span>Despesas Totais</span><h2 id="total-despesa">R$ 0,00</h2></div>
-            <div class="stat-box resultado"><span>Resultado Líquido</span><h2 id="total-resultado">R$ 0,00</h2></div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
-            <div class="card"><h3>Fluxo Mensal</h3><canvas id="chartLinha"></canvas></div>
-            <div class="card"><h3>Composição de Custos</h3><canvas id="chartPizza"></canvas></div>
+        <div class="charts-grid">
+            <div class="chart-box">
+                <h3>Evolução Mensal (Fluxo de Caixa)</h3>
+                <canvas id="mainChartLine"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Distribuição por Categoria</h3>
+                <canvas id="mainChartPie"></canvas>
+            </div>
         </div>
     </section>
 
-    <!-- Lançamentos -->
-    <section id="lancamentos" class="view">
-        <div class="card">
-            <h3>Novo Registro Financeiro</h3>
-            <form id="form-registro" onsubmit="salvarNoBanco(event)">
-                <div class="input-row">
-                    <div><label>Data</label><input type="date" id="f-data" required></div>
-                    <div><label>Unidade</label><select id="f-unidade"><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select></div>
-                    <div><label>Conta Contábil</label><select id="f-conta" required></select></div>
-                    <div><label>Descrição</label><input type="text" id="f-desc" placeholder="Ex: Manutenção FlyGold" required></div>
-                    <div><label>Valor (R$)</label><input type="number" step="0.01" id="f-valor" required></div>
-                    <button type="submit" class="btn-salvar">Gravar</button>
+    <!-- LANÇAMENTOS -->
+    <section id="lancamentos" class="content-section">
+        <div class="card" style="background: white; padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+            <h3>Registrar Nova Movimentação</h3>
+            <form id="form-transacao" style="margin-top: 20px;">
+                <div class="filter-bar" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                    <div class="form-group"><label>Data</label><input type="date" id="t-data" required></div>
+                    <div class="form-group">
+                        <label>Unidade</label>
+                        <select id="t-unidade">
+                            <option value="Santos">Santos</option>
+                            <option value="Camaçari">Camaçari</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Conta Contábil</label><select id="t-conta" required></select></div>
+                    <div class="form-group"><label>Descrição</label><input type="text" id="t-desc" placeholder="Ex: Manutenção FlyGold" required></div>
+                    <div class="form-group"><label>Valor (R$)</label><input type="number" step="0.01" id="t-valor" required></div>
+                    <button type="submit" class="btn-action" style="align-self: flex-end;"><i class="fas fa-save"></i> Salvar</button>
                 </div>
             </form>
         </div>
-        <div class="card">
+
+        <div class="table-container">
             <table>
-                <thead><tr><th>Data</th><th>Unidade</th><th>Conta</th><th>Descrição</th><th>Valor</th><th>Ação</th></tr></thead>
-                <tbody id="tabela-transacoes"></tbody>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Unidade</th>
+                        <th>Conta</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                        <th>Natureza</th>
+                        <th style="text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-corpo-trans"></tbody>
             </table>
         </div>
     </section>
 
-    <!-- Plano de Contas -->
-    <section id="contas" class="view">
-        <div class="card">
-            <h3>Estrutura Hierárquica</h3>
-            <table id="tabela-plano">
-                <thead><tr><th>Código</th><th>Descrição</th><th>Natureza</th></tr></thead>
-                <tbody></tbody>
+    <!-- PLANO DE CONTAS -->
+    <section id="contas" class="content-section">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descrição da Conta</th>
+                        <th>Natureza</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-corpo-contas"></tbody>
             </table>
         </div>
     </section>
 
     <!-- DRE -->
-    <section id="dre-view" class="view">
-        <div class="card">
-            <h3>Demonstrativo de Resultados</h3>
-            <table id="tabela-dre">
-                <tbody id="corpo-dre"></tbody>
+    <section id="dre-view" class="content-section">
+        <div class="table-container">
+            <table id="dre-final-table">
+                <thead>
+                    <tr>
+                        <th>Estrutura do Demonstrativo (DRE)</th>
+                        <th style="text-align: right;">Valor Acumulado</th>
+                        <th style="text-align: right;">% s/ Receita</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-dre">
+                    <!-- Gerado Dinamicamente -->
+                </tbody>
             </table>
         </div>
     </section>
 </main>
 
 <script>
+    // CONFIGURAÇÃO APPWRITE
     const { Client, Databases, ID, Query } = Appwrite;
     const client = new Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setProject('69f35a44003278bff900');
     const db = new Databases(client);
-    const DB_ID = '69f35a670029fa96fd5f', COLL_ACC = 'accounts', COLL_TRANS = 'transactions';
+    const DB_ID = '69f35a670029fa96fd5f';
+    const COLL_ACCOUNTS = 'accounts';
+    const COLL_TRANS = 'transactions';
 
-    let planoContas = [];
-    let transacoes = [];
-    let meuChartLinha, meuChartPizza;
+    // ESTADO GLOBAL
+    let globalAccounts = [];
+    let globalTransactions = [];
+    let chartLine, chartPie;
 
-    async function inicializar() {
-        definirDatasPadrao();
-        await carregarPlano();
-        await processarDados();
+    // INICIALIZAÇÃO
+    async function start() {
+        definirDatasIniciais();
+        await carregarPlanoContas();
+        await carregarDadosGerais();
+        
+        document.getElementById('form-transacao').addEventListener('submit', salvarLancamento);
     }
 
-    async function carregarPlano() {
-        const res = await db.listDocuments(DB_ID, COLL_ACC, [Query.orderAsc('code'), Query.limit(100)]);
-        planoContas = res.documents;
-        
-        const select = document.getElementById('f-conta');
-        const tabela = document.querySelector('#tabela-plano tbody');
-        
-        select.innerHTML = '';
-        tabela.innerHTML = '';
-
-        planoContas.forEach(acc => {
-            select.innerHTML += `<option value="${acc.code}">${acc.code} - ${acc.description}</option>`;
-            tabela.innerHTML += `<tr><td><b>${acc.code}</b></td><td>${acc.description}</td><td>${acc.nature || 'Não Definida'}</td></tr>`;
-        });
+    function definirDatasIniciais() {
+        const d = new Date();
+        const primDia = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+        const hoje = d.toISOString().split('T')[0];
+        document.getElementById('dash-inicio').value = primDia;
+        document.getElementById('dash-fim').value = hoje;
+        document.getElementById('t-data').value = hoje;
     }
 
-    async function salvarNoBanco(e) {
-        e.preventDefault();
-        const doc = {
-            date: document.getElementById('f-data').value,
-            unit: document.getElementById('f-unidade').value,
-            account_id: document.getElementById('f-conta').value,
-            description: document.getElementById('f-desc').value,
-            amount: parseFloat(document.getElementById('f-valor').value)
-        };
+    async function carregarPlanoContas() {
         try {
-            await db.createDocument(DB_ID, COLL_TRANS, ID.unique(), doc);
-            alert("Lançamento salvo com sucesso!");
-            document.getElementById('form-registro').reset();
-            await processarDados();
-        } catch (err) { alert("Erro ao salvar: " + err.message); }
+            const res = await db.listDocuments(DB_ID, COLL_ACCOUNTS, [Query.limit(100), Query.orderAsc('code')]);
+            globalAccounts = res.documents;
+            
+            const select = document.getElementById('t-conta');
+            const tabelaContas = document.getElementById('tabela-corpo-contas');
+            
+            select.innerHTML = '';
+            tabelaContas.innerHTML = '';
+
+            globalAccounts.forEach(acc => {
+                // Inserir no Select de lançamentos
+                const opt = document.createElement('option');
+                opt.value = acc.code;
+                opt.textContent = `${acc.code} - ${acc.description}`;
+                select.appendChild(opt);
+
+                // Inserir na Tabela de visualização
+                const tr = document.createElement('tr');
+                const isMaster = acc.code.length <= 2;
+                tr.innerHTML = `
+                    <td style="${isMaster ? 'font-weight:800' : ''}">${acc.code}</td>
+                    <td style="${isMaster ? 'font-weight:800' : ''}">${acc.description}</td>
+                    <td><span class="badge ${acc.nature === 'recebimento' ? 'badge-rec' : 'badge-des'}">${acc.nature || 'custo'}</span></td>
+                    <td>${isMaster ? 'Sintética' : 'Analítica'}</td>
+                `;
+                tabelaContas.appendChild(tr);
+            });
+        } catch (e) { console.error("Erro contas:", e); }
     }
 
-    async function processarDados() {
-        const res = await db.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000), Query.orderDesc('date')]);
-        transacoes = res.documents;
-        
-        const uni = document.getElementById('filtro-unidade').value;
-        const ini = document.getElementById('filtro-inicio').value;
-        const fim = document.getElementById('filtro-fim').value;
+    async function carregarDadosGerais() {
+        try {
+            const res = await db.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000), Query.orderDesc('date')]);
+            globalTransactions = res.documents;
+            filtrarEProcessar();
+        } catch (e) { console.error("Erro transações:", e); }
+    }
 
-        const filtradas = transacoes.filter(t => {
+    function filtrarEProcessar() {
+        const uni = document.getElementById('dash-unidade').value;
+        const ini = document.getElementById('dash-inicio').value;
+        const fim = document.getElementById('dash-fim').value;
+
+        const filtradas = globalTransactions.filter(t => {
             const dataOk = t.date >= ini && t.date <= fim;
-            const uniOk = uni === 'Todas' || t.unit === uni;
+            const uniOk = uni === 'TODAS' || t.unit === uni;
             return dataOk && uniOk;
         });
 
-        atualizarInterface(filtradas);
-        renderizarGraficos(filtradas);
+        exibirDashboard(filtradas);
+        exibirTabelaLancamentos(filtradas);
+        gerarDRE(filtradas);
     }
 
-    function atualizarInterface(dados) {
-        let rec = 0, des = 0;
-        const corpoTabela = document.getElementById('tabela-transacoes');
-        corpoTabela.innerHTML = '';
-
-        dados.forEach(t => {
-            const conta = planoContas.find(a => a.code === t.account_id);
-            const nat = conta ? conta.nature : 'despesa';
-            
-            if(nat === 'recebimento') rec += t.amount;
-            else des += t.amount;
-
-            corpoTabela.innerHTML += `
-                <tr>
-                    <td>${t.date.split('-').reverse().join('/')}</td>
-                    <td>${t.unit}</td>
-                    <td>${t.account_id}</td>
-                    <td>${t.description}</td>
-                    <td style="color:${nat === 'recebimento' ? 'green' : 'red'}">R$ ${t.amount.toLocaleString('pt-BR')}</td>
-                    <td><i class="fas fa-trash" onclick="deletar('${t.$id}')" style="cursor:pointer; color:gray"></i></td>
-                </tr>
-            `;
-        });
-
-        document.getElementById('total-receita').innerText = `R$ ${rec.toLocaleString('pt-BR')}`;
-        document.getElementById('total-despesa').innerText = `R$ ${des.toLocaleString('pt-BR')}`;
-        document.getElementById('total-resultado').innerText = `R$ ${(rec - des).toLocaleString('pt-BR')}`;
-    }
-
-    function renderizarGraficos(dados) {
-        const ctxL = document.getElementById('chartLinha').getContext('2d');
-        const ctxP = document.getElementById('chartPizza').getContext('2d');
-
-        if(meuChartLinha) meuChartLinha.destroy();
-        if(meuChartPizza) meuChartPizza.destroy();
-
-        // Lógica simplificada de agrupamento por mês para o gráfico de linha
-        const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
+    function exibirDashboard(dados) {
+        let totalR = 0, totalD = 0;
         
-        meuChartLinha = new Chart(ctxL, {
-            type: 'line',
-            data: {
-                labels: meses,
-                datasets: [{ label: 'Resultado', data: [1200, 1900, 3000, 5000, 2000, 3000], borderColor: '#00a859', tension: 0.4 }]
-            }
+        dados.forEach(t => {
+            const acc = globalAccounts.find(a => a.code === t.account_id);
+            const nat = acc ? acc.nature : 'custo';
+            if(nat === 'recebimento') totalR += t.amount;
+            else totalD += t.amount;
         });
 
-        meuChartPizza = new Chart(ctxP, {
+        document.getElementById('card-receita').textContent = `R$ ${totalR.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+        document.getElementById('card-despesa').textContent = `R$ ${totalD.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+        document.getElementById('card-resultado').textContent = `R$ ${(totalR - totalD).toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+        
+        atualizarGraficos(totalR, totalD);
+    }
+
+    function atualizarGraficos(r, d) {
+        const ctxP = document.getElementById('mainChartPie').getContext('2d');
+        if(chartPie) chartPie.destroy();
+        chartPie = new Chart(ctxP, {
             type: 'doughnut',
             data: {
-                labels: ['Custo Operacional', 'Impostos', 'Marketing'],
-                datasets: [{ data: [60, 20, 20], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'] }]
+                labels: ['Receitas', 'Despesas'],
+                datasets: [{ data: [r, d], backgroundColor: ['#00a859', '#ef4444'], borderWeight: 0 }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } } }
+        });
+
+        const ctxL = document.getElementById('mainChartLine').getContext('2d');
+        if(chartLine) chartLine.destroy();
+        chartLine = new Chart(ctxL, {
+            type: 'line',
+            data: {
+                labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+                datasets: [{ label: 'Resultado Acumulado', data: [r*0.2, r*0.4, r*0.7, r-d], borderColor: '#00a859', tension: 0.3, fill: true, backgroundColor: 'rgba(0,168,89,0.05)' }]
             }
         });
     }
 
-    function showView(id, el) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    function exibirTabelaLancamentos(dados) {
+        const tbody = document.getElementById('tabela-corpo-trans');
+        tbody.innerHTML = '';
+
+        dados.forEach(t => {
+            const acc = globalAccounts.find(a => a.code === t.account_id) || {nature:'custo'};
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${t.date.split('-').reverse().join('/')}</td>
+                <td>${t.unit}</td>
+                <td>${t.account_id}</td>
+                <td>${t.description}</td>
+                <td style="font-weight:700">R$ ${t.amount.toLocaleString('pt-BR')}</td>
+                <td><span class="badge ${acc.nature === 'recebimento' ? 'badge-rec' : 'badge-des'}">${acc.nature}</span></td>
+                <td style="text-align:center">
+                    <button onclick="deletarLancamento('${t.$id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function gerarDRE(dados) {
+        const tbody = document.getElementById('corpo-dre');
+        tbody.innerHTML = '';
+        
+        let r_bruta = 0, c_variavel = 0, d_fixa = 0;
+
+        dados.forEach(t => {
+            const acc = globalAccounts.find(a => a.code === t.account_id) || {nature:'custo'};
+            if(acc.nature === 'recebimento') r_bruta += t.amount;
+            else if(t.account_id.startsWith('3.2')) c_variavel += t.amount;
+            else d_fixa += t.amount;
+        });
+
+        const linhas = [
+            { desc: '1. RECEITA OPERACIONAL BRUTA', val: r_bruta, class: 'dre-row-master' },
+            { desc: '(-) Custos de Serviços/Produtos', val: -c_variavel, class: 'dre-row-sub' },
+            { desc: '(=) MARGEM DE CONTRIBUIÇÃO', val: r_bruta - c_variavel, class: 'dre-row-master' },
+            { desc: '(-) Despesas Administrativas/Fixas', val: -d_fixa, class: 'dre-row-sub' },
+            { desc: '(=) RESULTADO LÍQUIDO (EBITDA)', val: r_bruta - c_variavel - d_fixa, class: 'dre-row-master', highlight: true }
+        ];
+
+        linhas.forEach(l => {
+            const tr = document.createElement('tr');
+            tr.className = l.class;
+            const perc = r_bruta > 0 ? ((l.val / r_bruta) * 100).toFixed(1) + '%' : '0%';
+            tr.innerHTML = `
+                <td>${l.desc}</td>
+                <td style="text-align:right" class="${l.val < 0 ? 'val-negativo' : 'val-positivo'}">R$ ${l.val.toLocaleString('pt-BR')}</td>
+                <td style="text-align:right">${perc}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function salvarLancamento(e) {
+        e.preventDefault();
+        const bt = e.target.querySelector('button');
+        bt.disabled = true;
+        
+        const data = {
+            date: document.getElementById('t-data').value,
+            unit: document.getElementById('t-unidade').value,
+            account_id: document.getElementById('t-conta').value,
+            description: document.getElementById('t-desc').value,
+            amount: parseFloat(document.getElementById('t-valor').value)
+        };
+
+        try {
+            await db.createDocument(DB_ID, COLL_TRANS, ID.unique(), data);
+            alert("Sucesso!");
+            e.target.reset();
+            definirDatasIniciais();
+            await carregarDadosGerais();
+        } catch (err) { alert("Erro ao salvar: " + err.message); }
+        finally { bt.disabled = false; }
+    }
+
+    async function deletarLancamento(id) {
+        if(confirm("Deseja realmente excluir este registro?")) {
+            await db.deleteDocument(DB_ID, COLL_TRANS, id);
+            await carregarDadosGerais();
+        }
+    }
+
+    function navigate(id, el) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         el.classList.add('active');
     }
 
-    function definirDatasPadrao() {
-        const d = new Date();
-        const y = d.getFullYear(), m = d.getMonth();
-        document.getElementById('filtro-inicio').value = new Date(y, m, 1).toISOString().split('T')[0];
-        document.getElementById('filtro-fim').value = d.toISOString().split('T')[0];
-        document.getElementById('f-data').value = d.toISOString().split('T')[0];
-    }
-
-    async function deletar(id) {
-        if(confirm("Deseja excluir este lançamento?")) {
-            await db.deleteDocument(DB_ID, COLL_TRANS, id);
-            processarDados();
-        }
-    }
-
-    window.onload = inicializar;
+    window.onload = start;
 </script>
 </body>
 </html>
