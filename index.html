@@ -3,498 +3,730 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryoFNC - Gestão Financeira Industrial</title>
+    <title>CryoFNC - Gestão Financeira de Alta Precisão</title>
     
-    <!-- Bibliotecas de Alta Performance -->
+    <!-- Dependências Críticas -->
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #00a859;
-            --secondary: #005f32;
-            --dark-blue: #0f172a;
-            --sidebar-bg: #0b1c14;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --light-bg: #f8fafc;
-            --white: #ffffff;
-            --text-main: #1e293b;
-            --sidebar-width: 260px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --primary-color: #1a5f7a;
+            --secondary-color: #159895;
+            --accent-color: #57c5b6;
+            --dark-blue: #002b5b;
+            --error-red: #e74c3c;
+            --success-green: #27ae60;
+            --bg-light: #f4f7f6;
+            --sidebar-width: 280px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--light-bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
 
-        /* --- SIDEBAR ESTRUTURADA --- */
-        aside { 
-            width: var(--sidebar-width); 
-            background: var(--sidebar-bg); 
-            color: var(--white); 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        body {
+            background-color: var(--bg-light);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Barra Lateral de Navegação --- */
+        aside {
+            width: var(--sidebar-width);
+            background-color: var(--dark-blue);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
             z-index: 100;
         }
-        .sidebar-logo { 
-            padding: 40px 20px; 
-            text-align: center; 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-        }
-        .sidebar-logo h1 { 
-            color: var(--primary); 
-            font-weight: 900; 
-            font-size: 1.8rem; 
-            letter-spacing: -1px; 
-        }
-        
-        .nav-container { flex: 1; padding: 20px 0; }
-        .nav-item { 
-            padding: 16px 28px; 
-            display: flex; 
-            align-items: center; 
-            gap: 16px; 
-            color: #94a3b8; 
-            text-decoration: none; 
-            cursor: pointer; 
-            transition: var(--transition);
-            border-left: 4px solid transparent;
-        }
-        .nav-item i { width: 20px; font-size: 1.1rem; }
-        .nav-item:hover { background: rgba(255,255,255,0.03); color: var(--white); }
-        .nav-item.active { 
-            background: rgba(0,168,89,0.1); 
-            color: var(--primary); 
-            border-left-color: var(--primary); 
-            font-weight: 600; 
+
+        .sidebar-header {
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* --- CONTEÚDO PRINCIPAL --- */
-        main { flex: 1; overflow-y: auto; padding: 40px; position: relative; }
-        .page-view { display: none; }
-        .page-view.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- DASHBOARD CARDS (Referência image_49bb56.jpg) --- */
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .filter-panel { 
-            background: var(--white); 
-            padding: 24px; 
-            border-radius: 16px; 
-            margin-bottom: 30px; 
-            display: flex; 
-            gap: 20px; 
-            align-items: flex-end; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            letter-spacing: 2px;
         }
-        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 30px; }
-        .stat-card { padding: 30px; border-radius: 16px; color: var(--white); position: relative; overflow: hidden; }
-        .stat-card.receita { background: #10b981; }
-        .stat-card.despesa { background: #ef4444; }
-        .stat-card.resultado { background: #1e293b; }
-        .stat-card span { font-size: 0.85rem; font-weight: 600; opacity: 0.9; text-transform: uppercase; }
-        .stat-card h2 { font-size: 2.2rem; margin-top: 10px; font-weight: 800; }
 
-        /* --- FORMULÁRIOS --- */
-        .form-group { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        .form-group label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        input, select { 
-            padding: 12px 16px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 10px; 
-            font-size: 0.9rem; 
-            color: var(--text-main);
-            outline: none;
-            background: #fcfdfe;
+        .nav-list {
+            flex: 1;
+            padding: 25px 0;
+            list-style: none;
         }
-        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(0,168,89,0.08); }
-        .btn-primary { 
-            background: var(--primary); 
-            color: var(--white); 
-            border: none; 
-            padding: 14px 28px; 
-            border-radius: 10px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
+
+        .nav-item {
+            padding: 18px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #bdc3c7;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-left: 6px solid var(--accent-color);
+        }
+
+        /* --- Área de Conteúdo --- */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+            position: relative;
+        }
+
+        .page-section {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-section.active {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Cards e Estatísticas --- */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            border-top: 4px solid #eee;
+        }
+
+        .stat-card.income { border-top-color: var(--success-green); }
+        .stat-card.expense { border-top-color: var(--error-red); }
+        .stat-card.balance { border-top-color: var(--primary-color); }
+
+        .stat-card h4 {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-blue);
+        }
+
+        /* --- Filtros e Painéis --- */
+        .panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            margin-bottom: 30px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
-            transition: var(--transition);
         }
-        .btn-primary:hover { background: var(--secondary); transform: translateY(-1px); }
 
-        /* --- TABELAS --- */
-        .table-wrapper { background: var(--white); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f1f5f9; padding: 18px 24px; text-align: left; font-size: 0.7rem; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-        tr:hover { background: #f8fafc; }
-        
-        .action-btns { display: flex; gap: 12px; justify-content: center; }
-        .btn-icon { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; }
-        .btn-icon.edit { color: var(--primary); }
-        .btn-icon.delete { color: var(--danger); }
-        .btn-icon:hover { background: #f1f5f9; }
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #34495e;
+        }
 
-        /* --- DRE STYLES (Referência image_49baf9.png) --- */
-        .dre-row-nivel-1 { background: #f8fafc; font-weight: 800; color: var(--dark-blue); font-size: 1rem; }
-        .dre-row-nivel-2 { font-weight: 700; color: #334155; padding-left: 20px; }
-        .dre-row-nivel-3 { color: #64748b; padding-left: 40px; font-style: italic; }
-        .val-negativo { color: var(--danger); }
-        .val-positivo { color: var(--primary); }
+        input, select {
+            padding: 12px 15px;
+            border: 1px solid #dcdde1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #2c3e50;
+            outline: none;
+            transition: border-color 0.3s;
+        }
 
-        /* --- GRÁFICOS (Referência image_49bb56.jpg) --- */
-        .charts-container { display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 30px; margin-top: 30px; }
-        .chart-card { background: var(--white); padding: 24px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+        }
 
-        /* --- MODAL --- */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: var(--white); padding: 30px; border-radius: 16px; width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--dark-blue); transform: translateY(-2px); }
+
+        /* --- Tabelas de Dados --- */
+        .data-table-wrapper {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: left;
+            font-size: 0.75rem;
+            color: #95a5a6;
+            text-transform: uppercase;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        td {
+            padding: 18px 20px;
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 0.95rem;
+        }
+
+        tr:hover { background-color: #fafafa; }
+
+        .row-mestre { background-color: #f1f4f7 !important; font-weight: 700; }
+        .row-filho { padding-left: 40px; }
+
+        /* --- Gráficos --- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .chart-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
     </style>
 </head>
 <body>
 
 <aside>
-    <div class="sidebar-logo"><h1>CryoFNC</h1></div>
-    <nav class="nav-container">
-        <div class="nav-item active" onclick="showTab('dash-tab', this)"><i class="fas fa-th-large"></i> Painel Dashboard</div>
-        <div class="nav-item" onclick="showTab('lan-tab', this)"><i class="fas fa-exchange-alt"></i> Lançamentos</div>
-        <div class="nav-item" onclick="showTab('contas-tab', this)"><i class="fas fa-list-ul"></i> Plano de Contas</div>
-        <div class="nav-item" onclick="showTab('dre-tab', this)"><i class="fas fa-file-invoice-dollar"></i> Aba DRE</div>
+    <div class="sidebar-header">
+        <h2>CRYO FNC</h2>
+    </div>
+    <nav class="nav-list">
+        <li class="nav-item active" onclick="navegarPara('secao-dashboard', this)">
+            <i class="fas fa-th-large"></i> Dashboard & Curva S
+        </li>
+        <li class="nav-item" onclick="navegarPara('secao-lancamentos', this)">
+            <i class="fas fa-list-ul"></i> Movimentações
+        </li>
+        <li class="nav-item" onclick="navegarPara('secao-plano', this)">
+            <i class="fas fa-sitemap"></i> Plano de Contas
+        </li>
+        <li class="nav-item" onclick="navegarPara('secao-dre', this)">
+            <i class="fas fa-file-invoice-dollar"></i> DRE Industrial
+        </li>
     </nav>
 </aside>
 
 <main>
-    <!-- TAB DASHBOARD -->
-    <section id="dash-tab" class="page-view active">
-        <div class="dashboard-header"><h2>Gestão Cryo-Finance</h2></div>
-        
-        <div class="filter-panel">
-            <div class="form-group">
-                <label>Unidade Operacional</label>
-                <select id="f-unidade"><option value="Todas">Todas Unidades</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
+    <!-- DASHBOARD -->
+    <section id="secao-dashboard" class="page-section active">
+        <div class="panel">
+            <div class="filter-row">
+                <div class="form-group">
+                    <label>Unidade Operacional</label>
+                    <select id="filtro-uni-dash">
+                        <option value="TODAS">Todas Unidades</option>
+                        <option value="Santos">Unidade Santos</option>
+                        <option value="Camaçari">Unidade Camaçari</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Data Inicial</label>
+                    <input type="date" id="filtro-inicio-dash">
+                </div>
+                <div class="form-group">
+                    <label>Data Final</label>
+                    <input type="date" id="filtro-fim-dash">
+                </div>
+                <button class="btn btn-primary" onclick="processarDados()">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
             </div>
-            <div class="form-group"><label>Data Início</label><input type="date" id="f-inicio"></div>
-            <div class="form-group"><label>Data Fim</label><input type="date" id="f-fim"></div>
-            <button class="btn-primary" onclick="carregarDadosPrincipais()"><i class="fas fa-filter"></i> Filtrar</button>
         </div>
 
-        <div class="stat-grid">
-            <div class="stat-card receita"><span>Receitas Totais</span><h2 id="card-rec">R$ 0,00</h2></div>
-            <div class="stat-card despesa"><span>Despesas Totais</span><h2 id="card-des">R$ 0,00</h2></div>
-            <div class="stat-card resultado"><span>Resultado Líquido</span><h2 id="card-res">R$ 0,00</h2></div>
+        <div class="stats-container">
+            <div class="stat-card income">
+                <h4>Receita Bruta</h4>
+                <div class="value" id="val-receita">R$ 0,00</div>
+            </div>
+            <div class="stat-card expense">
+                <h4>Custos e Despesas</h4>
+                <div class="value" id="val-despesa">R$ 0,00</div>
+            </div>
+            <div class="stat-card balance">
+                <h4>EBITDA Estimado</h4>
+                <div class="value" id="val-resultado">R$ 0,00</div>
+            </div>
         </div>
 
-        <div class="charts-container">
-            <div class="chart-card"><h3>Fluxo Mensal (Resultado)</h3><canvas id="mainChartLine" height="200"></canvas></div>
-            <div class="chart-card"><h3>Composição de Custos</h3><canvas id="mainChartPie" height="200"></canvas></div>
+        <div class="charts-grid">
+            <div class="chart-box">
+                <h3>Tendência Financeira (Curva S)</h3>
+                <canvas id="canvasCurvaS" height="250"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Composição por Natureza</h3>
+                <canvas id="canvasPizza" height="250"></canvas>
+            </div>
         </div>
     </section>
 
-    <!-- TAB LANÇAMENTOS -->
-    <section id="lan-tab" class="page-view">
-        <div class="filter-panel">
-            <form id="form-lan" style="display: flex; gap: 15px; width: 100%; flex-wrap: wrap;">
-                <div class="form-group"><label>Data</label><input type="date" id="l-data" required></div>
+    <!-- LANÇAMENTOS -->
+    <section id="secao-lancamentos" class="page-section">
+        <div class="panel">
+            <h3 style="margin-bottom: 20px;">Novo Registro de Movimentação</h3>
+            <div class="filter-row">
+                <div class="form-group">
+                    <label>Data e Hora</label>
+                    <input type="datetime-local" id="lan-data">
+                </div>
+                <div class="form-group">
+                    <label>Conta do Plano</label>
+                    <select id="lan-conta-id"></select>
+                </div>
                 <div class="form-group">
                     <label>Unidade</label>
-                    <select id="l-unidade"><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
+                    <select id="lan-unidade">
+                        <option value="Santos">Santos</option>
+                        <option value="Camaçari">Camaçari</option>
+                    </select>
                 </div>
-                <div class="form-group"><label>Conta Contábil</label><select id="l-conta" required></select></div>
-                <div class="form-group"><label>Descrição</label><input type="text" id="l-desc" placeholder="Ex: Insumos Cryo" required></div>
-                <div class="form-group"><label>Valor (R$)</label><input type="number" step="0.01" id="l-valor" required></div>
-                <button type="submit" class="btn-primary" style="margin-top: auto;"><i class="fas fa-save"></i> Gravar</button>
-            </form>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" step="0.01" id="lan-valor" placeholder="0.00">
+                </div>
+            </div>
+            <div class="filter-row" style="margin-top: 15px;">
+                <div class="form-group" style="flex: 2;">
+                    <label>Descrição do Lançamento</label>
+                    <input type="text" id="lan-desc" placeholder="Ex: Fatura de Energia Elétrica - Ref Março">
+                </div>
+                <button class="btn btn-primary" onclick="registrarTransacao()">
+                    <i class="fas fa-save"></i> Salvar Lançamento
+                </button>
+            </div>
         </div>
-        <div class="table-wrapper">
+
+        <div class="data-table-wrapper">
             <table>
-                <thead><tr><th>Data</th><th>Unidade</th><th>Conta</th><th>Descrição</th><th>Valor</th><th>Ação</th></tr></thead>
-                <tbody id="tbody-lan"></tbody>
+                <thead>
+                    <tr>
+                        <th>Data e Hora</th>
+                        <th>Unidade</th>
+                        <th>Código</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-movimentacoes"></tbody>
             </table>
         </div>
     </section>
 
-    <!-- TAB PLANO DE CONTAS -->
-    <section id="contas-tab" class="page-view">
-        <div class="table-wrapper">
+    <!-- PLANO DE CONTAS -->
+    <section id="secao-plano" class="page-section">
+        <div class="panel">
+            <h3>Gestão da Estrutura Contábil</h3>
+            <div class="filter-row" style="margin-top: 20px;">
+                <div class="form-group">
+                    <label>Código (ex: 3.1.1)</label>
+                    <input type="text" id="pc-codigo">
+                </div>
+                <div class="form-group" style="flex: 2;">
+                    <label>Nome da Conta</label>
+                    <input type="text" id="pc-nome">
+                </div>
+                <div class="form-group">
+                    <label>Natureza</label>
+                    <select id="pc-natureza">
+                        <option value="recebimento">Receita</option>
+                        <option value="custo">Despesa / Custo</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="salvarContaNoPlano()">
+                    <i class="fas fa-plus"></i> Adicionar
+                </button>
+            </div>
+        </div>
+
+        <div class="data-table-wrapper">
             <table>
-                <thead><tr><th>Código</th><th>Descrição da Conta</th><th>Natureza</th></tr></thead>
-                <tbody id="tbody-contas"></tbody>
+                <thead>
+                    <tr>
+                        <th>Estrutura (Código)</th>
+                        <th>Descrição da Conta</th>
+                        <th>Natureza Operacional</th>
+                        <th>Controles</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-plano"></tbody>
             </table>
         </div>
     </section>
 
-    <!-- TAB DRE (Persistência Garantida) -->
-    <section id="dre-tab" class="page-view">
-        <div class="table-wrapper">
-            <table id="tabela-dre">
-                <thead><tr><th>Estrutura Hierárquica</th><th style="text-align: right;">Total Acumulado (R$)</th><th style="text-align: right;">% da Receita</th></tr></thead>
-                <tbody id="tbody-dre"></tbody>
+    <!-- DRE INDUSTRIAL -->
+    <section id="secao-dre" class="page-section">
+        <div class="panel">
+            <div class="filter-row">
+                <div class="form-group"><label>De:</label><input type="date" id="dre-inicio"></div>
+                <div class="form-group"><label>Até:</label><input type="date" id="dre-fim"></div>
+                <button class="btn btn-primary" onclick="montarDRE()">Gerar Relatório</button>
+            </div>
+        </div>
+
+        <div class="data-table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descrição Hierárquica</th>
+                        <th>Unidade Santos</th>
+                        <th>Unidade Camaçari</th>
+                        <th>Total Consolidado</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-dre-corpo"></tbody>
             </table>
         </div>
     </section>
 </main>
 
-<!-- MODAL DE EDIÇÃO -->
-<div class="modal" id="modal-edit">
-    <div class="modal-content">
-        <h3>Editar Lançamento</h3><br>
-        <div class="form-group"><label>Descrição</label><input type="text" id="e-desc"></div><br>
-        <div class="form-group"><label>Valor</label><input type="number" step="0.01" id="e-valor"></div><br>
-        <input type="hidden" id="e-id">
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button class="btn-primary" style="background:#64748b" onclick="closeModal()">Cancelar</button>
-            <button class="btn-primary" onclick="confirmarEdicao()">Salvar Alterações</button>
-        </div>
-    </div>
-</div>
-
 <script>
-    // --- CONFIGURAÇÃO APPRWRITE (Referência aos dados do usuário) ---
+    // --- Configurações de Backend (Appwrite) ---
     const { Client, Databases, ID, Query } = Appwrite;
-    const client = new Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setProject('69f35a44003278bff900');
-    const db = new Databases(client);
+    const client = new Client()
+        .setEndpoint('https://nyc.cloud.appwrite.io/v1')
+        .setProject('69f35a44003278bff900');
+
+    const databases = new Databases(client);
     const DB_ID = '69f35a670029fa96fd5f';
-    const COLL_ACCOUNTS = 'accounts';
+    const COLL_CONTAS = 'accounts';
     const COLL_TRANS = 'transactions';
 
-    let dataAccounts = [];
-    let dataTrans = [];
-    let chartInstanceLine, chartInstancePie;
+    let memoriaPlano = [];
+    let memoriaTrans = [];
+    let graficos = {};
 
-    // --- INICIALIZAÇÃO DO SISTEMA ---
-    async function setup() {
-        const d = new Date();
-        document.getElementById('f-inicio').value = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
-        document.getElementById('f-fim').value = d.toISOString().split('T')[0];
-        document.getElementById('l-data').value = d.toISOString().split('T')[0];
-        
-        await carregarPlanoContas();
-        await carregarDadosPrincipais();
-        
-        document.getElementById('form-lan').onsubmit = salvarNovoRegistro;
+    // --- Inicialização do Sistema ---
+    async function init() {
+        // Configurar datas iniciais do mês
+        const hoje = new Date();
+        const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
+        const dataAtual = hoje.toISOString().split('T')[0];
+        const dataHoraAgora = hoje.toISOString().slice(0, 16);
+
+        document.getElementById('filtro-inicio-dash').value = primeiroDia;
+        document.getElementById('dre-inicio').value = primeiroDia;
+        document.getElementById('filtro-fim-dash').value = dataAtual;
+        document.getElementById('dre-fim').value = dataAtual;
+        document.getElementById('lan-data').value = dataHoraAgora;
+
+        await atualizarCachePlano();
+        await atualizarCacheTransacoes();
     }
 
-    // --- CARREGAMENTO DO PLANO DE CONTAS (Referência image_49bb17.jpg) ---
-    async function carregarPlanoContas() {
+    // --- Gestão do Plano de Contas ---
+    async function atualizarCachePlano() {
         try {
-            const res = await db.listDocuments(DB_ID, COLL_ACCOUNTS, [Query.limit(100), Query.orderAsc('code')]);
-            dataAccounts = res.documents;
-            
-            const tbody = document.getElementById('tbody-contas');
-            const select = document.getElementById('l-conta');
-            tbody.innerHTML = ''; select.innerHTML = '';
-
-            dataAccounts.forEach(acc => {
-                const isHeader = acc.code.length <= 3;
-                tbody.innerHTML += `
-                    <tr class="${isHeader ? 'dre-row-nivel-1' : ''}">
-                        <td>${acc.code}</td>
-                        <td>${acc.description}</td>
-                        <td><span style="font-weight:700; color:${acc.nature === 'recebimento' ? 'var(--primary)' : 'var(--danger)'}">${acc.nature || 'custo'}</span></td>
-                    </tr>
-                `;
-                if(!isHeader) select.innerHTML += `<option value="${acc.code}">${acc.code} - ${acc.description}</option>`;
-            });
-        } catch (e) { console.error("Falha no Plano:", e); }
+            const res = await databases.listDocuments(DB_ID, COLL_CONTAS, [Query.limit(1000), Query.orderAsc('code')]);
+            memoriaPlano = res.documents;
+            renderizarPlano();
+        } catch (e) { console.error("Erro no plano:", e); }
     }
 
-    // --- CARREGAMENTO DE DADOS (DASHBOARD + LANÇAMENTOS) ---
-    async function carregarDadosPrincipais() {
+    function renderizarPlano() {
+        const corpo = document.getElementById('tabela-plano');
+        const selectLan = document.getElementById('lan-conta-id');
+        corpo.innerHTML = '';
+        selectLan.innerHTML = '';
+
+        memoriaPlano.forEach(c => {
+            // Preenche select de lançamentos
+            selectLan.innerHTML += `<option value="${c.code}">${c.code} - ${c.description}</option>`;
+
+            // Preenche tabela com estilo hierárquico
+            const niveis = c.code.split('.').length;
+            const classe = niveis === 1 ? 'class="row-mestre"' : '';
+            const recuo = niveis > 1 ? `style="padding-left: ${niveis * 20}px"` : '';
+
+            corpo.innerHTML += `
+                <tr ${classe}>
+                    <td ${recuo}>${c.code}</td>
+                    <td>${c.description}</td>
+                    <td style="color:${c.nature === 'recebimento' ? 'green' : 'red'}">${c.nature.toUpperCase()}</td>
+                    <td>
+                        <button onclick="removerConta('${c.$id}')" style="background:none; border:none; color:#e74c3c; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    async function salvarContaNoPlano() {
+        const dados = {
+            code: document.getElementById('pc-codigo').value,
+            description: document.getElementById('pc-nome').value,
+            nature: document.getElementById('pc-natureza').value
+        };
+        if(!dados.code || !dados.description) return alert("Preencha os campos obrigatórios");
+        await databases.createDocument(DB_ID, COLL_CONTAS, ID.unique(), dados);
+        await atualizarCachePlano();
+    }
+
+    async function removerConta(id) {
+        if(confirm("Deseja excluir esta conta? Isso não afetará lançamentos antigos, mas dificultará relatórios.")) {
+            await databases.deleteDocument(DB_ID, COLL_CONTAS, id);
+            await atualizarCachePlano();
+        }
+    }
+
+    // --- Gestão de Transações ---
+    async function atualizarCacheTransacoes() {
         try {
-            const res = await db.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000), Query.orderDesc('date')]);
-            dataTrans = res.documents;
-            atualizarInterface();
-        } catch (e) { console.error("Erro Trans:", e); }
+            const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000), Query.orderDesc('date')]);
+            memoriaTrans = res.documents;
+            processarDados();
+        } catch (e) { console.error("Erro nas transações:", e); }
     }
 
-    function atualizarInterface() {
-        const fUnidade = document.getElementById('f-unidade').value;
-        const fIni = document.getElementById('f-inicio').value;
-        const fFim = document.getElementById('f-fim').value;
+    async function registrarTransacao() {
+        const valor = parseFloat(document.getElementById('lan-valor').value);
+        if(!valor) return alert("Valor inválido");
 
-        const filtered = dataTrans.filter(t => {
-            const matchUni = fUnidade === 'Todas' || t.unit === fUnidade;
-            const matchData = t.date >= fIni && t.date <= fFim;
-            return matchUni && matchData;
+        const payload = {
+            date: document.getElementById('lan-data').value,
+            unit: document.getElementById('lan-unidade').value,
+            account_id: document.getElementById('lan-conta-id').value,
+            description: document.getElementById('lan-desc').value,
+            amount: valor
+        };
+
+        await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), payload);
+        alert("Lançamento confirmado!");
+        await atualizarCacheTransacoes();
+    }
+
+    // --- Motor de Processamento ---
+    function processarDados() {
+        const uni = document.getElementById('filtro-uni-dash').value;
+        const ini = document.getElementById('filtro-inicio-dash').value;
+        const fim = document.getElementById('filtro-fim-dash').value;
+
+        let totalRec = 0;
+        let totalCus = 0;
+        const corpoTab = document.getElementById('tabela-movimentacoes');
+        corpoTab.innerHTML = '';
+
+        // Filtragem robusta
+        const filtrados = memoriaTrans.filter(t => {
+            const dt = t.date.split('T')[0];
+            const checkUni = (uni === 'TODAS' || t.unit === uni);
+            const checkData = (dt >= ini && dt <= fim);
+            return checkUni && checkData;
         });
 
-        exibirCardsDashboard(filtered);
-        exibirTabelaLancamentos(filtered);
-        gerarDRE(filtered);
-        renderizarGraficos(filtered);
-    }
+        filtrados.forEach(t => {
+            const cInfo = memoriaPlano.find(p => p.code === t.account_id) || { nature: 'custo' };
+            if(cInfo.nature === 'recebimento') totalRec += t.amount;
+            else totalCus += t.amount;
 
-    // --- LÓGICA DO DASHBOARD ---
-    function exibirCardsDashboard(dados) {
-        let rec = 0, des = 0;
-        dados.forEach(t => {
-            const acc = dataAccounts.find(a => a.code === t.account_id) || {nature: 'custo'};
-            if(acc.nature === 'recebimento') rec += t.amount; else des += t.amount;
-        });
+            // FORMATAÇÃO PEDIDA: 04/05/2026 - 15:00h
+            const d = new Date(t.date);
+            const dFormatada = d.toLocaleDateString('pt-BR') + ' - ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) + 'h';
 
-        document.getElementById('card-rec').innerText = `R$ ${rec.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
-        document.getElementById('card-des').innerText = `R$ ${des.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
-        document.getElementById('card-res').innerText = `R$ ${(rec - des).toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
-    }
-
-    // --- LÓGICA DE LANÇAMENTOS (Com Editar/Excluir) ---
-    function exibirTabelaLancamentos(dados) {
-        const tbody = document.getElementById('tbody-lan');
-        tbody.innerHTML = '';
-        dados.forEach(t => {
-            tbody.innerHTML += `
+            corpoTab.innerHTML += `
                 <tr>
-                    <td>${t.date.split('-').reverse().join('/')}</td>
+                    <td>${dFormatada}</td>
                     <td>${t.unit}</td>
                     <td>${t.account_id}</td>
                     <td>${t.description}</td>
-                    <td style="font-weight:700">R$ ${t.amount.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                    <td style="color:${cInfo.nature === 'recebimento' ? 'green' : 'red'}">R$ ${t.amount.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td>
-                        <div class="action-btns">
-                            <button class="btn-icon edit" onclick="openEdit('${t.$id}', '${t.description}', ${t.amount})"><i class="fas fa-edit"></i></button>
-                            <button class="btn-icon delete" onclick="deletarRegistro('${t.$id}')"><i class="fas fa-trash-alt"></i></button>
-                        </div>
+                        <button onclick="deletarTrans('${t.$id}')" style="border:none; background:none; cursor:pointer;"><i class="fas fa-times-circle"></i></button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
+
+        document.getElementById('val-receita').innerText = `R$ ${totalRec.toLocaleString('pt-BR')}`;
+        document.getElementById('val-despesa').innerText = `R$ ${totalCus.toLocaleString('pt-BR')}`;
+        document.getElementById('val-resultado').innerText = `R$ ${(totalRec - totalCus).toLocaleString('pt-BR')}`;
+
+        renderizarCurvaS(filtrados);
     }
 
-    // --- LÓGICA DA DRE (Referência image_49baf9.png) ---
-    function gerarDRE(dados) {
-        const tbody = document.getElementById('tbody-dre');
-        tbody.innerHTML = '';
+    async function deletarTrans(id) {
+        if(confirm("Remover registro permanente?")) {
+            await databases.deleteDocument(DB_ID, COLL_TRANS, id);
+            await atualizarCacheTransacoes();
+        }
+    }
+
+    // --- Relatórios Complexos (DRE e Curva S) ---
+    function renderizarCurvaS(dados) {
+        if(graficos.curva) graficos.curva.destroy();
+        if(graficos.pizza) graficos.pizza.destroy();
+
+        // Ordenar dados por data para a Curva S
+        const ordenados = [...dados].sort((a,b) => new Date(a.date) - new Date(b.date));
         
-        let totalReceita = 0;
-        const mapaValores = {};
+        let acumulado = 0;
+        const labels = [];
+        const valores = [];
 
-        // 1. Calcula totais por conta analítica
-        dados.forEach(t => {
-            mapaValores[t.account_id] = (mapaValores[t.account_id] || 0) + t.amount;
-            const acc = dataAccounts.find(a => a.code === t.account_id);
-            if(acc && acc.nature === 'recebimento') totalReceita += t.amount;
+        ordenados.forEach(d => {
+            const cInfo = memoriaPlano.find(p => p.code === d.account_id) || { nature: 'custo' };
+            if(cInfo.nature === 'recebimento') acumulado += d.amount;
+            else acumulado -= d.amount;
+
+            labels.push(new Date(d.date).toLocaleDateString('pt-BR'));
+            valores.push(acumulado);
         });
 
-        // 2. Monta a árvore hierárquica
-        dataAccounts.forEach(acc => {
-            let valorAcumulado = 0;
-            // Soma todos os filhos caso seja conta sintética
-            for(let cod in mapaValores) { if(cod.startsWith(acc.code)) valorAcumulado += mapaValores[cod]; }
-
-            if(valorAcumulado !== 0 || acc.code.length <= 1) {
-                const perc = totalReceita > 0 ? ((valorAcumulado/totalReceita)*100).toFixed(1) : 0;
-                const nivel = acc.code.split('.').length;
-                
-                tbody.innerHTML += `
-                    <tr class="dre-row-nivel-${nivel}">
-                        <td>${acc.code} - ${acc.description}</td>
-                        <td style="text-align:right" class="${acc.nature === 'recebimento' ? 'val-positivo' : 'val-negativo'}">
-                            R$ ${valorAcumulado.toLocaleString('pt-BR', {minimumFractionDigits:2})}
-                        </td>
-                        <td style="text-align:right">${perc}%</td>
-                    </tr>
-                `;
-            }
-        });
-    }
-
-    // --- LÓGICA DE GRÁFICOS (Referência image_49bb56.jpg) ---
-    function renderizarGraficos(dados) {
-        if(chartInstanceLine) chartInstanceLine.destroy();
-        if(chartInstancePie) chartInstancePie.destroy();
-
-        const ctxL = document.getElementById('mainChartLine').getContext('2d');
-        const ctxP = document.getElementById('mainChartPie').getContext('2d');
-
-        // Lógica de Linha (Simplificada para exemplo, pode ser expandida por dia)
-        chartInstanceLine = new Chart(ctxL, {
+        const ctxL = document.getElementById('canvasCurvaS').getContext('2d');
+        graficos.curva = new Chart(ctxL, {
             type: 'line',
             data: {
-                labels: ['Início', 'Meio', 'Fim'],
-                datasets: [{ 
-                    label: 'Saldo', 
-                    data: [1000, 5000, 3000], 
-                    borderColor: '#00a859', 
-                    backgroundColor: 'rgba(0,168,89,0.05)',
+                labels: labels,
+                datasets: [{
+                    label: 'Resultado Acumulado (R$)',
+                    data: valores,
+                    borderColor: '#1a5f7a',
+                    backgroundColor: 'rgba(26, 95, 122, 0.1)',
                     fill: true,
-                    tension: 0.4
+                    tension: 0.3
                 }]
             }
         });
 
-        // Lógica de Pizza (Por natureza)
-        let r=0, d=0;
-        dados.forEach(t => {
-            const acc = dataAccounts.find(a => a.code === t.account_id) || {nature:'custo'};
-            if(acc.nature === 'recebimento') r += t.amount; else d += t.amount;
-        });
+        const ctxP = document.getElementById('canvasPizza').getContext('2d');
+        const rec = dados.filter(d => (memoriaPlano.find(p => p.code === d.account_id) || {}).nature === 'recebimento').length;
+        const cus = dados.length - rec;
 
-        chartInstancePie = new Chart(ctxP, {
+        graficos.pizza = new Chart(ctxP, {
             type: 'doughnut',
             data: {
-                labels: ['Receitas', 'Custos'],
-                datasets: [{ data: [r, d], backgroundColor: ['#10b981', '#ef4444'], borderWeight: 0 }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } } }
+                labels: ['Receitas', 'Custos/Despesas'],
+                datasets: [{
+                    data: [rec, cus],
+                    backgroundColor: ['#27ae60', '#e74c3c']
+                }]
+            }
         });
     }
 
-    // --- FUNÇÕES DE CRUD (Appwrite) ---
-    async function salvarNovoRegistro(e) {
-        e.preventDefault();
-        const doc = {
-            date: document.getElementById('l-data').value,
-            unit: document.getElementById('l-unidade').value,
-            account_id: document.getElementById('l-conta').value,
-            description: document.getElementById('l-desc').value,
-            amount: parseFloat(document.getElementById('l-valor').value)
-        };
-        try {
-            await db.createDocument(DB_ID, COLL_TRANS, ID.unique(), doc);
-            await carregarDadosPrincipais();
-            e.target.reset();
-        } catch (err) { alert("Erro ao salvar!"); }
+    function montarDRE() {
+        const ini = document.getElementById('dre-inicio').value;
+        const fim = document.getElementById('dre-fim').value;
+        const corpo = document.getElementById('tabela-dre-corpo');
+        corpo.innerHTML = '';
+
+        const dadosDRE = memoriaTrans.filter(t => {
+            const d = t.date.split('T')[0];
+            return d >= ini && d <= fim;
+        });
+
+        // Hierarquia: Percorre o plano de contas e soma recursivamente
+        memoriaPlano.forEach(conta => {
+            let sVal = 0;
+            let cVal = 0;
+
+            dadosDRE.forEach(trans => {
+                // Se o código do lançamento começa com o código da conta do plano (ex: 3.1.1 pertence a 3.1)
+                if(trans.account_id.startsWith(conta.code)) {
+                    if(trans.unit === 'Santos') sVal += trans.amount;
+                    else cVal += trans.amount;
+                }
+            });
+
+            const niveis = conta.code.split('.').length;
+            const classe = niveis === 1 ? 'class="row-mestre"' : '';
+            const recuo = niveis > 1 ? `style="padding-left: ${niveis * 20}px"` : '';
+
+            if(sVal !== 0 || cVal !== 0) {
+                corpo.innerHTML += `
+                    <tr ${classe}>
+                        <td ${recuo}>${conta.code} - ${conta.description}</td>
+                        <td>R$ ${sVal.toLocaleString('pt-BR')}</td>
+                        <td>R$ ${cVal.toLocaleString('pt-BR')}</td>
+                        <td><strong>R$ ${(sVal + cVal).toLocaleString('pt-BR')}</strong></td>
+                    </tr>`;
+            }
+        });
     }
 
-    async function deletarRegistro(id) {
-        if(confirm("Deseja realmente excluir este lançamento?")) {
-            await db.deleteDocument(DB_ID, COLL_TRANS, id);
-            await carregarDadosPrincipais();
-        }
-    }
-
-    function openEdit(id, desc, valor) {
-        document.getElementById('e-id').value = id;
-        document.getElementById('e-desc').value = desc;
-        document.getElementById('e-valor').value = valor;
-        document.getElementById('modal-edit').style.display = 'flex';
-    }
-
-    function closeModal() { document.getElementById('modal-edit').style.display = 'none'; }
-
-    async function confirmarEdicao() {
-        const id = document.getElementById('e-id').value;
-        const payload = {
-            description: document.getElementById('e-desc').value,
-            amount: parseFloat(document.getElementById('e-valor').value)
-        };
-        await db.updateDocument(DB_ID, COLL_TRANS, id, payload);
-        closeModal();
-        await carregarDadosPrincipais();
-    }
-
-    function showTab(id, btn) {
-        document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+    // --- Navegação ---
+    function navegarPara(id, el) {
+        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        
         document.getElementById(id).classList.add('active');
-        btn.classList.add('active');
+        el.classList.add('active');
+
+        if(id === 'secao-dre') montarDRE();
     }
 
-    window.onload = setup;
+    window.onload = init;
 </script>
+
 </body>
 </html>
