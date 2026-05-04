@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>CryoFinance Pro v10.9.1 - Login Seguro</title>
+    <title>CryoFinance Pro - Gestão Financeira</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         :root { 
             --primary: #00a859; 
@@ -27,7 +28,7 @@
             color: #1e293b; 
             overflow: hidden; 
         }
-        /* TELA DE LOGIN */
+        /* LOGIN */
         .login-overlay {
             position: fixed;
             top: 0;
@@ -39,7 +40,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
         }
         .login-card {
             background: white;
@@ -71,6 +71,8 @@
             font-size: 16px;
         }
         .error-msg { color: var(--danger); font-size: 12px; margin-top: 8px; }
+        
+        /* SIDEBAR */
         aside { 
             width: var(--sidebar-w); 
             background: var(--dark); 
@@ -107,90 +109,30 @@
         }
         .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
         .menu-item.active { background: var(--primary); color: white; font-weight: 600; }
+        
         main { flex: 1; overflow-y: auto; padding: 20px 25px; }
         .view-section { display: none; }
         .view-section.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card { 
-            background: white; 
-            border-radius: 12px; 
-            padding: 20px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-            margin-bottom: 25px; 
-            border: 1px solid var(--border); 
-        }
-        .grid-header { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-            gap: 15px; 
-            align-items: flex-end; 
-            margin-bottom: 20px; 
-        }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid var(--border); }
+        .grid-header { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: flex-end; margin-bottom: 20px; }
         label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
-        input, select { 
-            width: 100%; 
-            padding: 10px; 
-            border: 1px solid var(--border); 
-            border-radius: 8px; 
-            font-size: 13px; 
-            outline: none; 
-            box-sizing: border-box; 
-        }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
         .excel-filter { position: relative; width: 100%; }
-        .filter-box { 
-            background: white; 
-            border: 1px solid var(--border); 
-            padding: 10px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            height: 40px; 
-        }
-        .filter-options { 
-            display: none; 
-            position: absolute; 
-            top: 100%; 
-            left: 0; 
-            right: 0; 
-            background: white; 
-            border: 1px solid var(--border); 
-            border-radius: 8px; 
-            z-index: 2000; 
-            max-height: 250px; 
-            overflow-y: auto; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
-            margin-top: 5px; 
-        }
+        .filter-box { background: white; border: 1px solid var(--border); padding: 10px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; height: 40px; }
+        .filter-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: 8px; z-index: 2000; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-top: 5px; }
         .filter-options.show { display: block; }
         .opt { padding: 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
         .table-wrapper { overflow-x: auto; width: 100%; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th { text-align: left; padding: 14px; background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--border); text-transform: uppercase; }
         td { padding: 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-        .btn { 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            border: none; 
-            cursor: pointer; 
-            font-weight: 600; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 8px; 
-            transition: all 0.2s;
-        }
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-ghost { background: transparent; color: #64748b; }
         .btn-ghost:hover { background: #f1f5f9; }
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            border-left: 5px solid var(--primary); 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
-        }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .stat-card span { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
         .stat-card h2 { margin: 10px 0 0; font-size: 1.7rem; }
         .row-editing { background: #f0fff4 !important; outline: 1px solid var(--primary); }
@@ -208,8 +150,6 @@
             main { padding: 15px; }
             .grid-header { grid-template-columns: 1fr; gap: 10px; }
             .dash-grid { grid-template-columns: 1fr; }
-            .stat-card h2 { font-size: 1.3rem; }
-            .table-wrapper { margin: 0 -15px; width: calc(100% + 30px); padding: 0 15px; }
         }
     </style>
 </head>
@@ -228,7 +168,7 @@
     </div>
 </div>
 
-<!-- APLICAÇÃO PRINCIPAL (inicialmente oculta) -->
+<!-- APLICAÇÃO PRINCIPAL -->
 <div id="appContainer" style="display: none; width: 100%;">
     <aside>
         <div class="brand">CRYO FINANCE</div>
@@ -240,11 +180,13 @@
         </nav>
     </aside>
     <main>
-        <!-- VIEW: DASHBOARD -->
+        <!-- DASHBOARD -->
         <section id="dashboard" class="view-section active">
             <div class="card">
                 <div class="grid-header">
-                    <div><label>Unidade</label><select id="dash-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select></div>
+                    <div><label>Unidade</label>
+                        <select id="dash-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
+                    </div>
                     <div class="excel-filter">
                         <label>Filtro de Contas</label>
                         <div class="filter-box" onclick="toggleDropdown('dash-opt')"><span id="dash-sel-txt">Todas</span><i class="fas fa-chevron-down"></i></div>
@@ -265,7 +207,8 @@
                 <div class="card"><h4>Resultado: Camaçari</h4><canvas id="chartCamacari" height="150"></canvas></div>
             </div>
         </section>
-        <!-- VIEW: PLANO DE CONTAS -->
+
+        <!-- PLANO DE CONTAS -->
         <section id="plano" class="view-section">
             <div class="card">
                 <form id="formPlano" class="grid-header" onsubmit="event.preventDefault(); criarPlano();">
@@ -282,10 +225,16 @@
                 </form>
             </div>
             <div class="card">
-                <div class="table-wrapper"><table><thead><tr><th>CÓDIGO</th><th>DESCRIÇÃO</th><th>ESTOQUE</th><th>NATUREZA</th><th style="text-align:right">AÇÕES</th></tr></thead><tbody id="p-corpo"></tbody></table></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>CÓDIGO</th><th>DESCRIÇÃO</th><th>ESTOQUE</th><th>NATUREZA</th><th style="text-align:right">AÇÕES</th></tr></thead>
+                        <tbody id="p-corpo"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
-        <!-- VIEW: LANÇAMENTOS -->
+
+        <!-- LANÇAMENTOS -->
         <section id="lancamentos" class="view-section">
             <div class="card">
                 <form id="formLan" class="grid-header" onsubmit="event.preventDefault(); criarLan();">
@@ -299,10 +248,16 @@
                 </form>
             </div>
             <div class="card">
-                <div class="table-wrapper"><table><thead><tr><th>DATA</th><th>UNIDADE</th><th>CONTA</th><th>TIPO</th><th>HISTÓRICO</th><th>VALOR</th><th style="text-align:right">AÇÕES</th></tr></thead><tbody id="l-corpo"></tbody></table></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>DATA</th><th>UNIDADE</th><th>CONTA</th><th>TIPO</th><th>HISTÓRICO</th><th>VALOR</th><th style="text-align:right">AÇÕES</th></tr></thead>
+                        <tbody id="l-corpo"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
-        <!-- VIEW: DRE -->
+
+        <!-- DRE -->
         <section id="dre" class="view-section">
             <div class="card">
                 <div class="grid-header">
@@ -321,44 +276,48 @@
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-                <div class="card"><div class="table-wrapper"><table><thead><tr><th>ESTRUTURA DRE</th><th style="text-align:right">VALOR</th></tr></thead><tbody id="dre-corpo"></tbody></table></div></div>
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table><thead><tr><th>ESTRUTURA DRE</th><th style="text-align:right">VALOR</th></tr></thead><tbody id="dre-corpo"></tbody></table>
+                    </div>
+                </div>
                 <div class="card"><canvas id="chartDRE"></canvas></div>
             </div>
         </section>
     </main>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script>
-    // ==================== LOGIN SEGURO ====================
-    // Hash SHA-256 da senha "Cryo@2026!" (gerado com CryptoJS)
-    // Nunca armazenamos a senha em texto puro.
-    const SENHA_CORRETA_HASH = "2e6c2d5f8e9c7d4b8a6c3b2e1f4a5d6c7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c";
-    // Usuário fixo: admin
-    document.getElementById('loginBtn').addEventListener('click', () => {
+    // ==================== LOGIN (admin / admin) ====================
+    const SENHA_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; // SHA256 de "admin"
+    function validarLogin() {
         const user = document.getElementById('loginUser').value.trim();
         const pass = document.getElementById('loginPass').value;
         if (user !== 'admin') {
             document.getElementById('loginError').innerText = 'Usuário inválido';
-            return;
+            return false;
         }
-        const hashPass = CryptoJS.SHA256(pass).toString();
-        if (hashPass === SENHA_CORRETA_HASH) {
+        const hash = CryptoJS.SHA256(pass).toString();
+        if (hash === SENHA_HASH) {
             sessionStorage.setItem('logged', 'true');
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('appContainer').style.display = 'flex';
-            init();
+            init(); // inicia o sistema
+            return true;
         } else {
             document.getElementById('loginError').innerText = 'Senha incorreta';
+            return false;
         }
-    });
+    }
+    document.getElementById('loginBtn').addEventListener('click', validarLogin);
+    document.getElementById('loginPass').addEventListener('keypress', function(e) { if (e.key === 'Enter') validarLogin(); });
     if (sessionStorage.getItem('logged') === 'true') {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('appContainer').style.display = 'flex';
         init();
     }
 
-    // ==================== CÓDIGO DO SISTEMA (mesmo da versão anterior) ====================
+    // ==================== CONFIGURAÇÃO APPWRITE ====================
     const { Client, Databases, ID, Query } = Appwrite;
     const client = new Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setProject('69f35a44003278bff900');
     const databases = new Databases(client);
@@ -367,14 +326,25 @@
     let cacheAcc = {}, chartGeral = null, chartSan = null, chartCam = null, chartDRE = null;
     const LISTA_RECEBIMENTOS = ['1.1.2.01','1.1.2.02','1.1.4.01','1.1.4.02','1.1.4.03','1.3.1.01','1.3.2.01','1.3.2.02','3.1.1.01','3.1.1.02','3.1.1.03','3.1.1.04','3.1.1.05','3.1.2.01','3.1.2.02','3.1.3.01','3.1.3.02','3.1.3.03'];
 
-    async function init() { setDatasPadrao(); await carregarContas(); processarDashboard(); }
+    async function init() { 
+        setDatasPadrao(); 
+        await carregarContas(); 
+        processarDashboard(); 
+        renderLanTable(); 
+    }
+
     function toggleDropdown(id) { document.getElementById(id).classList.toggle('show'); }
-    function toggleAll(p) { const c = document.getElementById(`${p}-all`).checked; document.querySelectorAll(`.${p}-ck`).forEach(x => x.checked = c); updateTxt(p); }
+    function toggleAll(p) { 
+        const c = document.getElementById(`${p}-all`).checked; 
+        document.querySelectorAll(`.${p}-ck`).forEach(x => x.checked = c); 
+        updateTxt(p); 
+    }
     function updateTxt(p) { 
         const s = document.querySelectorAll(`.${p}-ck:checked`).length;
         const tot = document.querySelectorAll(`.${p}-ck`).length;
         document.getElementById(`${p}-sel-txt`).innerText = s === tot ? "Todas" : `${s} selecionadas`;
     }
+
     async function carregarContas() {
         try {
             const res = await databases.listDocuments(DB_ID, COLL_ACC, [Query.limit(500), Query.orderAsc('code')]);
@@ -388,10 +358,20 @@
                 lConta.innerHTML += `<option value="${d.code}">${d.code} - ${d.description}</option>`;
                 dList.innerHTML += `<div class="opt"><input type="checkbox" class="dash-ck" value="${d.code}" checked onchange="updateTxt('dash')"> <label>${d.code}</label></div>`;
                 drList.innerHTML += `<div class="opt"><input type="checkbox" class="dre-ck" value="${d.code}" checked onchange="updateTxt('dre')"> <label>${d.code}</label></div>`;
-                pCorpo.innerHTML += `<tr id="row-p-${d.$id}"><td>${d.code}</td><td>${d.description}</td><td>${d.stock_desc || ''}</td><td>${nat}</td><td style="text-align:right"><button class="btn btn-ghost" onclick="ativarEdicaoPlano('${d.$id}')"><i class="fas fa-edit"></i></button><button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_ACC}','${d.$id}')"><i class="fas fa-trash"></i></button></td></tr>`;
+                pCorpo.innerHTML += `<tr id="row-p-${d.$id}">
+                    <td>${d.code}</td>
+                    <td>${d.description}</td>
+                    <td>${d.stock_desc || ''}</td>
+                    <td>${nat}</td>
+                    <td style="text-align:right">
+                        <button class="btn btn-ghost" onclick="ativarEdicaoPlano('${d.$id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_ACC}','${d.$id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
             });
-        } catch (e) { console.error("Falha ao carregar contas", e); }
+        } catch(e) { console.error("Erro ao carregar contas", e); }
     }
+
     async function processarDashboard() {
         const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000)]);
         const uniF = document.getElementById('dash-uni').value, ini = document.getElementById('dash-ini').value, fim = document.getElementById('dash-fim').value;
@@ -404,22 +384,31 @@
         });
         const exR = (uniF === 'Todas') ? stats.Geral.r : stats[uniF].r;
         const exC = (uniF === 'Todas') ? stats.Geral.c : stats[uniF].c;
-        document.getElementById('dash-cards').innerHTML = `<div class="stat-card"><span>Receitas</span><h2 style="color:var(--primary)">R$ ${exR.toLocaleString()}</h2></div><div class="stat-card" style="border-left-color:var(--danger)"><span>Custos/Estoques</span><h2 style="color:var(--danger)">R$ ${exC.toLocaleString()}</h2></div><div class="stat-card" style="border-left-color:var(--dark)"><span>Resultado Líquido</span><h2>R$ ${(exR - exC).toLocaleString()}</h2></div>`;
+        document.getElementById('dash-cards').innerHTML = `
+            <div class="stat-card"><span>Receitas</span><h2 style="color:var(--primary)">R$ ${exR.toLocaleString()}</h2></div>
+            <div class="stat-card" style="border-left-color:var(--danger)"><span>Custos/Estoques</span><h2 style="color:var(--danger)">R$ ${exC.toLocaleString()}</h2></div>
+            <div class="stat-card" style="border-left-color:var(--dark)"><span>Resultado Líquido</span><h2>R$ ${(exR - exC).toLocaleString()}</h2></div>`;
         renderChart('chartGeral', stats.Geral, 'Consolidado');
         renderChart('chartSantos', stats.Santos, 'Santos');
         renderChart('chartCamacari', stats.Camaçari, 'Camaçari');
         document.getElementById('dash-opt').classList.remove('show');
     }
+
     function renderChart(id, data, label) {
         const ctx = document.getElementById(id).getContext('2d');
         if(id === 'chartGeral' && chartGeral) chartGeral.destroy();
         if(id === 'chartSantos' && chartSan) chartSan.destroy();
         if(id === 'chartCamacari' && chartCam) chartCam.destroy();
-        const config = { type: 'bar', data: { labels: ['Receita', 'Custo/Estoque', 'Resultado'], datasets: [{ label: label, data: [data.r, data.c, data.r - data.c], backgroundColor: ['#22c55e', '#ef4444', '#0f2419'], borderRadius: 5 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } };
+        const config = {
+            type: 'bar',
+            data: { labels: ['Receita', 'Custo/Estoque', 'Resultado'], datasets: [{ label: label, data: [data.r, data.c, data.r - data.c], backgroundColor: ['#22c55e', '#ef4444', '#0f2419'], borderRadius: 5 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        };
         if(id === 'chartGeral') chartGeral = new Chart(ctx, config);
         else if(id === 'chartSantos') chartSan = new Chart(ctx, config);
         else chartCam = new Chart(ctx, config);
     }
+
     async function gerarDRE() {
         const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000)]);
         const uni = document.getElementById('dre-uni').value, ini = document.getElementById('dre-ini').value, fim = document.getElementById('dre-fim').value;
@@ -438,29 +427,71 @@
         html += `<tr style="background:var(--dark); color:white; font-weight:bold"><td>RESULTADO DO EXERCÍCIO</td><td style="text-align:right">R$ ${(rTot - cTot).toLocaleString()}</td></tr>`;
         document.getElementById('dre-corpo').innerHTML = html;
         if(chartDRE) chartDRE.destroy();
-        chartDRE = new Chart(document.getElementById('chartDRE'), { type: 'doughnut', data: { labels: ['Receitas','Custos/Estoque'], datasets:[{data:[rTot, cTot], backgroundColor:['#22c55e','#ef4444']}] }, options: { plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => { const sum = ctx.dataset.data.reduce((a, b) => a + b, 0); const perc = sum > 0 ? ((ctx.raw / sum) * 100).toFixed(1) : 0; return `${ctx.label}: R$ ${ctx.raw.toLocaleString()} (${perc}%)`; } } } } });
+        chartDRE = new Chart(document.getElementById('chartDRE'), { 
+            type: 'doughnut', 
+            data: { labels: ['Receitas','Custos/Estoque'], datasets:[{data:[rTot, cTot], backgroundColor:['#22c55e','#ef4444']}] },
+            options: { plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => { const sum = ctx.dataset.data.reduce((a,b)=>a+b,0); const perc = sum>0?((ctx.raw/sum)*100).toFixed(1):0; return `${ctx.label}: R$ ${ctx.raw.toLocaleString()} (${perc}%)`; } } } } }
+        });
         document.getElementById('dre-opt').classList.remove('show');
     }
+
     async function criarPlano() { 
-        await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), { code: document.getElementById('p-codigo').value, description: document.getElementById('p-desc').value, stock_desc: document.getElementById('p-estoque').value, nature: document.getElementById('p-natureza').value }); 
-        document.getElementById('formPlano').reset(); carregarContas(); 
+        await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), { 
+            code: document.getElementById('p-codigo').value, 
+            description: document.getElementById('p-desc').value, 
+            stock_desc: document.getElementById('p-estoque').value,
+            nature: document.getElementById('p-natureza').value 
+        }); 
+        document.getElementById('formPlano').reset(); 
+        carregarContas(); 
     }
+
     async function criarLan() { 
-        await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), { date: document.getElementById('l-data').value, unit: document.getElementById('l-uni').value, account_id: document.getElementById('l-conta').value, description: document.getElementById('l-desc').value, stock_desc: document.getElementById('l-estoque-desc').value, amount: parseFloat(document.getElementById('l-valor').value) }); 
-        document.getElementById('formLan').reset(); setDatasPadrao(); await renderLanTable(); processarDashboard(); 
+        await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), { 
+            date: document.getElementById('l-data').value, 
+            unit: document.getElementById('l-uni').value, 
+            account_id: document.getElementById('l-conta').value, 
+            description: document.getElementById('l-desc').value, 
+            stock_desc: document.getElementById('l-estoque-desc').value,
+            amount: parseFloat(document.getElementById('l-valor').value) 
+        }); 
+        document.getElementById('formLan').reset(); 
+        setDatasPadrao(); 
+        await renderLanTable(); 
+        processarDashboard(); 
     }
+
     function ativarEdicaoPlano(id) {
         const tr = document.getElementById(`row-p-${id}`);
         const code = tr.cells[0].innerText, desc = tr.cells[1].innerText, st = tr.cells[2].innerText, nat = tr.cells[3].innerText;
         tr.classList.add('row-editing');
-        tr.innerHTML = `<td><input id="ed-p-c-${id}" value="${code}" style="width:100px"></td><td><input id="ed-p-d-${id}" value="${desc}" style="width:100%"></td><td><input id="ed-p-s-${id}" value="${st}" style="width:100%"></td><td><select id="ed-p-n-${id}"><option value="recebimento" ${nat=='recebimento'?'selected':''}>Recebimento</option><option value="custo" ${nat=='custo'?'selected':''}>Custo</option><option value="estoque" ${nat=='estoque'?'selected':''}>Estoque</option><option value="ativo" ${nat=='ativo'?'selected':''}>Ativo</option></select></td><td style="text-align:right"><button class="btn btn-primary" onclick="salvarEdicaoPlano('${id}')">✔</button></td>`;
+        tr.innerHTML = `
+            <td><input id="ed-p-c-${id}" value="${code}" style="width:100px"></td>
+            <td><input id="ed-p-d-${id}" value="${desc}" style="width:100%"></td>
+            <td><input id="ed-p-s-${id}" value="${st}" style="width:100%"></td>
+            <td><select id="ed-p-n-${id}">
+                <option value="recebimento" ${nat=='recebimento'?'selected':''}>Recebimento</option>
+                <option value="custo" ${nat=='custo'?'selected':''}>Custo</option>
+                <option value="estoque" ${nat=='estoque'?'selected':''}>Estoque</option>
+                <option value="ativo" ${nat=='ativo'?'selected':''}>Ativo</option>
+            </select></td>
+            <td style="text-align:right"><button class="btn btn-primary" onclick="salvarEdicaoPlano('${id}')">✔</button></td>
+        `;
     }
+
     async function salvarEdicaoPlano(id) {
-        await databases.updateDocument(DB_ID, COLL_ACC, id, { code: document.getElementById(`ed-p-c-${id}`).value, description: document.getElementById(`ed-p-d-${id}`).value, stock_desc: document.getElementById(`ed-p-s-${id}`).value, nature: document.getElementById(`ed-p-n-${id}`).value });
+        const d = { 
+            code: document.getElementById(`ed-p-c-${id}`).value, 
+            description: document.getElementById(`ed-p-d-${id}`).value, 
+            stock_desc: document.getElementById(`ed-p-s-${id}`).value,
+            nature: document.getElementById(`ed-p-n-${id}`).value 
+        };
+        await databases.updateDocument(DB_ID, COLL_ACC, id, d); 
         carregarContas();
     }
+
     async function renderLanTable() {
-        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.orderDesc('date'), Query.limit(50)]);
+        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.orderDesc('date'), Query.limit(100)]);
         document.getElementById('l-corpo').innerHTML = res.documents.map(d => {
             const acc = cacheAcc[d.account_id];
             const nat = acc?.nature || 'N/A';
@@ -468,23 +499,87 @@
             if(nat === 'recebimento') badgeClass = 'badge-rec';
             else if(nat === 'custo') badgeClass = 'badge-cus';
             else if(nat === 'estoque') badgeClass = 'badge-est';
-            return `<tr id="row-l-${d.$id}"><td>${d.date.split('-').reverse().join('/')}</td><td>${d.unit}</td><td>${d.account_id}</td><td><span class="badge ${badgeClass}">${nat}</span></td><td>${d.description} ${d.stock_desc ? ' - ('+d.stock_desc+')' : ''}</td><td style="font-weight:bold">R$ ${d.amount.toLocaleString()}</td><td style="text-align:right"><button class="btn btn-ghost" onclick="ativarEdicaoLan('${d.$id}')"><i class="fas fa-edit"></i></button><button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_TRANS}','${d.$id}')"><i class="fas fa-trash-alt"></i></button></td></tr>`;
+            return `<tr id="row-l-${d.$id}">
+                <td>${d.date.split('-').reverse().join('/')}</td>
+                <td>${d.unit}</td>
+                <td>${d.account_id}</td>
+                <td><span class="badge ${badgeClass}">${nat}</span></td>
+                <td>${d.description} ${d.stock_desc ? ' - ('+d.stock_desc+')' : ''}</td>
+                <td style="font-weight:bold">R$ ${d.amount.toLocaleString()}</td>
+                <td style="text-align:right">
+                    <button class="btn btn-ghost" onclick="ativarEdicaoLan('${d.$id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_TRANS}','${d.$id}')"><i class="fas fa-trash-alt"></i></button>
+                </td>
+            </tr>`;
         }).join('');
     }
+
     function ativarEdicaoLan(id) {
         const tr = document.getElementById(`row-l-${id}`);
-        const d = tr.cells[0].innerText.split('/').reverse().join('-'), u = tr.cells[1].innerText, h = tr.cells[4].innerText, v = tr.cells[5].innerText.replace('R$ ','').replace(/\./g,'').replace(',','.');
+        const dataStr = tr.cells[0].innerText.split('/').reverse().join('-');
+        const unidade = tr.cells[1].innerText;
+        const hist = tr.cells[4].innerText;
+        const val = tr.cells[5].innerText.replace('R$ ','').replace(/\./g,'').replace(',','.');
         tr.classList.add('row-editing');
-        tr.innerHTML = `<td colspan="7"><div style="display:flex; gap:8px; flex-wrap:wrap;"><input type="date" id="ed-l-dat-${id}" value="${d}" style="flex:1"><select id="ed-l-uni-${id}"><option value="Santos" ${u=='Santos'?'selected':''}>Santos</option><option value="Camaçari" ${u=='Camaçari'?'selected':''}>Camaçari</option></select><input id="ed-l-his-${id}" value="${h}" style="flex:2"><input type="number" id="ed-l-val-${id}" value="${v}" style="width:110px"><button class="btn btn-primary" onclick="salvarEdicaoLan('${id}')">✔</button><button class="btn btn-ghost" onclick="renderLanTable()">✖</button></div></td>`;
+        tr.innerHTML = `<td colspan="7">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <input type="date" id="ed-l-dat-${id}" value="${dataStr}" style="flex:1">
+                <select id="ed-l-uni-${id}">
+                    <option value="Santos" ${unidade=='Santos'?'selected':''}>Santos</option>
+                    <option value="Camaçari" ${unidade=='Camaçari'?'selected':''}>Camaçari</option>
+                </select>
+                <input id="ed-l-his-${id}" value="${hist}" style="flex:2">
+                <input type="number" step="0.01" id="ed-l-val-${id}" value="${val}" style="width:110px">
+                <button class="btn btn-primary" onclick="salvarEdicaoLan('${id}')">✔</button>
+                <button class="btn btn-ghost" onclick="renderLanTable()">✖</button>
+            </div>
+        </td>`;
     }
+
     async function salvarEdicaoLan(id) {
-        await databases.updateDocument(DB_ID, COLL_TRANS, id, { date: document.getElementById(`ed-l-dat-${id}`).value, unit: document.getElementById(`ed-l-uni-${id}`).value, description: document.getElementById(`ed-l-his-${id}`).value, amount: parseFloat(document.getElementById(`ed-l-val-${id}`).value) });
-        renderLanTable(); processarDashboard();
+        const d = { 
+            date: document.getElementById(`ed-l-dat-${id}`).value, 
+            unit: document.getElementById(`ed-l-uni-${id}`).value, 
+            description: document.getElementById(`ed-l-his-${id}`).value, 
+            amount: parseFloat(document.getElementById(`ed-l-val-${id}`).value) 
+        };
+        await databases.updateDocument(DB_ID, COLL_TRANS, id, d); 
+        renderLanTable(); 
+        processarDashboard();
     }
-    async function excluirDoc(c, id) { if(confirm("Confirmar exclusão permanente?")) { await databases.deleteDocument(DB_ID, c, id); if(c === COLL_ACC) carregarContas(); else renderLanTable(); processarDashboard(); } }
-    function showView(v, b) { document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active')); document.getElementById(v).classList.add('active'); b.classList.add('active'); if(v === 'lancamentos') renderLanTable(); }
-    function setDatasPadrao() { const h = new Date().toISOString().split('T')[0]; const prim = h.substring(0,8)+'01'; document.getElementById('dash-ini').value = prim; document.getElementById('dash-fim').value = h; document.getElementById('dre-ini').value = prim; document.getElementById('dre-fim').value = h; document.getElementById('l-data').value = h; }
-    if (sessionStorage.getItem('logged') === 'true') { init(); }
+
+    async function excluirDoc(coll, id) { 
+        if(confirm("Confirmar exclusão permanente?")) { 
+            await databases.deleteDocument(DB_ID, coll, id); 
+            if(coll === COLL_ACC) carregarContas(); 
+            else { renderLanTable(); processarDashboard(); }
+        } 
+    }
+
+    function showView(view, btn) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        document.getElementById(view).classList.add('active');
+        btn.classList.add('active');
+        if(view === 'lancamentos') renderLanTable();
+        if(view === 'plano') carregarContas();
+        if(view === 'dre') gerarDRE();
+    }
+
+    function setDatasPadrao() {
+        const hoje = new Date().toISOString().split('T')[0];
+        const primeiroDia = hoje.substring(0,8)+'01';
+        document.getElementById('dash-ini').value = primeiroDia;
+        document.getElementById('dash-fim').value = hoje;
+        document.getElementById('dre-ini').value = primeiroDia;
+        document.getElementById('dre-fim').value = hoje;
+        document.getElementById('l-data').value = hoje;
+    }
+
+    // Inicializar se já logado (caso o init já tenha sido chamado)
+    if (sessionStorage.getItem('logged') === 'true') {
+        // init já foi chamado no bloco de login
+    }
 </script>
 </body>
 </html>
