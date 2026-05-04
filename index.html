@@ -3,730 +3,344 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryoFNC - Gestão Financeira de Alta Precisão</title>
-    
-    <!-- Dependências Críticas -->
-    <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
+    <title>CRYO FNC - Gestão Financeira</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #1a5f7a;
-            --secondary-color: #159895;
-            --accent-color: #57c5b6;
-            --dark-blue: #002b5b;
-            --error-red: #e74c3c;
-            --success-green: #27ae60;
-            --bg-light: #f4f7f6;
-            --sidebar-width: 280px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-light);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* --- Barra Lateral de Navegação --- */
-        aside {
-            width: var(--sidebar-width);
-            background-color: var(--dark-blue);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
-            z-index: 100;
-        }
-
-        .sidebar-header {
-            padding: 40px 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .sidebar-header h2 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--accent-color);
-            letter-spacing: 2px;
-        }
-
-        .nav-list {
-            flex: 1;
-            padding: 25px 0;
-            list-style: none;
-        }
-
-        .nav-item {
-            padding: 18px 30px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #bdc3c7;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .nav-item:hover {
-            background-color: rgba(255,255,255,0.05);
-            color: white;
-        }
-
-        .nav-item.active {
-            background-color: var(--primary-color);
-            color: white;
-            border-left: 6px solid var(--accent-color);
-        }
-
-        /* --- Área de Conteúdo --- */
-        main {
-            flex: 1;
-            overflow-y: auto;
-            padding: 40px;
-            position: relative;
-        }
-
-        .page-section {
-            display: none;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .page-section.active {
-            display: block;
-            animation: slideUp 0.5s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- Cards e Estatísticas --- */
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-            border-top: 4px solid #eee;
-        }
-
-        .stat-card.income { border-top-color: var(--success-green); }
-        .stat-card.expense { border-top-color: var(--error-red); }
-        .stat-card.balance { border-top-color: var(--primary-color); }
-
-        .stat-card h4 {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-            letter-spacing: 1px;
-        }
-
-        .stat-card .value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--dark-blue);
-        }
-
-        /* --- Filtros e Painéis --- */
-        .panel {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-            margin-bottom: 30px;
-        }
-
-        .filter-row {
-            display: flex;
-            gap: 20px;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-
-        .form-group {
-            flex: 1;
-            min-width: 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .form-group label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #34495e;
-        }
-
-        input, select {
-            padding: 12px 15px;
-            border: 1px solid #dcdde1;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            color: #2c3e50;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--primary-color);
-        }
-
-        .btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-primary { background-color: var(--primary-color); color: white; }
-        .btn-primary:hover { background-color: var(--dark-blue); transform: translateY(-2px); }
-
-        /* --- Tabelas de Dados --- */
-        .data-table-wrapper {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background-color: #f8f9fa;
-            padding: 20px;
-            text-align: left;
-            font-size: 0.75rem;
-            color: #95a5a6;
-            text-transform: uppercase;
-            border-bottom: 2px solid #edf2f7;
-        }
-
-        td {
-            padding: 18px 20px;
-            border-bottom: 1px solid #f1f1f1;
-            font-size: 0.95rem;
-        }
-
-        tr:hover { background-color: #fafafa; }
-
-        .row-mestre { background-color: #f1f4f7 !important; font-weight: 700; }
-        .row-filho { padding-left: 40px; }
-
-        /* --- Gráficos --- */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .chart-box {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-        }
+        :root { --cryo-navy: #0a2540; }
+        body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .sidebar { background-color: var(--cryo-navy); }
+        .nav-item { color: #94a3b8; border-left: 4px solid transparent; transition: 0.3s; }
+        .nav-item.active { color: white; background: rgba(255,255,255,0.05); border-left-color: #38bdf8; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .loader { border-top-color: #38bdf8; animation: spinner 0.6s linear infinite; }
+        @keyframes spinner { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
+<body class="flex min-h-screen">
 
-<aside>
-    <div class="sidebar-header">
-        <h2>CRYO FNC</h2>
+    <!-- Loading Overlay -->
+    <div id="loading" class="fixed inset-0 bg-white/80 z-50 flex items-center justify-center hidden">
+        <div class="loader w-12 h-12 border-4 border-slate-200 rounded-full"></div>
     </div>
-    <nav class="nav-list">
-        <li class="nav-item active" onclick="navegarPara('secao-dashboard', this)">
-            <i class="fas fa-th-large"></i> Dashboard & Curva S
-        </li>
-        <li class="nav-item" onclick="navegarPara('secao-lancamentos', this)">
-            <i class="fas fa-list-ul"></i> Movimentações
-        </li>
-        <li class="nav-item" onclick="navegarPara('secao-plano', this)">
-            <i class="fas fa-sitemap"></i> Plano de Contas
-        </li>
-        <li class="nav-item" onclick="navegarPara('secao-dre', this)">
-            <i class="fas fa-file-invoice-dollar"></i> DRE Industrial
-        </li>
-    </nav>
-</aside>
 
-<main>
-    <!-- DASHBOARD -->
-    <section id="secao-dashboard" class="page-section active">
-        <div class="panel">
-            <div class="filter-row">
-                <div class="form-group">
-                    <label>Unidade Operacional</label>
-                    <select id="filtro-uni-dash">
-                        <option value="TODAS">Todas Unidades</option>
-                        <option value="Santos">Unidade Santos</option>
-                        <option value="Camaçari">Unidade Camaçari</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Data Inicial</label>
-                    <input type="date" id="filtro-inicio-dash">
-                </div>
-                <div class="form-group">
-                    <label>Data Final</label>
-                    <input type="date" id="filtro-fim-dash">
-                </div>
-                <button class="btn btn-primary" onclick="processarDados()">
-                    <i class="fas fa-sync-alt"></i> Atualizar
-                </button>
-            </div>
-        </div>
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 flex-shrink-0 hidden md:flex flex-col">
+        <div class="p-8"><h1 class="text-white text-2xl font-black tracking-tighter">CRYO FNC</h1></div>
+        <nav class="flex-1 space-y-1">
+            <a href="javascript:void(0)" onclick="nav('dash')" id="m-dash" class="nav-item active flex items-center px-6 py-4"><i class="fa-solid fa-chart-pie mr-3"></i> Dashboard & Curva S</a>
+            <a href="javascript:void(0)" onclick="nav('mov')" id="m-mov" class="nav-item flex items-center px-6 py-4"><i class="fa-solid fa-receipt mr-3"></i> Movimentações</a>
+            <a href="javascript:void(0)" onclick="nav('contas')" id="m-contas" class="nav-item flex items-center px-6 py-4"><i class="fa-solid fa-sitemap mr-3"></i> Plano de Contas</a>
+            <a href="javascript:void(0)" onclick="nav('dre')" id="m-dre" class="nav-item flex items-center px-6 py-4"><i class="fa-solid fa-file-contract mr-3"></i> DRE Industrial</a>
+        </nav>
+    </aside>
 
-        <div class="stats-container">
-            <div class="stat-card income">
-                <h4>Receita Bruta</h4>
-                <div class="value" id="val-receita">R$ 0,00</div>
-            </div>
-            <div class="stat-card expense">
-                <h4>Custos e Despesas</h4>
-                <div class="value" id="val-despesa">R$ 0,00</div>
-            </div>
-            <div class="stat-card balance">
-                <h4>EBITDA Estimado</h4>
-                <div class="value" id="val-resultado">R$ 0,00</div>
-            </div>
-        </div>
-
-        <div class="charts-grid">
-            <div class="chart-box">
-                <h3>Tendência Financeira (Curva S)</h3>
-                <canvas id="canvasCurvaS" height="250"></canvas>
-            </div>
-            <div class="chart-box">
-                <h3>Composição por Natureza</h3>
-                <canvas id="canvasPizza" height="250"></canvas>
-            </div>
-        </div>
-    </section>
-
-    <!-- LANÇAMENTOS -->
-    <section id="secao-lancamentos" class="page-section">
-        <div class="panel">
-            <h3 style="margin-bottom: 20px;">Novo Registro de Movimentação</h3>
-            <div class="filter-row">
-                <div class="form-group">
-                    <label>Data e Hora</label>
-                    <input type="datetime-local" id="lan-data">
-                </div>
-                <div class="form-group">
-                    <label>Conta do Plano</label>
-                    <select id="lan-conta-id"></select>
-                </div>
-                <div class="form-group">
-                    <label>Unidade</label>
-                    <select id="lan-unidade">
+    <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+        
+        <!-- DASHBOARD -->
+        <section id="p-dash" class="page">
+            <div class="flex flex-wrap gap-4 mb-8 items-end">
+                <div class="flex-1 min-w-[200px]">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Unidade</label>
+                    <select id="f-unit" onchange="loadData()" class="w-full mt-1 p-2 border rounded-lg outline-none">
+                        <option value="Todas">Todas Unidades</option>
                         <option value="Santos">Santos</option>
                         <option value="Camaçari">Camaçari</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Valor (R$)</label>
-                    <input type="number" step="0.01" id="lan-valor" placeholder="0.00">
+                <div><input type="date" id="f-start" onchange="loadData()" class="p-2 border rounded-lg"></div>
+                <div><input type="date" id="f-end" onchange="loadData()" class="p-2 border rounded-lg"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card p-6 border-l-4 border-green-500">
+                    <p class="text-slate-400 text-xs font-bold uppercase">Receita Bruta</p>
+                    <h2 id="c-rev" class="text-3xl font-bold text-slate-800">R$ 0,00</h2>
+                </div>
+                <div class="card p-6 border-l-4 border-red-500">
+                    <p class="text-slate-400 text-xs font-bold uppercase">Custos e Despesas</p>
+                    <h2 id="c-exp" class="text-3xl font-bold text-red-600">R$ 0,00</h2>
+                </div>
+                <div class="card p-6 border-l-4 border-blue-500">
+                    <p class="text-slate-400 text-xs font-bold uppercase">Resultado (EBITDA)</p>
+                    <h2 id="c-res" class="text-3xl font-bold text-slate-800">R$ 0,00</h2>
                 </div>
             </div>
-            <div class="filter-row" style="margin-top: 15px;">
-                <div class="form-group" style="flex: 2;">
-                    <label>Descrição do Lançamento</label>
-                    <input type="text" id="lan-desc" placeholder="Ex: Fatura de Energia Elétrica - Ref Março">
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="font-bold mb-4 text-slate-600">Tendência Financeira (Curva S)</h3>
+                    <canvas id="chartS"></canvas>
                 </div>
-                <button class="btn btn-primary" onclick="registrarTransacao()">
-                    <i class="fas fa-save"></i> Salvar Lançamento
-                </button>
+                <div class="card p-6 flex flex-col items-center">
+                    <h3 class="font-bold mb-4 self-start text-slate-600">Composição de Gastos</h3>
+                    <div class="w-full max-w-[300px]"><canvas id="chartDoughnut"></canvas></div>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <div class="data-table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Data e Hora</th>
-                        <th>Unidade</th>
-                        <th>Código</th>
-                        <th>Descrição</th>
-                        <th>Valor</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-movimentacoes"></tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- PLANO DE CONTAS -->
-    <section id="secao-plano" class="page-section">
-        <div class="panel">
-            <h3>Gestão da Estrutura Contábil</h3>
-            <div class="filter-row" style="margin-top: 20px;">
-                <div class="form-group">
-                    <label>Código (ex: 3.1.1)</label>
-                    <input type="text" id="pc-codigo">
-                </div>
-                <div class="form-group" style="flex: 2;">
-                    <label>Nome da Conta</label>
-                    <input type="text" id="pc-nome">
-                </div>
-                <div class="form-group">
-                    <label>Natureza</label>
-                    <select id="pc-natureza">
-                        <option value="recebimento">Receita</option>
-                        <option value="custo">Despesa / Custo</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" onclick="salvarContaNoPlano()">
-                    <i class="fas fa-plus"></i> Adicionar
-                </button>
+        <!-- MOVIMENTAÇÕES -->
+        <section id="p-mov" class="page hidden">
+            <div class="card p-6 mb-8">
+                <h3 class="text-lg font-bold mb-6">Novo Lançamento</h3>
+                <form id="form-mov" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-1">
+                        <label class="text-xs font-bold">Data e Hora</label>
+                        <input type="datetime-local" id="m-data" required class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold">Conta (Plano)</label>
+                        <select id="m-account" required class="w-full p-2 border rounded"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold">Unidade</label>
+                        <select id="m-unit" class="w-full p-2 border rounded">
+                            <option value="Santos">Santos</option>
+                            <option value="Camaçari">Camaçari</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold">Valor (R$)</label>
+                        <input type="number" step="0.01" id="m-valor" required class="w-full p-2 border rounded font-bold text-blue-700">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="text-xs font-bold">Histórico / Descrição</label>
+                        <input type="text" id="m-desc" placeholder="Ex: NF 1234 - Manutenção Frota" class="w-full p-2 border rounded">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full bg-[#0a2540] text-white py-2 rounded font-bold hover:bg-slate-800 transition">
+                            <i class="fa-solid fa-save mr-2"></i> Salvar Registro
+                        </button>
+                    </div>
+                </form>
             </div>
-        </div>
 
-        <div class="data-table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Estrutura (Código)</th>
-                        <th>Descrição da Conta</th>
-                        <th>Natureza Operacional</th>
-                        <th>Controles</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-plano"></tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- DRE INDUSTRIAL -->
-    <section id="secao-dre" class="page-section">
-        <div class="panel">
-            <div class="filter-row">
-                <div class="form-group"><label>De:</label><input type="date" id="dre-inicio"></div>
-                <div class="form-group"><label>Até:</label><input type="date" id="dre-fim"></div>
-                <button class="btn btn-primary" onclick="montarDRE()">Gerar Relatório</button>
+            <div class="card overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-400 text-xs uppercase">
+                            <tr>
+                                <th class="p-4">Data</th>
+                                <th class="p-4">Unidade</th>
+                                <th class="p-4">Código/Conta</th>
+                                <th class="p-4">Descrição</th>
+                                <th class="p-4">Valor</th>
+                                <th class="p-4">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="list-mov" class="text-sm divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <div class="data-table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Descrição Hierárquica</th>
-                        <th>Unidade Santos</th>
-                        <th>Unidade Camaçari</th>
-                        <th>Total Consolidado</th>
-                    </tr>
-                </thead>
-                <tbody id="tabela-dre-corpo"></tbody>
-            </table>
-        </div>
-    </section>
-</main>
+        <!-- PLANO DE CONTAS -->
+        <section id="p-contas" class="page hidden">
+            <div class="card p-6">
+                <h3 class="font-bold text-lg mb-6 text-slate-700">Estrutura de Contas (Plano Fixo)</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 text-xs">
+                            <tr><th class="p-4 text-left">CÓDIGO</th><th class="p-4 text-left">DESCRIÇÃO</th><th class="p-4 text-left">NATUREZA</th></tr>
+                        </thead>
+                        <tbody id="list-seed" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-<script>
-    // --- Configurações de Backend (Appwrite) ---
-    const { Client, Databases, ID, Query } = Appwrite;
-    const client = new Client()
-        .setEndpoint('https://nyc.cloud.appwrite.io/v1')
-        .setProject('69f35a44003278bff900');
+        <!-- DRE -->
+        <section id="p-dre" class="page hidden">
+            <div id="dre-result" class="card p-10 bg-white max-w-4xl mx-auto shadow-2xl border border-slate-100">
+                <div class="text-center text-slate-400 italic">Configure o período no dashboard para visualizar o DRE detalhado.</div>
+            </div>
+        </section>
 
-    const databases = new Databases(client);
-    const DB_ID = '69f35a670029fa96fd5f';
-    const COLL_CONTAS = 'accounts';
-    const COLL_TRANS = 'transactions';
+    </main>
 
-    let memoriaPlano = [];
-    let memoriaTrans = [];
-    let graficos = {};
-
-    // --- Inicialização do Sistema ---
-    async function init() {
-        // Configurar datas iniciais do mês
-        const hoje = new Date();
-        const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
-        const dataAtual = hoje.toISOString().split('T')[0];
-        const dataHoraAgora = hoje.toISOString().slice(0, 16);
-
-        document.getElementById('filtro-inicio-dash').value = primeiroDia;
-        document.getElementById('dre-inicio').value = primeiroDia;
-        document.getElementById('filtro-fim-dash').value = dataAtual;
-        document.getElementById('dre-fim').value = dataAtual;
-        document.getElementById('lan-data').value = dataHoraAgora;
-
-        await atualizarCachePlano();
-        await atualizarCacheTransacoes();
-    }
-
-    // --- Gestão do Plano de Contas ---
-    async function atualizarCachePlano() {
-        try {
-            const res = await databases.listDocuments(DB_ID, COLL_CONTAS, [Query.limit(1000), Query.orderAsc('code')]);
-            memoriaPlano = res.documents;
-            renderizarPlano();
-        } catch (e) { console.error("Erro no plano:", e); }
-    }
-
-    function renderizarPlano() {
-        const corpo = document.getElementById('tabela-plano');
-        const selectLan = document.getElementById('lan-conta-id');
-        corpo.innerHTML = '';
-        selectLan.innerHTML = '';
-
-        memoriaPlano.forEach(c => {
-            // Preenche select de lançamentos
-            selectLan.innerHTML += `<option value="${c.code}">${c.code} - ${c.description}</option>`;
-
-            // Preenche tabela com estilo hierárquico
-            const niveis = c.code.split('.').length;
-            const classe = niveis === 1 ? 'class="row-mestre"' : '';
-            const recuo = niveis > 1 ? `style="padding-left: ${niveis * 20}px"` : '';
-
-            corpo.innerHTML += `
-                <tr ${classe}>
-                    <td ${recuo}>${c.code}</td>
-                    <td>${c.description}</td>
-                    <td style="color:${c.nature === 'recebimento' ? 'green' : 'red'}">${c.nature.toUpperCase()}</td>
-                    <td>
-                        <button onclick="removerConta('${c.$id}')" style="background:none; border:none; color:#e74c3c; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                </tr>`;
-        });
-    }
-
-    async function salvarContaNoPlano() {
-        const dados = {
-            code: document.getElementById('pc-codigo').value,
-            description: document.getElementById('pc-nome').value,
-            nature: document.getElementById('pc-natureza').value
-        };
-        if(!dados.code || !dados.description) return alert("Preencha os campos obrigatórios");
-        await databases.createDocument(DB_ID, COLL_CONTAS, ID.unique(), dados);
-        await atualizarCachePlano();
-    }
-
-    async function removerConta(id) {
-        if(confirm("Deseja excluir esta conta? Isso não afetará lançamentos antigos, mas dificultará relatórios.")) {
-            await databases.deleteDocument(DB_ID, COLL_CONTAS, id);
-            await atualizarCachePlano();
-        }
-    }
-
-    // --- Gestão de Transações ---
-    async function atualizarCacheTransacoes() {
-        try {
-            const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000), Query.orderDesc('date')]);
-            memoriaTrans = res.documents;
-            processarDados();
-        } catch (e) { console.error("Erro nas transações:", e); }
-    }
-
-    async function registrarTransacao() {
-        const valor = parseFloat(document.getElementById('lan-valor').value);
-        if(!valor) return alert("Valor inválido");
-
-        const payload = {
-            date: document.getElementById('lan-data').value,
-            unit: document.getElementById('lan-unidade').value,
-            account_id: document.getElementById('lan-conta-id').value,
-            description: document.getElementById('lan-desc').value,
-            amount: valor
+    <script>
+        // --- CONFIGURAÇÃO APPWRITE (MAPEADO DAS IMAGENS) ---
+        const config = {
+            endpoint: 'https://cloud.appwrite.io/v1',
+            project: '69f0c2ac0039982cc56a',
+            db: '69f0c5c5003918981596',
+            colMov: 'movimentacoes'
         };
 
-        await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), payload);
-        alert("Lançamento confirmado!");
-        await atualizarCacheTransacoes();
-    }
+        const { Client, Databases, ID, Query } = Appwrite;
+        const client = new Client().setEndpoint(config.endpoint).setProject(config.project);
+        const db = new Databases(client);
 
-    // --- Motor de Processamento ---
-    function processarDados() {
-        const uni = document.getElementById('filtro-uni-dash').value;
-        const ini = document.getElementById('filtro-inicio-dash').value;
-        const fim = document.getElementById('filtro-fim-dash').value;
+        // Plano de Contas Fixo (Conforme Prompt)
+        const planoContas = [
+            { cod: '1.1.1.01', desc: 'Caixa Geral Cartão', nat: 'ativo' },
+            { cod: '3.1.1.01', desc: 'Venda de Produtos', nat: 'receita' },
+            { cod: '3.1.1.03', desc: 'Venda de Serviços (frotas)', nat: 'receita' },
+            { cod: '3.2.1.01', desc: 'Custos dos Insumos', nat: 'custo' },
+            { cod: '3.2.2.01', desc: 'Despesas Administrativas', nat: 'despesa' },
+            { cod: '3.2.2.02', desc: 'Despesas com Viagens', nat: 'despesa' }
+        ];
 
-        let totalRec = 0;
-        let totalCus = 0;
-        const corpoTab = document.getElementById('tabela-movimentacoes');
-        corpoTab.innerHTML = '';
+        let movements = [];
+        let chartInstances = {};
 
-        // Filtragem robusta
-        const filtrados = memoriaTrans.filter(t => {
-            const dt = t.date.split('T')[0];
-            const checkUni = (uni === 'TODAS' || t.unit === uni);
-            const checkData = (dt >= ini && dt <= fim);
-            return checkUni && checkData;
-        });
-
-        filtrados.forEach(t => {
-            const cInfo = memoriaPlano.find(p => p.code === t.account_id) || { nature: 'custo' };
-            if(cInfo.nature === 'recebimento') totalRec += t.amount;
-            else totalCus += t.amount;
-
-            // FORMATAÇÃO PEDIDA: 04/05/2026 - 15:00h
-            const d = new Date(t.date);
-            const dFormatada = d.toLocaleDateString('pt-BR') + ' - ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) + 'h';
-
-            corpoTab.innerHTML += `
-                <tr>
-                    <td>${dFormatada}</td>
-                    <td>${t.unit}</td>
-                    <td>${t.account_id}</td>
-                    <td>${t.description}</td>
-                    <td style="color:${cInfo.nature === 'recebimento' ? 'green' : 'red'}">R$ ${t.amount.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                    <td>
-                        <button onclick="deletarTrans('${t.$id}')" style="border:none; background:none; cursor:pointer;"><i class="fas fa-times-circle"></i></button>
-                    </td>
-                </tr>`;
-        });
-
-        document.getElementById('val-receita').innerText = `R$ ${totalRec.toLocaleString('pt-BR')}`;
-        document.getElementById('val-despesa').innerText = `R$ ${totalCus.toLocaleString('pt-BR')}`;
-        document.getElementById('val-resultado').innerText = `R$ ${(totalRec - totalCus).toLocaleString('pt-BR')}`;
-
-        renderizarCurvaS(filtrados);
-    }
-
-    async function deletarTrans(id) {
-        if(confirm("Remover registro permanente?")) {
-            await databases.deleteDocument(DB_ID, COLL_TRANS, id);
-            await atualizarCacheTransacoes();
+        async function init() {
+            renderSeed();
+            renderAccountDropdown();
+            await loadData();
         }
-    }
 
-    // --- Relatórios Complexos (DRE e Curva S) ---
-    function renderizarCurvaS(dados) {
-        if(graficos.curva) graficos.curva.destroy();
-        if(graficos.pizza) graficos.pizza.destroy();
-
-        // Ordenar dados por data para a Curva S
-        const ordenados = [...dados].sort((a,b) => new Date(a.date) - new Date(b.date));
-        
-        let acumulado = 0;
-        const labels = [];
-        const valores = [];
-
-        ordenados.forEach(d => {
-            const cInfo = memoriaPlano.find(p => p.code === d.account_id) || { nature: 'custo' };
-            if(cInfo.nature === 'recebimento') acumulado += d.amount;
-            else acumulado -= d.amount;
-
-            labels.push(new Date(d.date).toLocaleDateString('pt-BR'));
-            valores.push(acumulado);
-        });
-
-        const ctxL = document.getElementById('canvasCurvaS').getContext('2d');
-        graficos.curva = new Chart(ctxL, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Resultado Acumulado (R$)',
-                    data: valores,
-                    borderColor: '#1a5f7a',
-                    backgroundColor: 'rgba(26, 95, 122, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }]
+        async function loadData() {
+            toggleLoad(true);
+            try {
+                const res = await db.listDocuments(config.db, config.colMov, [Query.limit(500), Query.orderDesc('data')]);
+                movements = res.documents;
+                updateView();
+            } catch (e) {
+                console.error("Erro Appwrite:", e);
+                alert("Erro ao carregar dados do Appwrite Cloud.");
             }
-        });
+            toggleLoad(false);
+        }
 
-        const ctxP = document.getElementById('canvasPizza').getContext('2d');
-        const rec = dados.filter(d => (memoriaPlano.find(p => p.code === d.account_id) || {}).nature === 'recebimento').length;
-        const cus = dados.length - rec;
+        function updateView() {
+            const unit = document.getElementById('f-unit').value;
+            const start = document.getElementById('f-start').value;
+            const end = document.getElementById('f-end').value;
 
-        graficos.pizza = new Chart(ctxP, {
-            type: 'doughnut',
-            data: {
-                labels: ['Receitas', 'Custos/Despesas'],
-                datasets: [{
-                    data: [rec, cus],
-                    backgroundColor: ['#27ae60', '#e74c3c']
-                }]
-            }
-        });
-    }
-
-    function montarDRE() {
-        const ini = document.getElementById('dre-inicio').value;
-        const fim = document.getElementById('dre-fim').value;
-        const corpo = document.getElementById('tabela-dre-corpo');
-        corpo.innerHTML = '';
-
-        const dadosDRE = memoriaTrans.filter(t => {
-            const d = t.date.split('T')[0];
-            return d >= ini && d <= fim;
-        });
-
-        // Hierarquia: Percorre o plano de contas e soma recursivamente
-        memoriaPlano.forEach(conta => {
-            let sVal = 0;
-            let cVal = 0;
-
-            dadosDRE.forEach(trans => {
-                // Se o código do lançamento começa com o código da conta do plano (ex: 3.1.1 pertence a 3.1)
-                if(trans.account_id.startsWith(conta.code)) {
-                    if(trans.unit === 'Santos') sVal += trans.amount;
-                    else cVal += trans.amount;
-                }
+            // Filtros
+            const filtered = movements.filter(m => {
+                const uMatch = unit === 'Todas' || m.contaDebito === unit; // Usando contaDebito como Unidade conforme mapeamento lógico comum
+                const dMatch = (!start || m.data >= start) && (!end || m.data <= end);
+                return uMatch && dMatch;
             });
 
-            const niveis = conta.code.split('.').length;
-            const classe = niveis === 1 ? 'class="row-mestre"' : '';
-            const recuo = niveis > 1 ? `style="padding-left: ${niveis * 20}px"` : '';
+            // Cálculos
+            let rev = 0, exp = 0;
+            filtered.forEach(m => {
+                if (m.tipo === 'receita') rev += m.valor;
+                if (['custo', 'despesa', 'dedução'].includes(m.tipo)) exp += m.valor;
+            });
 
-            if(sVal !== 0 || cVal !== 0) {
-                corpo.innerHTML += `
-                    <tr ${classe}>
-                        <td ${recuo}>${conta.code} - ${conta.description}</td>
-                        <td>R$ ${sVal.toLocaleString('pt-BR')}</td>
-                        <td>R$ ${cVal.toLocaleString('pt-BR')}</td>
-                        <td><strong>R$ ${(sVal + cVal).toLocaleString('pt-BR')}</strong></td>
-                    </tr>`;
-            }
-        });
-    }
+            document.getElementById('c-rev').innerText = fmt(rev);
+            document.getElementById('c-exp').innerText = fmt(exp);
+            document.getElementById('c-res').innerText = fmt(rev - exp);
 
-    // --- Navegação ---
-    function navegarPara(id, el) {
-        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        
-        document.getElementById(id).classList.add('active');
-        el.classList.add('active');
+            renderMovTable(filtered);
+            renderCharts(rev, exp, filtered);
+            renderDRE(filtered);
+        }
 
-        if(id === 'secao-dre') montarDRE();
-    }
+        // Evento de envio
+        document.getElementById('form-mov').onsubmit = async (e) => {
+            e.preventDefault();
+            toggleLoad(true);
+            const acc = planoContas.find(p => p.cod === document.getElementById('m-account').value);
+            
+            const payload = {
+                data: document.getElementById('m-data').value,
+                desc: document.getElementById('m-desc').value,
+                tipo: acc.nat,
+                cat_: "financeiro",
+                nomecat: acc.desc,
+                cod_: acc.cod,
+                descricao: document.getElementById('m-desc').value,
+                contaDebito: document.getElementById('m-unit').value, // Unidade Santos/Camaçari
+                contaCredito: "Caixa",
+                valor: parseFloat(document.getElementById('m-valor').value)
+            };
 
-    window.onload = init;
-</script>
+            try {
+                await db.createDocument(config.db, config.colMov, ID.unique(), payload);
+                e.target.reset();
+                await loadData();
+            } catch (err) { alert("Erro ao salvar: " + err.message); }
+            toggleLoad(false);
+        };
 
+        // --- RENDERIZADORES ---
+        function renderMovTable(data) {
+            const tbody = document.getElementById('list-mov');
+            tbody.innerHTML = data.map(m => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-4 text-xs font-mono">${m.data.replace('T', ' ')}</td>
+                    <td class="p-4 font-bold text-slate-600">${m.contaDebito}</td>
+                    <td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-bold mr-2">${m.cod_}</span> ${m.nomecat}</td>
+                    <td class="p-4 text-slate-500">${m.desc}</td>
+                    <td class="p-4 font-bold ${m.tipo === 'receita' ? 'text-green-600' : 'text-red-500'}">${fmt(m.valor)}</td>
+                    <td class="p-4"><button onclick="delDoc('${m.$id}')" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function delDoc(id) {
+            if(!confirm("Excluir definitivamente?")) return;
+            toggleLoad(true);
+            await db.deleteDocument(config.db, config.colMov, id);
+            await loadData();
+            toggleLoad(false);
+        }
+
+        function renderCharts(rev, exp, filtered) {
+            // Doughnut
+            if(chartInstances.d) chartInstances.d.destroy();
+            chartInstances.d = new Chart(document.getElementById('chartDoughnut'), {
+                type: 'doughnut',
+                data: { labels: ['Receitas', 'Saídas'], datasets: [{ data: [rev, exp], backgroundColor: ['#10b981', '#f43f5e'] }] },
+                options: { cutout: '70%' }
+            });
+
+            // Curva S (Acumulado)
+            const sorted = [...filtered].sort((a,b) => new Date(a.data) - new Date(b.data));
+            let acc = 0;
+            const points = sorted.map(m => {
+                acc += (m.tipo === 'receita' ? m.valor : -m.valor);
+                return { x: m.data.split('T')[0], y: acc };
+            });
+
+            if(chartInstances.s) chartInstances.s.destroy();
+            chartInstances.s = new Chart(document.getElementById('chartS'), {
+                type: 'line',
+                data: { datasets: [{ label: 'Saldo Acumulado', data: points, borderColor: '#38bdf8', fill: true, backgroundColor: 'rgba(56, 189, 248, 0.1)', tension: 0.3 }] }
+            });
+        }
+
+        function renderDRE(data) {
+            const g = data.reduce((acc, m) => { acc[m.tipo] = (acc[m.tipo] || 0) + m.valor; return acc; }, {});
+            const rLiq = (g.receita || 0) - (g.dedução || 0);
+            const final = rLiq - (g.custo || 0) - (g.despesa || 0);
+
+            document.getElementById('dre-result').innerHTML = `
+                <h2 class="text-2xl font-black text-center mb-8 border-b pb-4">DRE INDUSTRIAL - CONSOLIDADO</h2>
+                <div class="space-y-4">
+                    <div class="flex justify-between font-bold text-lg"><span>RECEITA BRUTA</span> <span>${fmt(g.receita || 0)}</span></div>
+                    <div class="flex justify-between text-red-500 italic px-4"><span>(-) Deduções e Impostos</span> <span>(${fmt(g.dedução || 0)})</span></div>
+                    <div class="flex justify-between font-black bg-slate-50 p-2"><span>(=) RECEITA LÍQUIDA</span> <span>${fmt(rLiq)}</span></div>
+                    <div class="flex justify-between text-red-500 px-4"><span>(-) Custos de Produção</span> <span>(${fmt(g.custo || 0)})</span></div>
+                    <div class="flex justify-between text-red-500 px-4"><span>(-) Despesas Operacionais</span> <span>(${fmt(g.despesa || 0)})</span></div>
+                    <div class="flex justify-between font-black text-xl border-t-2 border-slate-800 pt-4 mt-8">
+                        <span>RESULTADO LÍQUIDO</span> 
+                        <span class="${final >= 0 ? 'text-green-600' : 'text-red-600'}">${fmt(final)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper UI
+        function nav(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('p-'+id).classList.remove('hidden');
+            document.getElementById('m-'+id).classList.add('active');
+        }
+        function fmt(v) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v); }
+        function toggleLoad(s) { document.getElementById('loading').classList.toggle('hidden', !s); }
+        function renderSeed() { document.getElementById('list-seed').innerHTML = planoContas.map(p => `<tr class="border-b"> <td class="p-4 font-mono font-bold">${p.cod}</td> <td class="p-4">${p.desc}</td> <td class="p-4 uppercase text-xs">${p.nat}</td> </tr>`).join(''); }
+        function renderAccountDropdown() { document.getElementById('m-account').innerHTML = planoContas.map(p => `<option value="${p.cod}">${p.cod} - ${p.desc}</option>`).join(''); }
+
+        window.onload = init;
+    </script>
 </body>
 </html>
