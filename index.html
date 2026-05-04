@@ -25,10 +25,10 @@
             height: 100vh; 
             background: var(--bg); 
             color: #1e293b; 
-            overflow: hidden;
+            overflow: hidden; 
         }
         
-        /* Sidebar e Overlay */
+        /* SIDEBAR E RESPONSIVIDADE */
         aside { 
             width: var(--sidebar-w); 
             background: var(--dark); 
@@ -37,16 +37,8 @@
             display: flex; 
             flex-direction: column; 
             box-shadow: 4px 0 10px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
             z-index: 1000;
-        }
-
-        #sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
         }
 
         .brand { 
@@ -78,225 +70,455 @@
 
         .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
         .menu-item.active { background: var(--primary); color: white; font-weight: 600; }
-        
-        /* Header Mobile */
-        .mobile-header {
-            display: none;
-            width: 100%;
-            height: 60px;
-            background: var(--dark);
-            color: white;
-            align-items: center;
-            padding: 0 20px;
-            justify-content: space-between;
-            position: fixed;
-            top: 0;
-            z-index: 1001;
-            box-sizing: border-box;
-        }
 
+        /* HEADER MOBILE */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1100;
+            background: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
         main { flex: 1; overflow-y: auto; padding: 30px; position: relative; }
         .view-section { display: none; }
         .view-section.active { display: block; animation: fadeIn 0.4s ease; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Utilitários de Layout */
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid var(--border); }
-        .grid-header { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: flex-end; margin-bottom: 20px; }
-        .table-container { width: 100%; overflow-x: auto; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+            margin-bottom: 25px; 
+            border: 1px solid var(--border); 
+        }
+
+        /* GRIDS ADAPTÁVEIS */
+        .grid-header { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 15px; 
+            align-items: flex-end; 
+            margin-bottom: 20px; 
+        }
+
         label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
-        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box; }
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 13px; 
+            outline: none; 
+            box-sizing: border-box; 
+        }
+
+        .excel-filter { position: relative; width: 100%; }
+        .filter-box { 
+            background: white; 
+            border: 1px solid var(--border); 
+            padding: 10px; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            height: 40px; 
+            box-sizing: border-box; 
+        }
+        .filter-options { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            right: 0; 
+            background: white; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            z-index: 2000; 
+            max-height: 250px; 
+            overflow-y: auto; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            margin-top: 5px; 
+        }
+        .filter-options.show { display: block; }
+        .opt { padding: 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
+
+        /* TABELAS RESPONSIVAS */
+        .table-wrap { width: 100%; overflow-x: auto; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { text-align: left; padding: 14px; background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--border); text-transform: uppercase; }
+        td { padding: 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
         
-        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .btn { 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 12px; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
         .btn-primary { background: var(--primary); color: white; }
         .btn-ghost { background: transparent; color: #64748b; }
+        .btn-ghost:hover { background: #f1f5f9; }
 
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 25px; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stat-card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            border-left: 5px solid var(--primary); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        }
+        .stat-card span { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
         .stat-card h2 { margin: 10px 0 0; font-size: 1.7rem; }
-
+        
+        .row-editing { background: #f0fff4 !important; outline: 1px solid var(--primary); }
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
         .badge-rec { background: #dcfce7; color: #166534; }
         .badge-cus { background: #fee2e2; color: #991b1b; }
+        .badge-ati { background: #f1f5f9; color: #475569; }
+        .badge-est { background: #e0f2fe; color: #0369a1; }
 
-        /* Responsividade Celular */
+        /* REGRAS MOBILE */
         @media (max-width: 768px) {
-            aside { position: fixed; left: 0; transform: translateX(-100%); height: 100%; }
-            aside.active { transform: translateX(0); }
-            .mobile-header { display: flex; }
-            #sidebar-overlay.active { display: block; }
-            main { padding: 80px 15px 20px 15px; }
-            .dash-grid { grid-template-columns: 1fr; }
-            .grid-header { grid-template-columns: 1fr; }
-            div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+            aside {
+                position: fixed;
+                left: -250px;
+                height: 100vh;
+            }
+            aside.mobile-open {
+                left: 0;
+            }
+            .mobile-toggle {
+                display: flex;
+            }
+            main {
+                padding: 60px 15px 20px 15px;
+            }
+            .grid-header {
+                grid-template-columns: 1fr;
+            }
+            .stat-card h2 {
+                font-size: 1.4rem;
+            }
+            /* Ajuste de gráficos lado a lado para um embaixo do outro */
+            div[style*="display: grid; grid-template-columns: 1fr 1fr;"],
+            div[style*="display: grid; grid-template-columns: 2fr 1fr;"] {
+                grid-template-columns: 1fr !important;
+            }
         }
-
-        th { text-align: left; padding: 14px; background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--border); }
-        td { padding: 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
     </style>
 </head>
 <body>
 
-    <div id="sidebar-overlay" onclick="toggleMenu()"></div>
+<div class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</div>
 
-    <header class="mobile-header">
-        <span style="font-weight: 800; color: var(--primary);">CRYO FINANCE</span>
-        <i class="fas fa-bars fa-lg" onclick="toggleMenu()" style="cursor:pointer"></i>
-    </header>
+<aside id="mainSidebar">
+    <div class="brand">CRYO FINANCE</div>
+    <nav>
+        <button class="menu-item active" onclick="showView('dashboard', this)"><i class="fas fa-chart-line"></i> Dashboard</button>
+        <button class="menu-item" onclick="showView('plano', this)"><i class="fas fa-list-ul"></i> Plano de Contas</button>
+        <button class="menu-item" onclick="showView('lancamentos', this)"><i class="fas fa-exchange-alt"></i> Lançamentos</button>
+        <button class="menu-item" onclick="showView('dre', this)"><i class="fas fa-file-invoice-dollar"></i> DRE</button>
+    </nav>
+</aside>
 
-    <aside id="sidebar">
-        <div class="brand">CRYO FINANCE</div>
-        <nav>
-            <button class="menu-item active" onclick="showView('dashboard', this)"><i class="fas fa-chart-line"></i> Dashboard</button>
-            <button class="menu-item" onclick="showView('plano', this)"><i class="fas fa-list-ul"></i> Plano de Contas</button>
-            <button class="menu-item" onclick="showView('lancamentos', this)"><i class="fas fa-exchange-alt"></i> Lançamentos</button>
-            <button class="menu-item" onclick="showView('dre', this)"><i class="fas fa-file-invoice-dollar"></i> DRE</button>
-        </nav>
-    </aside>
-
-    <main>
-        <section id="dashboard" class="view-section active">
-            <div class="card">
-                <div class="grid-header">
-                    <div><label>Unidade</label>
-                        <select id="dash-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
+<main>
+    <section id="dashboard" class="view-section active">
+        <div class="card">
+            <div class="grid-header">
+                <div><label>Unidade</label>
+                    <select id="dash-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
+                </div>
+                <div class="excel-filter">
+                    <label>Filtro de Contas</label>
+                    <div class="filter-box" onclick="toggleDropdown('dash-opt')"><span id="dash-sel-txt">Todas</span><i class="fas fa-chevron-down"></i></div>
+                    <div id="dash-opt" class="filter-options">
+                        <div class="opt"><b><input type="checkbox" id="dash-all" checked onchange="toggleAll('dash')"> Selecionar Todas</b></div>
+                        <div id="dash-list"></div>
                     </div>
-                    <div><label>Início</label><input type="date" id="dash-ini"></div>
-                    <div><label>Fim</label><input type="date" id="dash-fim"></div>
-                    <button class="btn btn-primary" onclick="processarDashboard()"><i class="fas fa-sync"></i> Atualizar</button>
                 </div>
+                <div><label>Início</label><input type="date" id="dash-ini"></div>
+                <div><label>Fim</label><input type="date" id="dash-fim"></div>
+                <button class="btn btn-primary" onclick="processarDashboard()"><i class="fas fa-sync"></i> Atualizar</button>
             </div>
-            <div id="dash-cards" class="dash-grid"></div>
-            <div class="card"><h3>Visão Geral</h3><canvas id="chartGeral" height="100"></canvas></div>
-        </section>
+        </div>
+        <div id="dash-cards" class="dash-grid"></div>
+        <div class="card"><h3>Visão Geral Consolidada</h3><canvas id="chartGeral" height="100"></canvas></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card"><h4>Resultado: Santos</h4><canvas id="chartSantos" height="150"></canvas></div>
+            <div class="card"><h4>Resultado: Camaçari</h4><canvas id="chartCamacari" height="150"></canvas></div>
+        </div>
+    </section>
 
-        <section id="plano" class="view-section">
-            <div class="card">
-                <form id="formPlano" class="grid-header" onsubmit="event.preventDefault(); criarPlano();">
-                    <input type="text" id="p-codigo" placeholder="Código (Ex: 3.1.1.01)" required>
-                    <input type="text" id="p-desc" placeholder="Descrição" required>
-                    <select id="p-natureza">
-                        <option value="recebimento">Recebimento (+)</option>
-                        <option value="custo">Custo (-)</option>
-                        <option value="estoque">Estoque</option>
-                    </select>
-                    <button type="submit" class="btn btn-primary">Adicionar</button>
-                </form>
+    <section id="plano" class="view-section">
+        <div class="card">
+            <form id="formPlano" class="grid-header" onsubmit="event.preventDefault(); criarPlano();">
+                <input type="text" id="p-codigo" placeholder="Código (Ex: 3.1.1.01)" required>
+                <input type="text" id="p-desc" placeholder="Descrição da Conta" required style="grid-column: span 2">
+                <input type="text" id="p-estoque" placeholder="Descrição Estoque">
+                <select id="p-natureza">
+                    <option value="recebimento">Recebimento (+)</option>
+                    <option value="custo">Custo (-)</option>
+                    <option value="estoque">Estoque</option>
+                    <option value="ativo">Ativo</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Adicionar Conta</button>
+            </form>
+        </div>
+        <div class="card">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>CÓDIGO</th><th>DESCRIÇÃO</th><th>ESTOQUE</th><th>NATUREZA</th><th style="text-align:right">AÇÕES</th></tr></thead>
+                    <tbody id="p-corpo"></tbody>
+                </table>
             </div>
-            <div class="card">
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>CÓDIGO</th><th>DESCRIÇÃO</th><th>NATUREZA</th><th style="text-align:right">AÇÕES</th></tr></thead>
-                        <tbody id="p-corpo"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+        </div>
+    </section>
 
-        <section id="lancamentos" class="view-section">
-            <div class="card">
-                <form id="formLan" class="grid-header" onsubmit="event.preventDefault(); criarLan();">
-                    <input type="date" id="l-data" required>
-                    <select id="l-uni"><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
-                    <select id="l-conta" required></select>
-                    <input type="number" step="0.01" id="l-valor" placeholder="R$ 0,00" required>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </form>
+    <section id="lancamentos" class="view-section">
+        <div class="card">
+            <form id="formLan" class="grid-header" onsubmit="event.preventDefault(); criarLan();">
+                <input type="date" id="l-data" required>
+                <select id="l-uni"><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
+                <select id="l-conta" required></select>
+                <input type="text" id="l-estoque-desc" placeholder="Descr. Estoque">
+                <input type="text" id="l-desc" placeholder="Histórico / Referência" required>
+                <input type="number" step="0.01" id="l-valor" placeholder="R$ 0,00" required>
+                <button type="submit" class="btn btn-primary">Salvar Lançamento</button>
+            </form>
+        </div>
+        <div class="card">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>DATA</th><th>UNIDADE</th><th>CONTA</th><th>TIPO</th><th>HISTÓRICO</th><th>VALOR</th><th style="text-align:right">AÇÕES</th></tr></thead>
+                    <tbody id="l-corpo"></tbody>
+                </table>
             </div>
-            <div class="card">
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>DATA</th><th>UNIDADE</th><th>CONTA</th><th>VALOR</th><th style="text-align:right">AÇÕES</th></tr></thead>
-                        <tbody id="l-corpo"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+        </div>
+    </section>
 
-        <section id="dre" class="view-section">
-            <div class="card">
-                <div class="grid-header">
-                    <input type="date" id="dre-ini">
-                    <input type="date" id="dre-fim">
-                    <button class="btn btn-primary" onclick="gerarDRE()">Gerar Relatório</button>
+    <section id="dre" class="view-section">
+        <div class="card">
+            <div class="grid-header">
+                <div><label>Unidade</label><select id="dre-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select></div>
+                <div class="excel-filter">
+                    <label>Filtro de Contas (DRE)</label>
+                    <div class="filter-box" onclick="toggleDropdown('dre-opt')"><span id="dre-sel-txt">Todas</span><i class="fas fa-chevron-down"></i></div>
+                    <div id="dre-opt" class="filter-options">
+                        <div class="opt"><b><input type="checkbox" id="dre-all" checked onchange="toggleAll('dre')"> Selecionar Todas</b></div>
+                        <div id="dre-list"></div>
+                    </div>
                 </div>
+                <div><label>Início</label><input type="date" id="dre-ini"></div>
+                <div><label>Fim</label><input type="date" id="dre-fim"></div>
+                <button class="btn btn-primary" onclick="gerarDRE()"><i class="fas fa-file-invoice"></i> Gerar DRE</button>
             </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
             <div class="card">
-                <div class="table-container">
+                <div class="table-wrap">
                     <table><thead><tr><th>ESTRUTURA DRE</th><th style="text-align:right">VALOR</th></tr></thead><tbody id="dre-corpo"></tbody></table>
                 </div>
             </div>
-        </section>
-    </main>
+            <div class="card">
+                <canvas id="chartDRE"></canvas>
+            </div>
+        </div>
+    </section>
+</main>
 
 <script>
+    // CONFIGURAÇÃO APPWRITE (MANTIDA ORIGINAL)
     const { Client, Databases, ID, Query } = Appwrite;
     const client = new Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setProject('69f35a44003278bff900');
     const databases = new Databases(client);
     const DB_ID = '69f35a670029fa96fd5f', COLL_ACC = 'accounts', COLL_TRANS = 'transactions';
 
-    let cacheAcc = {}, chartGeral = null;
-
-    function toggleMenu() {
-        document.getElementById('sidebar').classList.toggle('active');
-        document.getElementById('sidebar-overlay').classList.toggle('active');
-    }
-
-    function showView(v, b) { 
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active')); 
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active')); 
-        document.getElementById(v).classList.add('active'); 
-        b.classList.add('active'); 
-        if(v === 'lancamentos') renderLanTable(); 
-        if(window.innerWidth <= 768 && document.getElementById('sidebar').classList.contains('active')) toggleMenu();
-    }
+    let cacheAcc = {}, chartGeral = null, chartSan = null, chartCam = null, chartDRE = null;
+    const LISTA_RECEBIMENTOS = ['1.1.2.01','1.1.2.02','1.1.4.01','1.1.4.02','1.1.4.03','1.3.1.01','1.3.2.01','1.3.2.02','3.1.1.01','3.1.1.02','3.1.1.03','3.1.1.04','3.1.1.05','3.1.2.01','3.1.2.02','3.1.3.01','3.1.3.02','3.1.3.03'];
 
     async function init() { setDatasPadrao(); await carregarContas(); processarDashboard(); }
 
+    function toggleSidebar() {
+        document.getElementById('mainSidebar').classList.toggle('mobile-open');
+    }
+
+    function toggleDropdown(id) { document.getElementById(id).classList.toggle('show'); }
+    function toggleAll(p) { const c = document.getElementById(`${p}-all`).checked; document.querySelectorAll(`.${p}-ck`).forEach(x => x.checked = c); updateTxt(p); }
+    function updateTxt(p) { 
+        const s = document.querySelectorAll(`.${p}-ck:checked`).length;
+        const tot = document.querySelectorAll(`.${p}-ck`).length;
+        document.getElementById(`${p}-sel-txt`).innerText = s === tot ? "Todas" : `${s} selecionadas`;
+    }
+
+    // CARREGAR CONTAS (MANTIDO COMPLETO)
     async function carregarContas() {
         try {
             const res = await databases.listDocuments(DB_ID, COLL_ACC, [Query.limit(500), Query.orderAsc('code')]);
             const lConta = document.getElementById('l-conta'), pCorpo = document.getElementById('p-corpo');
-            lConta.innerHTML = ''; pCorpo.innerHTML = ''; cacheAcc = {};
+            const dList = document.getElementById('dash-list'), drList = document.getElementById('dre-list');
+            
+            lConta.innerHTML = ''; pCorpo.innerHTML = ''; dList.innerHTML = ''; drList.innerHTML = ''; cacheAcc = {};
+
             res.documents.forEach(d => {
-                cacheAcc[d.code] = d;
+                let nat = d.nature || 'custo';
+                if(LISTA_RECEBIMENTOS.includes(d.code)) nat = 'recebimento';
+                cacheAcc[d.code] = { ...d, nature: nat };
+                
                 lConta.innerHTML += `<option value="${d.code}">${d.code} - ${d.description}</option>`;
-                pCorpo.innerHTML += `<tr><td>${d.code}</td><td>${d.description}</td><td>${d.nature}</td><td style="text-align:right"><button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_ACC}','${d.$id}')"><i class="fas fa-trash"></i></button></td></tr>`;
+                dList.innerHTML += `<div class="opt"><input type="checkbox" class="dash-ck" value="${d.code}" checked onchange="updateTxt('dash')"> <label>${d.code}</label></div>`;
+                drList.innerHTML += `<div class="opt"><input type="checkbox" class="dre-ck" value="${d.code}" checked onchange="updateTxt('dre')"> <label>${d.code}</label></div>`;
+                pCorpo.innerHTML += `<tr id="row-p-${d.$id}">
+                    <td>${d.code}</td><td>${d.description}</td><td>${d.stock_desc || ''}</td><td>${nat}</td>
+                    <td style="text-align:right">
+                        <button class="btn btn-ghost" onclick="ativarEdicaoPlano('${d.$id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_ACC}','${d.$id}')"><i class="fas fa-trash"></i></button>
+                    </td></tr>`;
             });
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Erro ao carregar contas", e); }
     }
 
+    // DASHBOARD (MANTIDO COMPLETO)
     async function processarDashboard() {
         const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000)]);
         const uniF = document.getElementById('dash-uni').value, ini = document.getElementById('dash-ini').value, fim = document.getElementById('dash-fim').value;
-        let r = 0, c = 0;
-        res.documents.filter(d => d.date >= ini && d.date <= fim && (uniF === 'Todas' || d.unit === uniF)).forEach(d => {
+        const marcados = Array.from(document.querySelectorAll('.dash-ck:checked')).map(cb => cb.value);
+        let stats = { Santos: { r: 0, c: 0 }, Camaçari: { r: 0, c: 0 }, Geral: { r: 0, c: 0 } };
+
+        res.documents.filter(d => d.date >= ini && d.date <= fim && marcados.includes(d.account_id)).forEach(d => {
             const nat = cacheAcc[d.account_id]?.nature;
-            if(nat === 'recebimento') r += d.amount; else c += d.amount;
+            if(nat === 'recebimento') { stats[d.unit].r += d.amount; stats.Geral.r += d.amount; }
+            if(nat === 'custo' || nat === 'estoque') { stats[d.unit].c += d.amount; stats.Geral.c += d.amount; }
         });
-        document.getElementById('dash-cards').innerHTML = `<div class="stat-card"><span>Receitas</span><h2 style="color:var(--primary)">R$ ${r.toLocaleString()}</h2></div><div class="stat-card" style="border-left-color:var(--danger)"><span>Custos</span><h2 style="color:var(--danger)">R$ ${c.toLocaleString()}</h2></div><div class="stat-card" style="border-left-color:var(--dark)"><span>Saldo</span><h2>R$ ${(r-c).toLocaleString()}</h2></div>`;
+
+        const exR = (uniF === 'Todas') ? stats.Geral.r : stats[uniF].r;
+        const exC = (uniF === 'Todas') ? stats.Geral.c : stats[uniF].c;
+
+        document.getElementById('dash-cards').innerHTML = `
+            <div class="stat-card"><span>Receitas</span><h2 style="color:var(--primary)">R$ ${exR.toLocaleString()}</h2></div>
+            <div class="stat-card" style="border-left-color:var(--danger)"><span>Custos/Estoques</span><h2 style="color:var(--danger)">R$ ${exC.toLocaleString()}</h2></div>
+            <div class="stat-card" style="border-left-color:var(--dark)"><span>Resultado Líquido</span><h2>R$ ${(exR - exC).toLocaleString()}</h2></div>`;
+
+        renderChart('chartGeral', stats.Geral, 'Consolidado');
+        renderChart('chartSantos', stats.Santos, 'Santos');
+        renderChart('chartCamacari', stats.Camaçari, 'Camaçari');
+        document.getElementById('dash-opt').classList.remove('show');
     }
 
-    async function renderLanTable() {
-        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.orderDesc('date'), Query.limit(50)]);
-        document.getElementById('l-corpo').innerHTML = res.documents.map(d => `<tr><td>${d.date}</td><td>${d.unit}</td><td>${d.account_id}</td><td>R$ ${d.amount.toLocaleString()}</td><td style="text-align:right"><button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_TRANS}','${d.$id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+    function renderChart(id, data, label) {
+        const ctx = document.getElementById(id).getContext('2d');
+        if(id === 'chartGeral' && chartGeral) chartGeral.destroy();
+        if(id === 'chartSantos' && chartSan) chartSan.destroy();
+        if(id === 'chartCamacari' && chartCam) chartCam.destroy();
+
+        const config = {
+            type: 'bar',
+            data: { labels: ['Receita', 'Custo/Estoque', 'Resultado'], datasets: [{ label: label, data: [data.r, data.c, data.r - data.c], backgroundColor: ['#22c55e', '#ef4444', '#0f2419'], borderRadius: 5 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        };
+
+        if(id === 'chartGeral') chartGeral = new Chart(ctx, config);
+        else if(id === 'chartSantos') chartSan = new Chart(ctx, config);
+        else chartCam = new Chart(ctx, config);
     }
 
-    async function criarPlano() { await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), { code: document.getElementById('p-codigo').value, description: document.getElementById('p-desc').value, nature: document.getElementById('p-natureza').value }); carregarContas(); }
-    async function criarLan() { await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), { date: document.getElementById('l-data').value, unit: document.getElementById('l-uni').value, account_id: document.getElementById('l-conta').value, amount: parseFloat(document.getElementById('l-valor').value), description: 'Lançamento' }); renderLanTable(); processarDashboard(); }
-    async function excluirDoc(c, id) { if(confirm("Excluir?")) { await databases.deleteDocument(DB_ID, c, id); c === COLL_ACC ? carregarContas() : renderLanTable(); processarDashboard(); } }
+    // DRE (MANTIDO COMPLETO)
+    async function gerarDRE() {
+        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000)]);
+        const uni = document.getElementById('dre-uni').value, ini = document.getElementById('dre-ini').value, fim = document.getElementById('dre-fim').value;
+        const marcados = Array.from(document.querySelectorAll('.dre-ck:checked')).map(cb => cb.value);
+        let rTot = 0, cTot = 0, resumo = {}, html = "";
 
-    function setDatasPadrao() { 
-        const h = new Date().toISOString().split('T')[0]; 
-        const p = h.substring(0,8)+'01';
-        document.getElementById('dash-ini').value = p; document.getElementById('dash-fim').value = h;
-        document.getElementById('dre-ini').value = p; document.getElementById('dre-fim').value = h;
-        document.getElementById('l-data').value = h;
+        res.documents.filter(d => d.date >= ini && d.date <= fim && (uni === 'Todas' || d.unit === uni) && marcados.includes(d.account_id)).forEach(d => {
+            const acc = cacheAcc[d.account_id];
+            if(!acc || acc.nature === 'ativo') return;
+            if(!resumo[d.account_id]) resumo[d.account_id] = { d: acc.description, v: 0, n: acc.nature };
+            resumo[d.account_id].v += d.amount;
+        });
+
+        html += `<tr style="font-weight:bold; background:#f1f5f9"><td>(+) RECEITAS OPERACIONAIS</td><td style="text-align:right">---</td></tr>`;
+        Object.values(resumo).filter(x => x.n === 'recebimento').forEach(x => { rTot += x.v; html += `<tr><td style="padding-left:25px">${x.d}</td><td style="text-align:right">R$ ${x.v.toLocaleString()}</td></tr>`; });
+        html += `<tr style="font-weight:bold; background:#f1f5f9"><td>(-) CUSTOS E ESTOQUES</td><td style="text-align:right">---</td></tr>`;
+        Object.values(resumo).filter(x => x.n === 'custo' || x.n === 'estoque').forEach(x => { cTot += x.v; html += `<tr><td style="padding-left:25px">${x.d}</td><td style="text-align:right; color:var(--danger)">R$ (${x.v.toLocaleString()})</td></tr>`; });
+        html += `<tr style="background:var(--dark); color:white; font-weight:bold"><td>RESULTADO DO EXERCÍCIO</td><td style="text-align:right">R$ ${(rTot - cTot).toLocaleString()}</td></tr>`;
+        document.getElementById('dre-corpo').innerHTML = html;
+
+        if(chartDRE) chartDRE.destroy();
+        chartDRE = new Chart(document.getElementById('chartDRE'), { 
+            type: 'doughnut', 
+            data: { labels: ['Receitas','Custos/Estoque'], datasets:[{data:[rTot, cTot], backgroundColor:['#22c55e','#ef4444']}] },
+            options: { plugins: { 
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: (ctx) => {
+                    const sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    const perc = sum > 0 ? ((ctx.raw / sum) * 100).toFixed(1) : 0;
+                    return `${ctx.label}: R$ ${ctx.raw.toLocaleString()} (${perc}%)`;
+                }}}
+            }}
+        });
+        document.getElementById('dre-opt').classList.remove('show');
     }
-    window.onload = init;
-</script>
-</body>
-</html>
+
+    // CRUD PLANO DE CONTAS (MANTIDO COMPLETO)
+    async function criarPlano() { 
+        await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), { 
+            code: document.getElementById('p-codigo').value, 
+            description: document.getElementById('p-desc').value, 
+            stock_desc: document.getElementById('p-estoque').value,
+            nature: document.getElementById('p-natureza').value 
+        }); 
+        document.getElementById('formPlano').reset(); carregarContas(); 
+    }
+
+    function ativarEdicaoPlano(id) {
+        const tr = document.getElementById(`row-p-${id}`);
+        const code = tr.cells[0].innerText, desc = tr.cells[1].innerText, st = tr.cells[2].innerText, nat = tr.cells[3].innerText;
+        tr.classList.add('row-editing');
+        tr.innerHTML = `
+            <td><input id="ed-p-c-${id}" value="${code}" style="width:100px"></td>
+            <td><input id="ed-p-d-${id}" value="${desc}" style="width:100%"></td>
+            <td><input id="ed-p-s-${id}" value="${st}" style="width:100%"></td>
+            <td><select id="ed-p-n-${id}">
+                <option value="recebimento" ${nat=='recebimento'?'selected':''}>Recebimento</option>
+                <option value="custo" ${nat=='custo'?'selected':''}>Custo</option>
+                <option value="estoque" ${nat=='estoque'?'selected':''}>Estoque</option>
+                <option value="ativo" ${nat=='ativo'?'selected':''}>Ativo</option>
+            </select></td>
+            <td style="text-align:right"><button class="btn btn-primary" onclick="salvarEdicaoPlano('${id}')">✔</button></td>`;
+    }
+
+    async function salvarEdicaoPlano(id) {
+        const d = { 
+            code: document.getElementById(`ed-p-c-${id}`).value, 
+            description: document.getElementById(`ed-p-d-${id}`).value, 
+            stock_desc: document.getElementById(`ed-p-s-${id}`).value,
+            nature: document.getElementById(`ed-p-n-${id}`).value 
+        };
+        await databases.updateDocument(DB_ID, COLL_ACC, id, d); carregarContas();
+    }
+
+    // CRUD LANÇAMENTOS (MANTIDO COMPLETO)
+    async function criarLan() { 
+        await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), { 
+            date: document.getElementById('l-data').value,
