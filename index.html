@@ -3,140 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryoFinance Pro v14.0</title>
+    <title>CryoFinance Pro v10.9.1</title>
+    <!-- Bibliotecas Externas -->
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
         :root { 
-            --primary: #00a859; --dark: #0f2419; --danger: #ef4444; --warning: #f59e0b;
-            --info: #3b82f6; --border: #e2e8f0; --bg: #f4f7f6; --sidebar-w: 260px;
+            --primary: #00a859; 
+            --dark: #0f2419; 
+            --danger: #ef4444; 
+            --border: #e2e8f0; 
+            --bg: #f8fafc; 
+            --sidebar-w: 250px;
         }
-        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { margin: 0; display: flex; height: 100vh; background: var(--bg); overflow: hidden; }
-        #loader-bar { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: var(--primary); z-index: 9999; transition: width 0.3s; }
-        aside { width: var(--sidebar-w); background: var(--dark); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
-        .brand { padding: 25px; font-weight: 900; color: var(--primary); border-bottom: 1px solid #1d402f; text-align: center; }
-        .menu-item { padding: 15px 25px; cursor: pointer; border: none; background: none; color: #94a3b8; width: 100%; text-align: left; display: flex; gap: 12px; }
-        .menu-item.active { background: var(--primary); color: white; }
-        main { flex: 1; overflow-y: auto; padding: 25px; }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            background: var(--bg); 
+            color: #1e293b; 
+            overflow: hidden; 
+        }
+        
+        aside { 
+            width: var(--sidebar-w); 
+            background: var(--dark); 
+            color: white; 
+            flex-shrink: 0; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .brand { 
+            padding: 25px 20px; 
+            background: #0a1a12; 
+            font-weight: 800; 
+            font-size: 1.3rem; 
+            color: var(--primary); 
+            border-bottom: 1px solid #1d402f; 
+            letter-spacing: 1px;
+        }
+
+        nav { flex: 1; padding: 15px 0; }
+
+        .menu-item { 
+            padding: 16px 20px; 
+            cursor: pointer; 
+            border: none; 
+            background: none; 
+            color: #94a3b8; 
+            text-align: left; 
+            width: 100%; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            font-size: 14px; 
+            transition: all 0.3s; 
+        }
+
+        .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .menu-item.active { background: var(--primary); color: white; font-weight: 600; }
+        
+        main { flex: 1; overflow-y: auto; padding: 30px; }
         .view-section { display: none; }
-        .view-section.active { display: block; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid var(--border); }
-        .grid-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: flex-end; }
-        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
-        .btn { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+        .view-section.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+            margin-bottom: 25px; 
+            border: 1px solid var(--border); 
+        }
+
+        .grid-header { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 15px; 
+            align-items: flex-end; 
+            margin-bottom: 20px; 
+        }
+
+        label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 13px; 
+            outline: none; 
+            box-sizing: border-box; 
+        }
+
+        /* Filtro Excel Style */
+        .excel-filter { position: relative; width: 100%; }
+        .filter-box { 
+            background: white; 
+            border: 1px solid var(--border); 
+            padding: 10px; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            height: 40px; 
+            box-sizing: border-box; 
+        }
+        .filter-options { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            right: 0; 
+            background: white; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            z-index: 2000; 
+            max-height: 250px; 
+            overflow-y: auto; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            margin-top: 5px; 
+        }
+        .filter-options.show { display: block; }
+        .opt { padding: 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 14px; background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--border); text-transform: uppercase; }
+        td { padding: 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+        
+        .btn { 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 12px; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            transition: all 0.2s;
+        }
         .btn-primary { background: var(--primary); color: white; }
-        .dropdown-check { position: relative; }
-        .dropdown-content { display: none; position: absolute; background: white; border: 1px solid var(--border); width: 100%; z-index: 1000; max-height: 250px; overflow-y: auto; padding: 10px; border-radius: 8px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        .dropdown-content.show { display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; border-bottom: 2px solid var(--border); font-size: 11px; color: #64748b; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-        .chart-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .btn-ghost { background: transparent; color: #64748b; }
+        .btn-ghost:hover { background: #f1f5f9; }
+
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            border-left: 5px solid var(--primary); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        }
+        .stat-card span { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        .stat-card h2 { margin: 10px 0 0; font-size: 1.7rem; }
+        
+        .row-editing { background: #f0fff4 !important; outline: 1px solid var(--primary); }
+        .badge { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+        .badge-rec { background: #dcfce7; color: #166534; }
+        .badge-cus { background: #fee2e2; color: #991b1b; }
+        .badge-ati { background: #f1f5f9; color: #475569; }
+        .badge-est { background: #e0f2fe; color: #0369a1; }
     </style>
 </head>
 <body>
 
-<div id="loader-bar"></div>
-
 <aside>
     <div class="brand">CRYO FINANCE</div>
     <nav>
-        <button class="menu-item active" onclick="showView('dash', this)"><i class="fas fa-chart-line"></i> Dashboard</button>
-        <button class="menu-item" onclick="showView('plano', this)"><i class="fas fa-list-ol"></i> Plano de Contas</button>
-        <button class="menu-item" onclick="showView('lan', this)"><i class="fas fa-exchange-alt"></i> Lançamentos</button>
+        <button class="menu-item active" onclick="showView('dashboard', this)"><i class="fas fa-chart-line"></i> Dashboard</button>
+        <button class="menu-item" onclick="showView('plano', this)"><i class="fas fa-list-ul"></i> Plano de Contas</button>
+        <button class="menu-item" onclick="showView('lancamentos', this)"><i class="fas fa-exchange-alt"></i> Lançamentos</button>
         <button class="menu-item" onclick="showView('dre', this)"><i class="fas fa-file-invoice-dollar"></i> DRE</button>
     </nav>
 </aside>
 
 <main>
-    <!-- VISTAS IDÊNTICAS À VERSÃO ANTERIOR, MAS COM O ARRAY COMPLETO NO SCRIPT -->
-    <section id="dash" class="view-section active">
+    <!-- VIEW: DASHBOARD -->
+    <section id="dashboard" class="view-section active">
         <div class="card">
-            <div class="grid-filters">
+            <div class="grid-header">
+                <div><label>Unidade</label>
+                    <select id="dash-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
+                </div>
+                <div class="excel-filter">
+                    <label>Filtro de Contas</label>
+                    <div class="filter-box" onclick="toggleDropdown('dash-opt')"><span id="dash-sel-txt">Todas</span><i class="fas fa-chevron-down"></i></div>
+                    <div id="dash-opt" class="filter-options">
+                        <div class="opt"><b><input type="checkbox" id="dash-all" checked onchange="toggleAll('dash')"> Selecionar Todas</b></div>
+                        <div id="dash-list"></div>
+                    </div>
+                </div>
                 <div><label>Início</label><input type="date" id="dash-ini"></div>
                 <div><label>Fim</label><input type="date" id="dash-fim"></div>
-                <div class="dropdown-check">
-                    <label>Filtro de Contas</label>
-                    <div class="btn" style="border:1px solid var(--border); width:100%" onclick="toggleDrop('dash-drop')">Filtrar Contas...</div>
-                    <div id="dash-drop" class="dropdown-content"></div>
-                </div>
-                <button class="btn btn-primary" onclick="loadDash()"><i class="fas fa-sync"></i> Atualizar</button>
+                <button class="btn btn-primary" onclick="processarDashboard()"><i class="fas fa-sync"></i> Atualizar</button>
             </div>
         </div>
-        <div id="dash-cards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px;"></div>
-        <div class="chart-grid">
-            <div class="card"><h4>Consolidado</h4><canvas id="chartGeral"></canvas></div>
-            <div class="card"><h4>Santos</h4><canvas id="chartSantos"></canvas></div>
-            <div class="card"><h4>Camaçari</h4><canvas id="chartCamacari"></canvas></div>
+        <div id="dash-cards" class="dash-grid"></div>
+        <div class="card"><h3>Visão Geral Consolidada</h3><canvas id="chartGeral" height="100"></canvas></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card"><h4>Resultado: Santos</h4><canvas id="chartSantos" height="150"></canvas></div>
+            <div class="card"><h4>Resultado: Camaçari</h4><canvas id="chartCamacari" height="150"></canvas></div>
         </div>
     </section>
 
-    <!-- PLANO DE CONTAS -->
+    <!-- VIEW: PLANO DE CONTAS -->
     <section id="plano" class="view-section">
         <div class="card">
-            <form id="formPlano" class="grid-filters" onsubmit="event.preventDefault(); saveConta();">
-                <input type="hidden" id="p-id">
+            <form id="formPlano" class="grid-header" onsubmit="event.preventDefault(); criarPlano();">
                 <input type="text" id="p-codigo" placeholder="Código (Ex: 3.1.1.01)" required>
-                <input type="text" id="p-desc" placeholder="Descrição da Conta" required>
-                <input type="text" id="p-estoque" placeholder="Descr. Estoque (Opcional)">
+                <input type="text" id="p-desc" placeholder="Descrição da Conta" required style="grid-column: span 2">
+                <input type="text" id="p-estoque" placeholder="Descrição Estoque">
                 <select id="p-natureza">
-                    <option value="ativo">Ativo</option><option value="passivo">Passivo</option><option value="pl">Patrimônio Líquido</option>
-                    <option value="receita">Receita</option><option value="deducao">Dedução</option><option value="custo">Custo</option>
-                    <option value="despesa">Despesa Operacional</option><option value="despesa_fin">Despesa Financeira</option>
-                    <option value="estoque">Estoque (Controle)</option>
+                    <option value="recebimento">Recebimento (+)</option>
+                    <option value="custo">Custo (-)</option>
+                    <option value="estoque">Estoque</option>
+                    <option value="ativo">Ativo</option>
                 </select>
-                <button type="submit" class="btn btn-primary">Salvar</button>
-            </form>
-        </div>
-        <div class="card">
-            <div style="max-height: 500px; overflow-y: auto;">
-                <table>
-                    <thead><tr><th>CÓDIGO</th><th>DESCRIÇÃO</th><th>ESTOQUE</th><th>NATUREZA</th><th>AÇÕES</th></tr></thead>
-                    <tbody id="p-corpo"></tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <!-- LANÇAMENTOS -->
-    <section id="lan" class="view-section">
-        <div class="card">
-            <form id="formLan" class="grid-filters" onsubmit="event.preventDefault(); saveLan();">
-                <input type="hidden" id="l-id">
-                <input type="date" id="l-data" required>
-                <select id="l-uni"><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
-                <select id="l-conta" required></select>
-                <input type="number" step="0.01" id="l-valor" placeholder="Valor R$" required>
-                <button type="submit" class="btn btn-primary">Lançar/Atualizar</button>
+                <button type="submit" class="btn btn-primary">Adicionar Conta</button>
             </form>
         </div>
         <div class="card">
             <table>
-                <thead><tr><th>DATA</th><th>UNIDADE</th><th>CONTA</th><th>VALOR</th><th>AÇÕES</th></tr></thead>
+                <thead><tr><th>CÓDIGO</th><th>DESCRIÇÃO</th><th>ESTOQUE</th><th>NATUREZA</th><th style="text-align:right">AÇÕES</th></tr></thead>
+                <tbody id="p-corpo"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- VIEW: LANÇAMENTOS -->
+    <section id="lancamentos" class="view-section">
+        <div class="card">
+            <form id="formLan" class="grid-header" onsubmit="event.preventDefault(); criarLan();">
+                <input type="date" id="l-data" required>
+                <select id="l-uni"><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
+                <select id="l-conta" required></select>
+                <input type="text" id="l-estoque-desc" placeholder="Descr. Estoque">
+                <input type="text" id="l-desc" placeholder="Histórico / Referência" required>
+                <input type="number" step="0.01" id="l-valor" placeholder="R$ 0,00" required>
+                <button type="submit" class="btn btn-primary">Salvar Lançamento</button>
+            </form>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>DATA</th><th>UNIDADE</th><th>CONTA</th><th>TIPO</th><th>HISTÓRICO</th><th>VALOR</th><th style="text-align:right">AÇÕES</th></tr></thead>
                 <tbody id="l-corpo"></tbody>
             </table>
         </div>
     </section>
 
-    <!-- DRE -->
+    <!-- VIEW: DRE -->
     <section id="dre" class="view-section">
         <div class="card">
-            <div class="grid-filters">
-                <select id="dre-uni"><option value="Todas">Todas Unidades</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
-                <input type="date" id="dre-ini">
-                <input type="date" id="dre-fim">
-                <div class="dropdown-check">
-                    <div class="btn" style="border:1px solid var(--border); width:100%" onclick="toggleDrop('dre-drop')">Filtrar Contas...</div>
-                    <div id="dre-drop" class="dropdown-content"></div>
+            <div class="grid-header">
+                <div><label>Unidade</label><select id="dre-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select></div>
+                <div class="excel-filter">
+                    <label>Filtro de Contas (DRE)</label>
+                    <div class="filter-box" onclick="toggleDropdown('dre-opt')"><span id="dre-sel-txt">Todas</span><i class="fas fa-chevron-down"></i></div>
+                    <div id="dre-opt" class="filter-options">
+                        <div class="opt"><b><input type="checkbox" id="dre-all" checked onchange="toggleAll('dre')"> Selecionar Todas</b></div>
+                        <div id="dre-list"></div>
+                    </div>
                 </div>
-                <button class="btn btn-primary" onclick="renderDRE()">Gerar DRE</button>
+                <div><label>Início</label><input type="date" id="dre-ini"></div>
+                <div><label>Fim</label><input type="date" id="dre-fim"></div>
+                <button class="btn btn-primary" onclick="gerarDRE()"><i class="fas fa-file-invoice"></i> Gerar DRE</button>
             </div>
         </div>
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-            <div class="card" id="dre-tabela"></div>
-            <div class="card"><canvas id="chartDRE"></canvas></div>
+            <div class="card">
+                <table><thead><tr><th>ESTRUTURA DRE</th><th style="text-align:right">VALOR</th></tr></thead><tbody id="dre-corpo"></tbody></table>
+            </div>
+            <div class="card">
+                <canvas id="chartDRE"></canvas>
+            </div>
         </div>
     </section>
 </main>
@@ -147,208 +296,238 @@
     const databases = new Databases(client);
     const DB_ID = '69f35a670029fa96fd5f', COLL_ACC = 'accounts', COLL_TRANS = 'transactions';
 
-    let cacheContas = [], charts = {};
+    let cacheAcc = {}, chartGeral = null, chartSan = null, chartCam = null, chartDRE = null;
+    const LISTA_RECEBIMENTOS = ['1.1.2.01','1.1.2.02','1.1.4.01','1.1.4.02','1.1.4.03','1.3.1.01','1.3.2.01','1.3.2.02','3.1.1.01','3.1.1.02','3.1.1.03','3.1.1.04','3.1.1.05','3.1.2.01','3.1.2.02','3.1.3.01','3.1.3.02','3.1.3.03'];
 
-    // O SEED COMPLETO E VALIDADO
-    const FULL_PLANO = [
-        {c:"1.1.1.01", d:"Caixa Geral Cartão", n:"ativo"}, {c:"1.1.1.02", d:"Fundo de caixa (dinheiro em espécie)", n:"ativo"},
-        {c:"1.1.2.01", d:"Valor Recebido da Mechatronics", n:"ativo"}, {c:"1.1.2.02", d:"Valor Recebido de Camaçari", n:"ativo"},
-        {c:"1.1.2.03", d:"Valor Pago a Mechatronics", n:"ativo"}, {c:"1.1.2.04", d:"Valor Pago a Camaçari", n:"ativo"},
-        {c:"1.1.3.01", d:"Mercadorias", n:"estoque"}, {c:"1.1.3.02", d:"Equipamentos", n:"estoque"}, {c:"1.1.3.03", d:"Insumos", n:"estoque"},
-        {c:"1.1.4.01", d:"Títulos a Receber", n:"ativo"}, {c:"1.1.4.02", d:"Impostos a Recuperar", n:"ativo"}, {c:"1.1.4.03", d:"Outros Valores a Receber", n:"ativo"},
-        {c:"1.3.1.01", d:"Contas a Receber (LP)", n:"ativo"}, {c:"1.3.1.02", d:"(-) Perdas Estimadas", n:"ativo"},
-        {c:"1.3.2.01", d:"Participações Societárias", n:"ativo"}, {c:"1.3.2.02", d:"Outros Investimentos", n:"ativo"},
-        {c:"1.3.3.01", d:"Terrenos", n:"ativo"}, {c:"1.3.3.02", d:"Edificações", n:"ativo"}, {c:"1.3.3.03", d:"Máquinas e Equipamentos", n:"ativo"},
-        {c:"1.3.3.04", d:"Veículos", n:"ativo"}, {c:"1.3.3.05", d:"Móveis e Utensílios", n:"ativo"}, {c:"1.3.3.06", d:"(-) Depreciação Acumulada", n:"ativo"},
-        {c:"1.3.4.01", d:"Softwares", n:"ativo"}, {c:"2.1.1.01", d:"Fornecedores Nacionais", n:"passivo"}, {c:"2.1.1.02", d:"Fornecedores Internacionais", n:"passivo"},
-        {c:"2.1.2.01", d:"Empréstimos Bancários", n:"passivo"}, {c:"2.1.2.02", d:"Financiamentos", n:"passivo"},
-        {c:"2.1.3.01", d:"SIMPLES NACIONAL (DAS)", n:"passivo"}, {c:"2.1.3.02", d:"IRPJ", n:"passivo"}, {c:"2.1.3.03", d:"CSLL", n:"passivo"},
-        {c:"2.1.3.04", d:"PIS", n:"passivo"}, {c:"2.1.3.05", d:"COFINS", n:"passivo"}, {c:"2.1.3.06", d:"ISSQN a Recolher", n:"passivo"},
-        {c:"2.1.3.07", d:"INSS imposto a Recolher", n:"passivo"}, {c:"2.1.4.01", d:"Salários a Pagar", n:"passivo"}, {c:"2.1.4.02", d:"FGTS a Recolher", n:"passivo"},
-        {c:"2.1.4.03", d:"INSS dos Segurados", n:"passivo"}, {c:"2.1.4.04", d:"Horas Extras", n:"passivo"}, {c:"2.1.4.05", d:"Bonus de Viagem", n:"passivo"},
-        {c:"2.1.4.06", d:"13º salário", n:"passivo"}, {c:"2.1.4.07", d:"Férias", n:"passivo"}, {c:"2.1.4.08", d:"PLR", n:"passivo"},
-        {c:"2.1.4.09", d:"Outros (Freelancer, saúde, VT, VR...)", n:"passivo"}, {c:"2.1.4.10", d:"Extras Fora Folha", n:"passivo"},
-        {c:"2.1.4.11", d:"Salários Mecha p/ Cryo", n:"passivo"}, {c:"2.1.5.01", d:"Telefone a Pagar", n:"passivo"}, {c:"2.1.5.02", d:"Energia a Pagar", n:"passivo"},
-        {c:"2.1.5.03", d:"Água a Pagar", n:"passivo"}, {c:"2.1.5.04", d:"Aluguel a Pagar", n:"passivo"}, {c:"2.1.6.01", d:"Provisão de Férias", n:"passivo"},
-        {c:"2.1.6.02", d:"Provisão de 13º", n:"passivo"}, {c:"2.1.6.03", d:"Provisão Encargos", n:"passivo"}, {c:"2.2.1.01", d:"Financiamentos Banco A", n:"passivo"},
-        {c:"2.2.2.01", d:"Empréstimos de Sócios", n:"passivo"}, {c:"2.3.1.01", d:"Capital Subscrito", n:"pl"}, {c:"2.3.1.02", d:"(-) Capital a Integralizar", n:"pl"},
-        {c:"2.3.2.01", d:"Reservas de Capital", n:"pl"}, {c:"2.3.2.02", d:"Reservas de Lucros", n:"pl"}, {c:"2.3.3.01", d:"Lucros Acumulados", n:"pl"},
-        {c:"2.3.3.02", d:"(-) Prejuízos Acumulados", n:"pl"}, {c:"3.1.1.01", d:"Venda de Produtos", n:"receita"}, {c:"3.1.1.02", d:"Venda de Mercadorias", n:"receita"},
-        {c:"3.1.1.03", d:"Venda de Serviços (frotas)", n:"receita"}, {c:"3.1.1.04", d:"(-) Deduções de Tributos, Abatimentos", n:"deducao"},
-        {c:"3.1.2.01", d:"Receitas de Aplicações Financeiras", n:"receita"}, {c:"3.1.2.02", d:"Juros Ativos", n:"receita"},
-        {c:"3.1.3.01", d:"Venda de Imobilizado", n:"receita"}, {c:"3.1.3.02", d:"Venda de Investimentos", n:"receita"},
-        {c:"3.1.3.03", d:"Outras Receitas", n:"receita"}, {c:"3.2.1.01", d:"Custos dos Insumos", n:"custo"}, {c:"3.2.1.02", d:"Custos da Mão de Obra", n:"custo"},
-        {c:"3.2.1.03", d:"Custos EPI", n:"custo"}, {c:"3.2.1.04", d:"Outros Custos (materiais carretas)", n:"custo"}, {c:"3.2.1.05", d:"Baixas de Estoque", n:"custo"},
-        {c:"3.2.2.01", d:"Despesas Administrativas", n:"despesa"}, {c:"3.2.2.02", d:"Despesas com Viagens", n:"despesa"},
-        {c:"3.2.2.03", d:"Honorários Contabilidade", n:"despesa"}, {c:"3.2.2.04", d:"Despesas com Correios", n:"despesa"},
-        {c:"3.2.2.05", d:"Despesas com Frete", n:"despesa"}, {c:"3.2.2.06", d:"Outras Despesas Gerais (propaganda)", n:"despesa"},
-        {c:"3.2.3.01", d:"Juros Passivos", n:"despesa_fin"}, {c:"3.2.3.02", d:"Outras Despesas Financeiras", n:"despesa_fin"},
-        {c:"3.2.4.01", d:"Baixa de Imobilizado", n:"despesa"}, {c:"3.2.4.02", d:"Baixa de Investimentos", n:"despesa"}, {c:"3.2.4.03", d:"Outras Despesas", n:"despesa"}
-    ];
+    async function init() { setDatasPadrao(); await carregarContas(); processarDashboard(); }
 
-    async function init() {
-        setLoader(30);
-        await checkSeed();
-        await loadContas();
-        setDates();
-        await loadDash();
+    function toggleDropdown(id) { document.getElementById(id).classList.toggle('show'); }
+    function toggleAll(p) { const c = document.getElementById(`${p}-all`).checked; document.querySelectorAll(`.${p}-ck`).forEach(x => x.checked = c); updateTxt(p); }
+    function updateTxt(p) { 
+        const s = document.querySelectorAll(`.${p}-ck:checked`).length;
+        const tot = document.querySelectorAll(`.${p}-ck`).length;
+        document.getElementById(`${p}-sel-txt`).innerText = s === tot ? "Todas" : `${s} selecionadas`;
     }
 
-    async function checkSeed() {
-        const res = await databases.listDocuments(DB_ID, COLL_ACC, [Query.limit(1)]);
-        if (res.total === 0) {
-            for (let a of FULL_PLANO) {
-                await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), { code: a.c, description: a.d, nature: a.n });
-            }
-        }
-        setLoader(60);
+    async function carregarContas() {
+        try {
+            const res = await databases.listDocuments(DB_ID, COLL_ACC, [Query.limit(500), Query.orderAsc('code')]);
+            const lConta = document.getElementById('l-conta'), pCorpo = document.getElementById('p-corpo');
+            const dList = document.getElementById('dash-list'), drList = document.getElementById('dre-list');
+            
+            lConta.innerHTML = ''; pCorpo.innerHTML = ''; dList.innerHTML = ''; drList.innerHTML = ''; cacheAcc = {};
+
+            res.documents.forEach(d => {
+                let nat = d.nature || 'custo';
+                if(LISTA_RECEBIMENTOS.includes(d.code)) nat = 'recebimento';
+                cacheAcc[d.code] = { ...d, nature: nat };
+                
+                lConta.innerHTML += `<option value="${d.code}">${d.code} - ${d.description}</option>`;
+                dList.innerHTML += `<div class="opt"><input type="checkbox" class="dash-ck" value="${d.code}" checked onchange="updateTxt('dash')"> <label>${d.code}</label></div>`;
+                drList.innerHTML += `<div class="opt"><input type="checkbox" class="dre-ck" value="${d.code}" checked onchange="updateTxt('dre')"> <label>${d.code}</label></div>`;
+                pCorpo.innerHTML += `<tr id="row-p-${d.$id}">
+                    <td>${d.code}</td><td>${d.description}</td><td>${d.stock_desc || ''}</td><td>${nat}</td>
+                    <td style="text-align:right">
+                        <button class="btn btn-ghost" onclick="ativarEdicaoPlano('${d.$id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_ACC}','${d.$id}')"><i class="fas fa-trash"></i></button>
+                    </td></tr>`;
+            });
+        } catch (e) { console.error("Falha ao carregar contas", e); }
     }
 
-    function setLoader(w) { document.getElementById('loader-bar').style.width = w + '%'; if(w===100) setTimeout(()=>setLoader(0),500); }
-    function showView(id, btn) {
-        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        btn.classList.add('active');
-    }
-    function toggleDrop(id) { document.getElementById(id).classList.toggle('show'); }
-    function setDates() {
-        const d = new Date();
-        const ini = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
-        const fim = d.toISOString().split('T')[0];
-        document.querySelectorAll('input[type="date"]').forEach(i => i.value = i.id.includes('ini') ? ini : fim);
-    }
+    async function processarDashboard() {
+        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000)]);
+        const uniF = document.getElementById('dash-uni').value, ini = document.getElementById('dash-ini').value, fim = document.getElementById('dash-fim').value;
+        const marcados = Array.from(document.querySelectorAll('.dash-ck:checked')).map(cb => cb.value);
+        let stats = { Santos: { r: 0, c: 0 }, Camaçari: { r: 0, c: 0 }, Geral: { r: 0, c: 0 } };
 
-    async function loadContas() {
-        const res = await databases.listDocuments(DB_ID, COLL_ACC, [Query.limit(500), Query.orderAsc('code')]);
-        cacheContas = res.documents;
-        const corpo = document.getElementById('p-corpo'), sel = document.getElementById('l-conta'), dDrop = document.getElementById('dash-drop'), rDrop = document.getElementById('dre-drop');
-        corpo.innerHTML = ''; sel.innerHTML = ''; dDrop.innerHTML = ''; rDrop.innerHTML = '';
-        cacheContas.forEach(c => {
-            corpo.innerHTML += `<tr><td>${c.code}</td><td>${c.description}</td><td>${c.stock_desc || '-'}</td><td>${c.nature}</td>
-                <td><button onclick="editConta('${c.$id}','${c.code}','${c.description}','${c.nature}','${c.stock_desc||''}')"><i class="fas fa-edit"></i></button>
-                <button onclick="deleteConta('${c.$id}','${c.code}')"><i class="fas fa-trash text-danger"></i></button></td></tr>`;
-            sel.innerHTML += `<option value="${c.code}">${c.code} - ${c.description}</option>`;
-            const chk = `<label style="display:block;font-size:11px"><input type="checkbox" class="acc-chk" value="${c.code}" checked> ${c.code}</label>`;
-            dDrop.innerHTML += chk; rDrop.innerHTML += chk;
+        res.documents.filter(d => d.date >= ini && d.date <= fim && marcados.includes(d.account_id)).forEach(d => {
+            const nat = cacheAcc[d.account_id]?.nature;
+            if(nat === 'recebimento') { stats[d.unit].r += d.amount; stats.Geral.r += d.amount; }
+            if(nat === 'custo' || nat === 'estoque') { stats[d.unit].c += d.amount; stats.Geral.c += d.amount; }
         });
-    }
 
-    async function saveConta() {
-        const id = document.getElementById('p-id').value;
-        const data = { code: document.getElementById('p-codigo').value, description: document.getElementById('p-desc').value, nature: document.getElementById('p-natureza').value, stock_desc: document.getElementById('p-estoque').value };
-        if(id) await databases.updateDocument(DB_ID, COLL_ACC, id, data);
-        else await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), data);
-        document.getElementById('formPlano').reset(); document.getElementById('p-id').value = '';
-        await loadContas();
-    }
+        const exR = (uniF === 'Todas') ? stats.Geral.r : stats[uniF].r;
+        const exC = (uniF === 'Todas') ? stats.Geral.c : stats[uniF].c;
 
-    async function deleteConta(id, code) {
-        const check = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.equal('account_id', code), Query.limit(1)]);
-        if(check.total > 0) return alert("Erro: Esta conta possui lançamentos!");
-        if(confirm("Excluir conta?")) { await databases.deleteDocument(DB_ID, COLL_ACC, id); loadContas(); }
-    }
-
-    function editConta(id, c, d, n, s) {
-        document.getElementById('p-id').value = id;
-        document.getElementById('p-codigo').value = c; document.getElementById('p-desc').value = d;
-        document.getElementById('p-natureza').value = n; document.getElementById('p-estoque').value = s;
-    }
-
-    async function saveLan() {
-        const id = document.getElementById('l-id').value;
-        const data = { date: document.getElementById('l-data').value, unit: document.getElementById('l-uni').value, account_id: document.getElementById('l-conta').value, amount: parseFloat(document.getElementById('l-valor').value) };
-        if(id) await databases.updateDocument(DB_ID, COLL_TRANS, id, data);
-        else await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), data);
-        document.getElementById('formLan').reset(); document.getElementById('l-id').value = '';
-        loadDash();
-    }
-
-    function editLan(id, d, u, c, v) {
-        document.getElementById('l-id').value = id;
-        document.getElementById('l-data').value = d; document.getElementById('l-uni').value = u;
-        document.getElementById('l-conta').value = c; document.getElementById('l-valor').value = v;
-    }
-
-    async function loadDash() {
-        setLoader(40);
-        const ini = document.getElementById('dash-ini').value, fim = document.getElementById('dash-fim').value;
-        const filter = Array.from(document.querySelectorAll('#dash-drop .acc-chk:checked')).map(i => i.value);
-        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.greaterThanEqual('date', ini), Query.lessThanEqual('date', fim), Query.limit(5000)]);
-        const trans = res.documents.filter(t => filter.includes(t.account_id));
-        let s = {r:0, c:0}, c = {r:0, c:0};
-        const corpo = document.getElementById('l-corpo'); corpo.innerHTML = '';
-        trans.forEach(t => {
-            const acc = cacheContas.find(acc => acc.code === t.account_id);
-            if(acc) {
-                const isExpense = ['custo','despesa','despesa_fin','deducao'].includes(acc.nature);
-                if(acc.nature === 'receita') t.unit === 'Santos' ? s.r += t.amount : c.r += t.amount;
-                if(isExpense) t.unit === 'Santos' ? s.c += t.amount : c.c += t.amount;
-            }
-            corpo.innerHTML += `<tr><td>${t.date}</td><td>${t.unit}</td><td>${t.account_id}</td><td>R$ ${t.amount.toLocaleString()}</td>
-                <td><button onclick="editLan('${t.$id}','${t.date}','${t.unit}','${t.account_id}',${t.amount})"><i class="fas fa-edit"></i></button>
-                <button onclick="deleteLan('${t.$id}')"><i class="fas fa-trash"></i></button></td></tr>`;
-        });
-        renderDashStats(s, c);
-        setLoader(100);
-    }
-
-    function renderDashStats(s, c) {
-        const tr = s.r + c.r, tc = s.c + c.c, rl = tr - tc;
         document.getElementById('dash-cards').innerHTML = `
-            <div class="card" style="border-left:5px solid var(--primary)"><span>Receita Total</span><h3>R$ ${tr.toLocaleString()}</h3></div>
-            <div class="card" style="border-left:5px solid var(--danger)"><span>Custos/Desp</span><h3>R$ ${tc.toLocaleString()}</h3></div>
-            <div class="card" style="border-left:5px solid var(--info)"><span>Resultado Líquido</span><h3>R$ ${rl.toLocaleString()}</h3></div>`;
-        updateChart('chartGeral', 'Consolidado', [tr, tc, rl]);
-        updateChart('chartSantos', 'Santos', [s.r, s.c, s.r - s.c]);
-        updateChart('chartCamacari', 'Camaçari', [c.r, c.c, c.r - c.c]);
+            <div class="stat-card"><span>Receitas</span><h2 style="color:var(--primary)">R$ ${exR.toLocaleString()}</h2></div>
+            <div class="stat-card" style="border-left-color:var(--danger)"><span>Custos/Estoques</span><h2 style="color:var(--danger)">R$ ${exC.toLocaleString()}</h2></div>
+            <div class="stat-card" style="border-left-color:var(--dark)"><span>Resultado Líquido</span><h2>R$ ${(exR - exC).toLocaleString()}</h2></div>`;
+
+        renderChart('chartGeral', stats.Geral, 'Consolidado');
+        renderChart('chartSantos', stats.Santos, 'Santos');
+        renderChart('chartCamacari', stats.Camaçari, 'Camaçari');
+        document.getElementById('dash-opt').classList.remove('show');
     }
 
-    function updateChart(id, label, data) {
-        if(charts[id]) charts[id].destroy();
-        charts[id] = new Chart(document.getElementById(id), {
+    function renderChart(id, data, label) {
+        const ctx = document.getElementById(id).getContext('2d');
+        if(id === 'chartGeral' && chartGeral) chartGeral.destroy();
+        if(id === 'chartSantos' && chartSan) chartSan.destroy();
+        if(id === 'chartCamacari' && chartCam) chartCam.destroy();
+
+        const config = {
             type: 'bar',
-            data: { labels: ['Rec','Custo','Result'], datasets: [{ label: label, data: data, backgroundColor: ['#00a859','#ef4444','#3b82f6'] }] },
-            options: { plugins: { legend: { display: false } } }
-        });
+            data: { labels: ['Receita', 'Custo/Estoque', 'Resultado'], datasets: [{ label: label, data: [data.r, data.c, data.r - data.c], backgroundColor: ['#22c55e', '#ef4444', '#0f2419'], borderRadius: 5 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        };
+
+        if(id === 'chartGeral') chartGeral = new Chart(ctx, config);
+        else if(id === 'chartSantos') chartSan = new Chart(ctx, config);
+        else chartCam = new Chart(ctx, config);
     }
 
-    async function renderDRE() {
+    async function gerarDRE() {
+        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.limit(5000)]);
         const uni = document.getElementById('dre-uni').value, ini = document.getElementById('dre-ini').value, fim = document.getElementById('dre-fim').value;
-        const filter = Array.from(document.querySelectorAll('#dre-drop .acc-chk:checked')).map(i => i.value);
-        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.greaterThanEqual('date', ini), Query.lessThanEqual('date', fim), Query.limit(5000)]);
-        const trans = res.documents.filter(t => (uni === 'Todas' || t.unit === uni) && filter.includes(t.account_id));
-        let dre = { rec:0, ded:0, cus:0, des:0, fin:0 };
-        trans.forEach(t => {
-            const acc = cacheContas.find(a => a.code === t.account_id);
-            if(acc.nature === 'receita') dre.rec += t.amount;
-            if(acc.nature === 'deducao') dre.ded += t.amount;
-            if(acc.nature === 'custo') dre.cus += t.amount;
-            if(acc.nature === 'despesa') dre.des += t.amount;
-            if(acc.nature === 'despesa_fin') dre.fin += t.amount;
+        const marcados = Array.from(document.querySelectorAll('.dre-ck:checked')).map(cb => cb.value);
+        let rTot = 0, cTot = 0, resumo = {}, html = "";
+
+        res.documents.filter(d => d.date >= ini && d.date <= fim && (uni === 'Todas' || d.unit === uni) && marcados.includes(d.account_id)).forEach(d => {
+            const acc = cacheAcc[d.account_id];
+            if(!acc || acc.nature === 'ativo') return;
+            if(!resumo[d.account_id]) resumo[d.account_id] = { d: acc.description, v: 0, n: acc.nature };
+            resumo[d.account_id].v += d.amount;
         });
-        const rl = dre.rec - dre.ded, rb = rl - dre.cus, ebit = rb - dre.des, liq = ebit - dre.fin;
-        document.getElementById('dre-tabela').innerHTML = `
-            <table>
-                <tr style="font-weight:800"><td>(=) RECEITA BRUTA</td><td align="right">R$ ${dre.rec.toLocaleString()}</td></tr>
-                <tr style="color:var(--danger)"><td>(-) DEDUÇÕES</td><td align="right">R$ (${dre.ded.toLocaleString()})</td></tr>
-                <tr style="background:#f8fafc"><td>(=) RECEITA LÍQUIDA</td><td align="right">R$ ${rl.toLocaleString()}</td></tr>
-                <tr style="color:var(--danger)"><td>(-) CUSTOS INDUSTRIAIS</td><td align="right">R$ (${dre.cus.toLocaleString()})</td></tr>
-                <tr style="background:#f0fdf4"><td>(=) RESULTADO BRUTO</td><td align="right">R$ ${rb.toLocaleString()}</td></tr>
-                <tr style="color:var(--warning)"><td>(-) DESPESAS OPERACIONAIS</td><td align="right">R$ (${dre.des.toLocaleString()})</td></tr>
-                <tr style="background:#eff6ff"><td>(=) EBITDA</td><td align="right">R$ ${ebit.toLocaleString()}</td></tr>
-                <tr style="color:var(--danger)"><td>(-) DESPESAS FINANCEIRAS</td><td align="right">R$ (${dre.fin.toLocaleString()})</td></tr>
-                <tr style="background:var(--dark); color:white; font-size:16px"><td>(=) RESULTADO LÍQUIDO</td><td align="right">R$ ${liq.toLocaleString()}</td></tr>
-            </table>`;
-        if(charts.dre) charts.dre.destroy();
-        charts.dre = new Chart(document.getElementById('chartDRE'), {
-            type: 'doughnut',
-            data: { labels: ['Liq','Cust','Desp','Fin'], datasets: [{ data:[liq, dre.cus, dre.des, dre.fin], backgroundColor: ['#00a859','#ef4444','#f59e0b','#3b82f6'] }] }
+
+        html += `<tr style="font-weight:bold; background:#f1f5f9"><td>(+) RECEITAS OPERACIONAIS</td><td style="text-align:right">---</td></tr>`;
+        Object.values(resumo).filter(x => x.n === 'recebimento').forEach(x => { rTot += x.v; html += `<tr><td style="padding-left:25px">${x.d}</td><td style="text-align:right">R$ ${x.v.toLocaleString()}</td></tr>`; });
+        html += `<tr style="font-weight:bold; background:#f1f5f9"><td>(-) CUSTOS E ESTOQUES</td><td style="text-align:right">---</td></tr>`;
+        Object.values(resumo).filter(x => x.n === 'custo' || x.n === 'estoque').forEach(x => { cTot += x.v; html += `<tr><td style="padding-left:25px">${x.d}</td><td style="text-align:right; color:var(--danger)">R$ (${x.v.toLocaleString()})</td></tr>`; });
+        html += `<tr style="background:var(--dark); color:white; font-weight:bold"><td>RESULTADO DO EXERCÍCIO</td><td style="text-align:right">R$ ${(rTot - cTot).toLocaleString()}</td></tr>`;
+        document.getElementById('dre-corpo').innerHTML = html;
+
+        if(chartDRE) chartDRE.destroy();
+        chartDRE = new Chart(document.getElementById('chartDRE'), { 
+            type: 'doughnut', 
+            data: { labels: ['Receitas','Custos/Estoque'], datasets:[{data:[rTot, cTot], backgroundColor:['#22c55e','#ef4444']}] },
+            options: { plugins: { 
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: (ctx) => {
+                    const sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    const perc = sum > 0 ? ((ctx.raw / sum) * 100).toFixed(1) : 0;
+                    return `${ctx.label}: R$ ${ctx.raw.toLocaleString()} (${perc}%)`;
+                }}}
+            }}
         });
+        document.getElementById('dre-opt').classList.remove('show');
     }
 
-    async function deleteLan(id) { if(confirm("Excluir?")) { await databases.deleteDocument(DB_ID, COLL_TRANS, id); loadDash(); } }
-    init();
+    async function criarPlano() { 
+        await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), { 
+            code: document.getElementById('p-codigo').value, 
+            description: document.getElementById('p-desc').value, 
+            stock_desc: document.getElementById('p-estoque').value,
+            nature: document.getElementById('p-natureza').value 
+        }); 
+        document.getElementById('formPlano').reset(); carregarContas(); 
+    }
+
+    async function criarLan() { 
+        await databases.createDocument(DB_ID, COLL_TRANS, ID.unique(), { 
+            date: document.getElementById('l-data').value, 
+            unit: document.getElementById('l-uni').value, 
+            account_id: document.getElementById('l-conta').value, 
+            description: document.getElementById('l-desc').value, 
+            stock_desc: document.getElementById('l-estoque-desc').value,
+            amount: parseFloat(document.getElementById('l-valor').value) 
+        }); 
+        document.getElementById('formLan').reset(); setDatasPadrao(); await renderLanTable(); processarDashboard(); 
+    }
+
+    function ativarEdicaoPlano(id) {
+        const tr = document.getElementById(`row-p-${id}`);
+        const code = tr.cells[0].innerText, desc = tr.cells[1].innerText, st = tr.cells[2].innerText, nat = tr.cells[3].innerText;
+        tr.classList.add('row-editing');
+        tr.innerHTML = `
+            <td><input id="ed-p-c-${id}" value="${code}" style="width:100px"></td>
+            <td><input id="ed-p-d-${id}" value="${desc}" style="width:100%"></td>
+            <td><input id="ed-p-s-${id}" value="${st}" style="width:100%"></td>
+            <td><select id="ed-p-n-${id}">
+                <option value="recebimento" ${nat=='recebimento'?'selected':''}>Recebimento</option>
+                <option value="custo" ${nat=='custo'?'selected':''}>Custo</option>
+                <option value="estoque" ${nat=='estoque'?'selected':''}>Estoque</option>
+                <option value="ativo" ${nat=='ativo'?'selected':''}>Ativo</option>
+            </select></td>
+            <td style="text-align:right"><button class="btn btn-primary" onclick="salvarEdicaoPlano('${id}')">✔</button></td>`;
+    }
+
+    async function salvarEdicaoPlano(id) {
+        const d = { 
+            code: document.getElementById(`ed-p-c-${id}`).value, 
+            description: document.getElementById(`ed-p-d-${id}`).value, 
+            stock_desc: document.getElementById(`ed-p-s-${id}`).value,
+            nature: document.getElementById(`ed-p-n-${id}`).value 
+        };
+        await databases.updateDocument(DB_ID, COLL_ACC, id, d); carregarContas();
+    }
+
+    async function renderLanTable() {
+        const res = await databases.listDocuments(DB_ID, COLL_TRANS, [Query.orderDesc('date'), Query.limit(50)]);
+        document.getElementById('l-corpo').innerHTML = res.documents.map(d => {
+            const acc = cacheAcc[d.account_id];
+            const nat = acc?.nature || 'N/A';
+            let badgeClass = 'badge-ati';
+            if(nat === 'recebimento') badgeClass = 'badge-rec';
+            else if(nat === 'custo') badgeClass = 'badge-cus';
+            else if(nat === 'estoque') badgeClass = 'badge-est';
+
+            return `<tr id="row-l-${d.$id}">
+                <td>${d.date.split('-').reverse().join('/')}</td>
+                <td>${d.unit}</td>
+                <td>${d.account_id}</td>
+                <td><span class="badge ${badgeClass}">${nat}</span></td>
+                <td>${d.description} ${d.stock_desc ? ' - ('+d.stock_desc+')' : ''}</td>
+                <td style="font-weight:bold">R$ ${d.amount.toLocaleString()}</td>
+                <td style="text-align:right">
+                    <button class="btn btn-ghost" onclick="ativarEdicaoLan('${d.$id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirDoc('${COLL_TRANS}','${d.$id}')"><i class="fas fa-trash-alt"></i></button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function ativarEdicaoLan(id) {
+        const tr = document.getElementById(`row-l-${id}`);
+        const d = tr.cells[0].innerText.split('/').reverse().join('-'), u = tr.cells[1].innerText, h = tr.cells[4].innerText, v = tr.cells[5].innerText.replace('R$ ','').replace(/\./g,'').replace(',','.');
+        tr.classList.add('row-editing');
+        tr.innerHTML = `<td colspan="7">
+            <div style="display:flex; gap:8px">
+                <input type="date" id="ed-l-dat-${id}" value="${d}">
+                <select id="ed-l-uni-${id}"><option value="Santos" ${u=='Santos'?'selected':''}>Santos</option><option value="Camaçari" ${u=='Camaçari'?'selected':''}>Camaçari</option></select>
+                <input id="ed-l-his-${id}" value="${h}" style="flex:1">
+                <input type="number" id="ed-l-val-${id}" value="${v}" style="width:110px">
+                <button class="btn btn-primary" onclick="salvarEdicaoLan('${id}')">✔</button>
+                <button class="btn btn-ghost" onclick="renderLanTable()">✖</button>
+            </div>
+        </td>`;
+    }
+
+    async function salvarEdicaoLan(id) {
+        const d = { date: document.getElementById(`ed-l-dat-${id}`).value, unit: document.getElementById(`ed-l-uni-${id}`).value, description: document.getElementById(`ed-l-his-${id}`).value, amount: parseFloat(document.getElementById(`ed-l-val-${id}`).value) };
+        await databases.updateDocument(DB_ID, COLL_TRANS, id, d); renderLanTable(); processarDashboard();
+    }
+
+    async function excluirDoc(c, id) { if(confirm("Confirmar exclusão permanente?")) { await databases.deleteDocument(DB_ID, c, id); c === COLL_ACC ? carregarContas() : renderLanTable(); processarDashboard(); } }
+    
+    function showView(v, b) { 
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active')); 
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active')); 
+        document.getElementById(v).classList.add('active'); 
+        b.classList.add('active'); 
+        if(v === 'lancamentos') renderLanTable(); 
+    }
+
+    function setDatasPadrao() { 
+        const h = new Date().toISOString().split('T')[0]; 
+        const prim = h.substring(0,8)+'01';
+        document.getElementById('dash-ini').value = prim; document.getElementById('dash-fim').value = h; 
+        document.getElementById('dre-ini').value = prim; document.getElementById('dre-fim').value = h; 
+        document.getElementById('l-data').value = h; 
+    }
+
+    window.onload = init;
 </script>
 </body>
 </html>
