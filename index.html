@@ -3,534 +3,400 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>CryoFinance Pro v11.3 – Correção Total de Erros</title>
+    <title>CryoFinance Pro - Sistema Financeiro Completo</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #00a859;
-            --dark: #0f2419;
-            --danger: #ef4444;
-            --border: #e2e8f0;
-            --bg: #f8fafc;
-            --sidebar-w: 250px;
-            --sidebar-w-mobile: 70px;
-        }
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg);
-            color: #1e293b;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-        }
-        aside {
-            width: var(--sidebar-w);
-            background: var(--dark);
-            color: white;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            transition: width 0.3s ease;
-            z-index: 10;
-        }
-        .brand {
-            padding: 25px 20px;
-            background: #0a1a12;
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: var(--primary);
-            border-bottom: 1px solid #1d402f;
-        }
-        nav { flex: 1; padding: 15px 0; }
-        .menu-item {
-            padding: 16px 20px;
-            cursor: pointer;
-            border: none;
-            background: none;
-            color: #94a3b8;
-            text-align: left;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        .menu-item i { min-width: 24px; }
-        .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
-        .menu-item.active { background: var(--primary); color: white; font-weight: 600; }
-        main { flex: 1; overflow-y: auto; padding: 20px; }
-        .view-section { display: none; }
-        .view-section.active { display: block; animation: fadeIn 0.3s ease; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        :root { --primary: #00a859; --dark: #0f2419; --danger: #ef4444; --border: #e2e8f0; --bg: #f8fafc; --sidebar-w: 250px; }
+        body { background: var(--bg); display: flex; height: 100vh; overflow: hidden; }
+        aside { width: var(--sidebar-w); background: var(--dark); color: white; display: flex; flex-direction: column; transition: all 0.3s; }
+        .brand { padding: 25px; font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid #1d402f; color: var(--primary); }
+        nav { flex: 1; padding: 10px 0; }
+        .menu-btn { width: 100%; padding: 15px 25px; border: none; background: none; color: #94a3b8; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 12px; font-size: 14px; }
+        .menu-btn i { width: 20px; }
+        .menu-btn:hover, .menu-btn.active { background: #1a3528; color: white; }
+        .menu-btn.active { border-left: 4px solid var(--primary); }
+        main { flex: 1; overflow-y: auto; padding: 25px; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            margin-bottom: 25px;
-            border: 1px solid var(--border);
-        }
-        .grid-header {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 15px;
-            align-items: flex-end;
-            margin-bottom: 20px;
-        }
-        label { display: block; font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
-        input, select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            font-size: 13px;
-            outline: none;
-            background: white;
-        }
-        .excel-filter { position: relative; width: 100%; }
-        .filter-box {
-            background: white;
-            border: 1px solid var(--border);
-            padding: 10px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 42px;
-        }
-        .filter-options {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            z-index: 1000;
-            max-height: 260px;
-            overflow-y: auto;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            margin-top: 5px;
-        }
-        .filter-options.show { display: block; }
-        .opt { padding: 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
-        .opt label { margin: 0; font-weight: normal; text-transform: none; cursor: pointer; }
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 14px 12px; background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--border); text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-        .btn {
-            padding: 8px 16px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: 0.2s;
-        }
+        h2, h3 { margin-bottom: 15px; color: #1e293b; }
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end; }
+        label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 5px; display: block; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f8fafc; text-align: left; padding: 12px; border-bottom: 2px solid var(--border); font-size: 11px; text-transform: uppercase; color: #64748b; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; font-size: 12px; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-ghost { background: transparent; color: #475569; }
-        .btn-ghost:hover { background: #f1f5f9; }
-        .dash-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            border-left: 5px solid var(--primary);
-        }
-        .stat-card span { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        .stat-card h2 { margin: 8px 0 0; font-size: 1.7rem; }
-        .row-editing { background: #f0fff4 !important; outline: 1px solid var(--primary); }
-        .badge {
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-weight: 700;
-            text-transform: uppercase;
-            display: inline-block;
-        }
-        .badge-rec { background: #dcfce7; color: #166534; }
-        .badge-cus { background: #fee2e2; color: #991b1b; }
-        .badge-ati { background: #f1f5f9; color: #475569; }
-        .badge-est { background: #e0f2fe; color: #0369a1; }
-        .toast-msg {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #1e293b;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 40px;
-            font-size: 13px;
-            z-index: 9999;
-            animation: fadeOut 3s forwards;
-        }
-        @keyframes fadeOut {
-            0% { opacity: 1; transform: translateY(0); }
-            70% { opacity: 1; }
-            100% { opacity: 0; visibility: hidden; }
-        }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 11px; }
+        .status { padding: 4px 8px; border-radius: 20px; font-size: 10px; font-weight: bold; display: inline-block; }
+        .status-recebimento { background: #dcfce7; color: #166534; }
+        .status-custo { background: #fee2e2; color: #991b1b; }
+        .status-estoque { background: #e0f2fe; color: #0369a1; }
+        .status-ativo { background: #f1f5f9; color: #475569; }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 16px; border-left: 5px solid var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .stat-card h3 { font-size: 12px; color: #64748b; margin-bottom: 5px; }
+        .stat-card .value { font-size: 28px; font-weight: 800; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 40px; font-size: 13px; z-index: 9999; animation: fadeOut 3s forwards; }
+        @keyframes fadeOut { 0% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+        #loader { position: fixed; top: 0; left: 0; width: 0; height: 3px; background: var(--primary); z-index: 1000; transition: 0.3s; }
         @media (max-width: 768px) {
-            aside { width: var(--sidebar-w-mobile); }
-            .brand { text-align: center; padding: 20px 0; font-size: 1rem; }
-            .menu-item span { display: none; }
-            .menu-item i { margin: 0 auto; font-size: 1.3rem; }
-            .menu-item { justify-content: center; padding: 16px 0; }
+            aside { width: 70px; }
+            .brand { text-align: center; font-size: 0; padding: 20px 0; }
+            .brand:before { content: "CRYO"; font-size: 1rem; }
+            .menu-btn span { display: none; }
+            .menu-btn i { margin: 0 auto; }
             main { padding: 15px; }
-            .grid-header { grid-template-columns: 1fr; }
         }
-        .error-box {
-            background: #fee2e2;
-            border-left: 4px solid var(--danger);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
+        .table-responsive { overflow-x: auto; }
     </style>
 </head>
 <body>
-
+<div id="loader"></div>
 <aside>
-    <div class="brand">CRYO</div>
+    <div class="brand">CRYO FINANCE</div>
     <nav>
-        <button class="menu-item active" onclick="showView('dashboard', this)"><i class="fas fa-chart-line"></i><span>Dashboard</span></button>
-        <button class="menu-item" onclick="showView('plano', this)"><i class="fas fa-list-ul"></i><span>Plano de Contas</span></button>
-        <button class="menu-item" onclick="showView('lancamentos', this)"><i class="fas fa-exchange-alt"></i><span>Lançamentos</span></button>
-        <button class="menu-item" onclick="showView('dre', this)"><i class="fas fa-file-invoice-dollar"></i><span>DRE</span></button>
+        <button class="menu-btn active" onclick="navTo('view-dash')"><i class="fas fa-chart-line"></i><span> Dashboard</span></button>
+        <button class="menu-btn" onclick="navTo('view-plano')"><i class="fas fa-sitemap"></i><span> Plano de Contas</span></button>
+        <button class="menu-btn" onclick="navTo('view-lan')"><i class="fas fa-coins"></i><span> Lançamentos</span></button>
+        <button class="menu-btn" onclick="navTo('view-dre')"><i class="fas fa-file-invoice"></i><span> DRE</span></button>
     </nav>
 </aside>
-
 <main>
-    <section id="dashboard" class="view-section active">
-        <div class="card">
-            <div class="grid-header">
-                <div><label>Unidade</label><select id="dash-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select></div>
-                <div class="excel-filter">
-                    <label>Filtro de Contas</label>
-                    <div class="filter-box" onclick="toggleDropdown('dash-opt')"><span id="dash-sel-txt">Todas</span><i class="fas fa-chevron-down"></i></div>
-                    <div id="dash-opt" class="filter-options"><div class="opt"><b><input type="checkbox" id="dash-all" checked onchange="toggleAll('dash')"> Selecionar Todas</b></div><div id="dash-list"></div></div>
-                </div>
-                <div><label>Início</label><input type="date" id="dash-ini"></div><div><label>Fim</label><input type="date" id="dash-fim"></div>
-                <button class="btn btn-primary" onclick="processarDashboard()"><i class="fas fa-sync"></i> Atualizar</button>
-            </div>
-        </div>
-        <div id="dash-cards" class="dash-grid"></div>
-        <div class="card"><h3>Visão Consolidada</h3><canvas id="chartGeral" height="100"></canvas></div>
-        <div class="card"><h4>Resultado por Unidade</h4><canvas id="chartUnidades" height="150"></canvas></div>
+    <!-- Dashboard -->
+    <section id="view-dash" class="view active">
+        <h2>Dashboard Financeiro</h2>
+        <div class="dash-grid" id="dash-stats"></div>
+        <div class="card"><canvas id="chartDash" height="100"></canvas></div>
     </section>
 
-    <section id="plano" class="view-section">
+    <!-- Plano de Contas -->
+    <section id="view-plano" class="view">
+        <div style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <h2>Plano de Contas</h2>
+            <button class="btn btn-primary" onclick="seedPlanoDeContas()"><i class="fas fa-database"></i> Carregar Padrão</button>
+        </div>
         <div class="card">
-            <form id="formPlano" class="grid-header" onsubmit="event.preventDefault(); criarPlano();">
-                <input type="text" id="p-codigo" placeholder="Código (Ex: 3.1.1.01)" required>
-                <input type="text" id="p-desc" placeholder="Descrição da Conta" required>
-                <input type="text" id="p-estoque" placeholder="Descrição Estoque (opcional)">
-                <select id="p-natureza">
-                    <option value="recebimento">Recebimento (+)</option><option value="custo">Custo (-)</option>
-                    <option value="estoque">Estoque (Custo)</option><option value="ativo">Ativo</option>
-                </select>
-                <button type="submit" class="btn btn-primary">Adicionar Conta</button>
+            <form id="form-conta" class="grid-form" onsubmit="event.preventDefault(); criarConta();">
+                <div><label>Código</label><input type="text" id="p-codigo" placeholder="Ex: 3.1.1.01" required></div>
+                <div><label>Descrição</label><input type="text" id="p-desc" placeholder="Nome da conta" required></div>
+                <div><label>Natureza</label><select id="p-natureza"><option value="recebimento">Recebimento</option><option value="custo">Custo</option><option value="estoque">Estoque</option><option value="ativo">Ativo</option></select></div>
+                <div><button type="submit" class="btn btn-primary">Adicionar Conta</button></div>
             </form>
         </div>
-        <div class="card"><div class="table-responsive">\n<table id="tabela-plano"><thead><tr><th>CÓDIGO</th><th>DESCRIÇÃO</th><th>ESTOQUE</th><th>NATUREZA</th><th>AÇÕES</th></tr></thead><tbody id="p-corpo"></tbody></table></div></div>
+        <div class="card"><div class="table-responsive"><table><thead><tr><th>Código</th><th>Descrição</th><th>Natureza</th><th>Ações</th></tr></thead><tbody id="lista-contas"></tbody></table></div></div>
     </section>
 
-    <section id="lancamentos" class="view-section">
+    <!-- Lançamentos -->
+    <section id="view-lan" class="view">
+        <h2>Novo Lançamento</h2>
         <div class="card">
-            <form id="formLan" class="grid-header" onsubmit="event.preventDefault(); criarLan();">
-                <input type="date" id="l-data" required>
-                <select id="l-uni"><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select>
-                <select id="l-conta" required><option value="">Carregando contas...</option></select>
-                <input type="text" id="l-desc" placeholder="Histórico / Referência" required>
-                <input type="number" step="0.01" id="l-valor" placeholder="R$ 0,00" required>
-                <button type="submit" class="btn btn-primary">Salvar Lançamento</button>
+            <form id="form-lan" class="grid-form">
+                <div><label>Data</label><input type="date" id="l-data" required></div>
+                <div><label>Unidade</label><select id="l-uni"><option>Santos</option><option>Camaçari</option></select></div>
+                <div><label>Conta</label><select id="l-conta" required></select></div>
+                <div><label>Descrição</label><input type="text" id="l-desc" required></div>
+                <div><label>Valor R$</label><input type="number" step="0.01" id="l-valor" required></div>
+                <div><button type="submit" class="btn btn-primary">Salvar Lançamento</button></div>
             </form>
         </div>
-        <div class="card"><div class="table-responsive"><table><thead><tr><th>DATA</th><th>UNIDADE</th><th>CONTA</th><th>TIPO</th><th>HISTÓRICO</th><th>VALOR</th><th>AÇÕES</th></tr></thead><tbody id="l-corpo"><tr><td colspan="7">Nenhum lançamento encontrado</td></tr></tbody></table></div></div>
+        <div class="card">
+            <h3>Movimentações Recentes</h3>
+            <div class="table-responsive"><table id="tab-lan"><thead><tr><th>Data</th><th>Conta</th><th>Descrição</th><th>Valor</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+        </div>
     </section>
 
-    <section id="dre" class="view-section">
+    <!-- DRE -->
+    <section id="view-dre" class="view">
+        <h2>Demonstrativo de Resultados</h2>
         <div class="card">
-            <div class="grid-header">
-                <div><label>Unidade</label><select id="dre-uni"><option value="Todas">Todas</option><option value="Santos">Santos</option><option value="Camaçari">Camaçari</option></select></div>
-                <div class="excel-filter"><label>Filtro Contas DRE</label><div class="filter-box" onclick="toggleDropdown('dre-opt')"><span id="dre-sel-txt">Todas</span><i class="fas fa-chevron-down"></i></div><div id="dre-opt" class="filter-options"><div class="opt"><b><input type="checkbox" id="dre-all" checked onchange="toggleAll('dre')"> Selecionar Todas</b></div><div id="dre-list"></div></div></div>
-                <div><label>Início</label><input type="date" id="dre-ini"></div><div><label>Fim</label><input type="date" id="dre-fim"></div>
-                <button class="btn btn-primary" onclick="gerarDRE()"><i class="fas fa-chart-pie"></i> Gerar DRE</button>
+            <div class="grid-form">
+                <div><label>Unidade</label><select id="dre-uni"><option value="Todas">Todas</option><option>Santos</option><option>Camaçari</option></select></div>
+                <div><label>Data Início</label><input type="date" id="dre-ini"></div>
+                <div><label>Data Fim</label><input type="date" id="dre-fim"></div>
+                <div><button class="btn btn-primary" onclick="gerarDRE()">Gerar DRE</button></div>
             </div>
         </div>
-        <div class="card"><div class="table-responsive"><table><thead><tr><th>ESTRUTURA DRE</th><th>VALOR (R$)</th></tr></thead><tbody id="dre-corpo"><tr><td colspan="2">Selecione filtros e clique em Gerar DRE</td></tr></tbody></table></div></div>
-        <div class="card"><canvas id="chartDRE" height="200"></canvas></div>
+        <div class="card"><div class="table-responsive"><table id="dre-table"><thead><tr><th>Estrutura DRE</th><th>Valor (R$)</th></tr></thead><tbody id="dre-corpo"><tr><td colspan="2">Selecione o período e clique em Gerar DRE</td></tr></tbody></table></div></div>
+        <div class="card"><canvas id="chartDRE" height="180"></canvas></div>
     </section>
 </main>
 
 <script>
-    const { Client, Databases, ID, Query } = Appwrite;
-    const client = new Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setProject('69f35a44003278bff900');
-    const databases = new Databases(client);
-    const DB_ID = '69f0c5c503918981596';
-    const COLL_ACC = 'accounts';
-    const COLL_MOV = 'movimentacoes';
+// ==================== CONFIGURAÇÃO ====================
+const { Client, Databases, ID, Query } = Appwrite;
+const client = new Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setProject('69f35a44003278bff900');
+const db = new Databases(client);
+const DB_ID = '69f0c5c503918981596';
+const COLL_ACC = 'accounts';
+const COLL_MOV = 'movimentacoes';
 
-    let cacheAcc = {};
-    let chartGeral = null, chartUni = null, chartDRE = null;
+let cacheAcc = [];
+let chartDash = null, chartDRE = null;
+let useAppwrite = true;  // fallback automático para localStorage
 
-    // === PLANO DE CONTAS COMPLETO (resumido para economizar espaço, mas completo na versão final) ===
-    // Na prática, você deve incluir o array completo de 150+ contas. Por questões de legibilidade, colocarei apenas as contas essenciais.
-    // Para o teste, vou usar um conjunto reduzido, mas funcional. (O usuário pode adicionar mais via interface)
-    const contasBasicas = [
-        { code: "3.1.1.01", description: "Venda de Produtos", nature: "recebimento" },
-        { code: "3.1.1.03", description: "Venda de Serviços", nature: "recebimento" },
-        { code: "3.2.1.02", description: "Custos da Mão de Obra", nature: "custo" },
-        { code: "3.2.2.01", description: "Despesas Administrativas", nature: "custo" },
-        { code: "1.1.1.01", description: "Caixa Geral Cartão", nature: "ativo" }
-    ];
+// Dados locais
+let localAccounts = JSON.parse(localStorage.getItem('cryo_accounts')) || [];
+let localTransactions = JSON.parse(localStorage.getItem('cryo_transactions')) || [];
 
-    // Funções auxiliares
-    function showToast(msg, isError = false) {
-        const toast = document.createElement('div');
-        toast.className = 'toast-msg';
-        toast.style.background = isError ? '#b91c1c' : '#0f2419';
-        toast.innerText = msg;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
+// Plano padrão
+const PLANO_PADRAO = [
+    {code: "1.1.1.01", desc: "Caixa Geral Cartão", nature: "ativo"},
+    {code: "1.1.1.02", desc: "Fundo de caixa (dinheiro)", nature: "ativo"},
+    {code: "1.1.3.01", desc: "Mercadorias", nature: "estoque"},
+    {code: "1.1.3.02", desc: "Equipamentos", nature: "estoque"},
+    {code: "3.1.1.01", desc: "Venda de Produtos", nature: "recebimento"},
+    {code: "3.1.1.03", desc: "Venda de Serviços (Frotas)", nature: "recebimento"},
+    {code: "3.2.1.01", desc: "Custos dos Insumos", nature: "custo"},
+    {code: "3.2.1.02", desc: "Custos da Mão de Obra", nature: "custo"},
+    {code: "3.2.2.03", desc: "Honorários Contabilidade", nature: "custo"}
+];
 
-    function setDatasPadrao() {
-        const hoje = new Date().toISOString().split('T')[0];
-        const primeiroDia = hoje.substring(0,8)+'01';
-        ['dash-ini', 'dre-ini'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = primeiroDia; });
-        ['dash-fim', 'dre-fim'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = hoje; });
-        if(document.getElementById('l-data')) document.getElementById('l-data').value = hoje;
-    }
+// ==================== AUXILIARES ====================
+function showToast(msg, isError = false) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.background = isError ? '#b91c1c' : '#0f2419';
+    toast.innerText = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+function updateLoader(w) { document.getElementById('loader').style.width = w + '%'; }
+function navTo(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (id === 'view-dash') atualizarDashboard();
+    if (id === 'view-lan') carregarLan();
+    if (id === 'view-plano') carregarContas();
+}
 
-    function toggleDropdown(id) { const el = document.getElementById(id); if(el) el.classList.toggle('show'); }
-    function toggleAll(prefix) {
-        const allChk = document.getElementById(`${prefix}-all`);
-        if(allChk) {
-            document.querySelectorAll(`.${prefix}-ck`).forEach(cb => cb.checked = allChk.checked);
-            updateTxt(prefix);
-        }
-    }
-    function updateTxt(prefix) {
-        const cbs = document.querySelectorAll(`.${prefix}-ck`);
-        const chkCount = Array.from(cbs).filter(cb => cb.checked).length;
-        const total = cbs.length;
-        const span = document.getElementById(`${prefix}-sel-txt`);
-        if(span) span.innerText = chkCount === total ? "Todas" : `${chkCount} selecionada(s)`;
-    }
-
-    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-
-    // Carregar contas do Appwrite e popular caches/filtros
-    async function carregarContas() {
-        try {
-            const res = await databases.listDocuments(DB_ID, COLL_ACC, [Query.limit(500), Query.orderAsc('code')]);
-            cacheAcc = {};
-            const lConta = document.getElementById('l-conta');
-            const pCorpo = document.getElementById('p-corpo');
-            const dashList = document.getElementById('dash-list');
-            const dreList = document.getElementById('dre-list');
-            if(lConta) lConta.innerHTML = '<option value="">-- Selecione uma conta --</option>';
-            if(pCorpo) pCorpo.innerHTML = '';
-            if(dashList) dashList.innerHTML = '';
-            if(dreList) dreList.innerHTML = '';
-
-            if(res.documents.length === 0) {
-                // Seed do plano de contas
-                showToast("Nenhuma conta encontrada. Criando plano básico...");
-                for(const conta of contasBasicas) {
-                    await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), {
-                        code: conta.code,
-                        description: conta.description,
-                        stock_desc: "",
-                        nature: conta.nature
-                    });
-                }
-                // Recursão para recarregar após seed
-                await carregarContas();
-                return;
+// ==================== PLANO DE CONTAS ====================
+async function carregarContas() {
+    try {
+        if (useAppwrite) {
+            const res = await db.listDocuments(DB_ID, COLL_ACC, [Query.limit(500)]);
+            cacheAcc = res.documents;
+            if (cacheAcc.length === 0 && confirm("Nenhuma conta encontrada. Deseja carregar o plano padrão?")) await seedPlanoDeContas();
+        } else {
+            cacheAcc = localAccounts;
+            if (cacheAcc.length === 0 && confirm("Nenhuma conta local. Carregar padrão?")) {
+                localAccounts = PLANO_PADRAO.map((p, i) => ({ $id: i.toString(), code: p.code, description: p.desc, nature: p.nature }));
+                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+                cacheAcc = localAccounts;
             }
-
-            for(const doc of res.documents) {
-                cacheAcc[doc.code] = { ...doc, nature: doc.nature };
-                if(lConta) lConta.innerHTML += `<option value="${doc.code}">${doc.code} - ${escapeHtml(doc.description)}</option>`;
-                const optDash = `<div class="opt"><input type="checkbox" class="dash-ck" value="${doc.code}" checked onchange="updateTxt('dash')"> <label>${doc.code} - ${escapeHtml(doc.description)}</label></div>`;
-                const optDre = `<div class="opt"><input type="checkbox" class="dre-ck" value="${doc.code}" checked onchange="updateTxt('dre')"> <label>${doc.code} - ${escapeHtml(doc.description)}</label></div>`;
-                if(dashList) dashList.innerHTML += optDash;
-                if(dreList) dreList.innerHTML += optDre;
-                if(pCorpo) pCorpo.innerHTML += `<tr id="row-p-${doc.$id}">
-                    <td>${escapeHtml(doc.code)}</td><td>${escapeHtml(doc.description)}</td><td>${escapeHtml(doc.stock_desc || '')}</td>
-                    <td>${doc.nature}</td>
-                    <td><button class="btn btn-ghost" onclick="ativarEdicaoPlano('${doc.$id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirConta('${doc.$id}','${doc.code}')"><i class="fas fa-trash"></i></button></td>
-                </tr>`;
-            }
-            updateTxt('dash');
-            updateTxt('dre');
-        } catch (err) {
-            console.error("Erro ao carregar contas:", err);
-            let errorMsg = "Erro ao carregar contas: ";
-            if(err.code === 404) errorMsg += "Coleção 'accounts' não existe. Crie-a manualmente no Appwrite com atributos: code (string), description (string), stock_desc (string), nature (string).";
-            else if(err.code === 401) errorMsg += "Permissão negada. Configure permissões de leitura/escrita para 'any' na coleção accounts.";
-            else errorMsg += err.message;
-            showToast(errorMsg, true);
-            document.getElementById('p-corpo').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center">${errorMsg}</td></tr>`;
-            throw err;
         }
-    }
-
-    // Funções de CRUD do plano (simplificadas, mas funcionais)
-    async function criarPlano() {
-        const code = document.getElementById('p-codigo').value.trim();
-        const desc = document.getElementById('p-desc').value.trim();
-        const stock = document.getElementById('p-estoque').value.trim();
-        const nature = document.getElementById('p-natureza').value;
-        if(!code || !desc) { showToast("Código e descrição são obrigatórios", true); return; }
-        try {
-            await databases.createDocument(DB_ID, COLL_ACC, ID.unique(), { code, description: desc, stock_desc: stock, nature });
-            showToast("Conta criada com sucesso");
-            document.getElementById('formPlano').reset();
-            await carregarContas();
-        } catch(e) { showToast("Erro ao criar conta: "+e.message, true); }
-    }
-
-    async function excluirConta(id, code) {
-        const exists = await databases.listDocuments(DB_ID, COLL_MOV, [Query.equal('cat', code), Query.limit(1)]);
-        if(exists.total > 0) { showToast("Não é possível excluir: existem lançamentos vinculados", true); return; }
-        if(confirm("Excluir permanentemente esta conta?")) {
-            await databases.deleteDocument(DB_ID, COLL_ACC, id);
-            await carregarContas();
-            showToast("Conta removida");
-        }
-    }
-
-    function ativarEdicaoPlano(id) { /* mesmo código anterior, omitido por brevidade, mas essencial */ 
-        const row = document.getElementById(`row-p-${id}`);
-        const code = row.cells[0].innerText, desc = row.cells[1].innerText, stock = row.cells[2].innerText, nature = row.cells[3].innerText;
-        row.classList.add('row-editing');
-        row.innerHTML = `<td><input id="ed-p-c-${id}" value="${code}"></td><td><input id="ed-p-d-${id}" value="${desc}"></td><td><input id="ed-p-s-${id}" value="${stock}"></td>
-        <td><select id="ed-p-n-${id}"><option value="recebimento" ${nature=='recebimento'?'selected':''}>Recebimento</option><option value="custo" ${nature=='custo'?'selected':''}>Custo</option><option value="estoque" ${nature=='estoque'?'selected':''}>Estoque</option><option value="ativo" ${nature=='ativo'?'selected':''}>Ativo</option></select></td>
-        <td><button class="btn btn-primary" onclick="salvarEdicaoPlano('${id}')">✔</button></td>`;
-    }
-    async function salvarEdicaoPlano(id) {
-        const newCode = document.getElementById(`ed-p-c-${id}`).value;
-        const newDesc = document.getElementById(`ed-p-d-${id}`).value;
-        const newStock = document.getElementById(`ed-p-s-${id}`).value;
-        const newNature = document.getElementById(`ed-p-n-${id}`).value;
-        await databases.updateDocument(DB_ID, COLL_ACC, id, { code: newCode, description: newDesc, stock_desc: newStock, nature: newNature });
+        renderizarContas();
+        popularSelectContas();
+    } catch (err) {
+        console.warn("Appwrite falhou, usando localStorage", err);
+        useAppwrite = false;
         await carregarContas();
-        showToast("Conta atualizada");
     }
-
-    // LANÇAMENTOS
-    async function criarLan() {
-        if(Object.keys(cacheAcc).length === 0) { showToast("Aguardando carregamento do plano de contas", true); return; }
-        const data = document.getElementById('l-data').value;
-        const unidade = document.getElementById('l-uni').value;
-        const contaCode = document.getElementById('l-conta').value;
-        const desc = document.getElementById('l-desc').value.trim();
-        let valor = parseFloat(document.getElementById('l-valor').value);
-        if(!data || !contaCode || !desc || isNaN(valor) || valor <= 0) { showToast("Preencha todos os campos corretamente", true); return; }
-        const account = cacheAcc[contaCode];
-        if(!account) { showToast("Conta inválida", true); return; }
-        const docMov = {
-            data, desc, tipo: account.nature, cat: account.code, nomecat: account.description,
-            cod: account.code, descricao: desc, contaDebito: (account.nature === 'recebimento') ? account.code : '',
-            contaCredito: (account.nature === 'custo') ? account.code : '', valor, unidade
-        };
-        await databases.createDocument(DB_ID, COLL_MOV, ID.unique(), docMov);
-        showToast("Lançamento salvo!");
-        document.getElementById('formLan').reset(); setDatasPadrao();
-        await renderLanTable(); processarDashboard();
+}
+function renderizarContas() {
+    const tbody = document.getElementById('lista-contas');
+    tbody.innerHTML = cacheAcc.map(acc => `
+        <tr>
+            <td>${acc.code}</td><td>${acc.description}</td>
+            <td><span class="status status-${acc.nature}">${acc.nature}</span></td>
+            <td><button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}')"><i class="fas fa-trash"></i></button></td>
+        </tr>
+    `).join('');
+}
+function popularSelectContas() {
+    const select = document.getElementById('l-conta');
+    select.innerHTML = cacheAcc.map(acc => `<option value="${acc.code}">${acc.code} - ${acc.description}</option>`).join('');
+}
+async function criarConta() {
+    const code = document.getElementById('p-codigo').value.trim();
+    const desc = document.getElementById('p-desc').value.trim();
+    const nature = document.getElementById('p-natureza').value;
+    if (!code || !desc) { showToast("Preencha código e descrição", true); return; }
+    if (useAppwrite) {
+        await db.createDocument(DB_ID, COLL_ACC, ID.unique(), { code, description: desc, nature });
+    } else {
+        localAccounts.push({ $id: Date.now().toString(), code, description: desc, nature });
+        localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
     }
-
-    async function renderLanTable() {
-        try {
-            const res = await databases.listDocuments(DB_ID, COLL_MOV, [Query.orderDesc('data'), Query.limit(200)]);
-            const tbody = document.getElementById('l-corpo');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            if(res.documents.length === 0) { tbody.innerHTML = '<tr><td colspan="7">Nenhum lançamento encontrado</td></tr>'; return; }
-            for(const doc of res.documents) {
-                const acc = cacheAcc[doc.cat] || { nature: doc.tipo };
-                const badgeClass = acc.nature === 'recebimento' ? 'badge-rec' : (acc.nature === 'custo' || acc.nature === 'estoque') ? 'badge-cus' : 'badge-ati';
-                tbody.innerHTML += `<tr id="row-l-${doc.$id}">
-                    <td>${doc.data.split('-').reverse().join('/')}</td><td>${escapeHtml(doc.unidade)}</td><td>${escapeHtml(doc.cat)}</td>
-                    <td><span class="badge ${badgeClass}">${acc.nature}</span></td><td>${escapeHtml(doc.desc)}</td>
-                    <td>R$ ${doc.valor.toLocaleString('pt-BR')}</td>
-                    <td><button class="btn btn-ghost" onclick="ativarEdicaoLan('${doc.$id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-ghost" style="color:var(--danger)" onclick="excluirLan('${doc.$id}')"><i class="fas fa-trash"></i></button></td>
-                </tr>`;
-            }
-        } catch(e) { showToast("Erro ao listar lançamentos: "+e.message, true); }
+    showToast("Conta criada");
+    document.getElementById('form-conta').reset();
+    await carregarContas();
+}
+async function seedPlanoDeContas() {
+    for (const item of PLANO_PADRAO) {
+        if (useAppwrite) {
+            const exists = cacheAcc.some(a => a.code === item.code);
+            if (!exists) await db.createDocument(DB_ID, COLL_ACC, ID.unique(), { code: item.code, description: item.desc, nature: item.nature });
+        } else {
+            if (!localAccounts.some(a => a.code === item.code))
+                localAccounts.push({ $id: Date.now().toString(), code: item.code, description: item.desc, nature: item.nature });
+        }
     }
-    async function excluirLan(id) { if(confirm("Excluir este lançamento?")) { await databases.deleteDocument(DB_ID, COLL_MOV, id); await renderLanTable(); processarDashboard(); showToast("Excluído"); } }
-    function ativarEdicaoLan(id) { /* similar ao anterior, mantido */ }
-    async function salvarEdicaoLan(id) { /* similar */ }
-
-    // DASHBOARD
-    async function processarDashboard() {
-        if(Object.keys(cacheAcc).length === 0) { showToast("Plano de contas não carregado", true); return; }
-        try {
-            const res = await databases.listDocuments(DB_ID, COLL_MOV, [Query.limit(5000)]);
-            const unidadeFiltro = document.getElementById('dash-uni').value;
-            const ini = document.getElementById('dash-ini').value, fim = document.getElementById('dash-fim').value;
-            const contasSel = Array.from(document.querySelectorAll('.dash-ck:checked')).map(cb => cb.value);
-            let totals = { Santos: {r:0,c:0}, Camaçari: {r:0,c:0}, Geral: {r:0,c:0} };
-            for(const doc of res.documents) {
-                if(doc.data < ini || doc.data > fim) continue;
-                if(!contasSel.includes(doc.cat)) continue;
-                const nature = cacheAcc[doc.cat]?.nature || doc.tipo;
-                const unidade = doc.unidade || 'Santos';
-                if(nature === 'recebimento') { totals[unidade].r += doc.valor; totals.Geral.r += doc.valor; }
-                else if(nature === 'custo' || nature === 'estoque') { totals[unidade].c += doc.valor; totals.Geral.c += doc.valor; }
-            }
-            let exibeR = (unidadeFiltro==='Todas') ? totals.Geral.r : (totals[unidadeFiltro]?.r || 0);
-            let exibeC = (unidadeFiltro==='Todas') ? totals.Geral.c : (totals[unidadeFiltro]?.c || 0);
-            document.getElementById('dash-cards').innerHTML = `<div class="stat-card"><span>Receitas</span><h2 style="color:var(--primary)">R$ ${exibeR.toLocaleString('pt-BR')}</h2></div>
-            <div class="stat-card" style="border-left-color:var(--danger)"><span>Custos/Estoques</span><h2 style="color:var(--danger)">R$ ${exibeC.toLocaleString('pt-BR')}</h2></div>
-            <div class="stat-card"><span>Resultado Líquido</span><h2>R$ ${(exibeR - exibeC).toLocaleString('pt-BR')}</h2></div>`;
-            if(chartGeral) chartGeral.destroy();
-            chartGeral = new Chart(document.getElementById('chartGeral'), { type: 'bar', data: { labels: ['Receita','Custo','Resultado'], datasets: [{ label: 'Geral', data: [totals.Geral.r, totals.Geral.c, totals.Geral.r - totals.Geral.c], backgroundColor: ['#22c55e','#ef4444','#0f2419'] }] } });
-            if(chartUni) chartUni.destroy();
-            chartUni = new Chart(document.getElementById('chartUnidades'), { type: 'bar', data: { labels: ['Santos','Camaçari'], datasets: [{ label: 'Resultado Líquido', data: [totals.Santos.r - totals.Santos.c, totals.Camaçari.r - totals.Camaçari.c], backgroundColor: '#00a859' }] } });
-        } catch(e) { showToast("Erro ao processar dashboard: "+e.message, true); }
-    }
-
-    async function gerarDRE() { /* similar, mas com verificações */ }
-
-    function showView(view, btn) {
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        document.getElementById(view).classList.add('active');
-        btn.classList.add('active');
-        if(view === 'lancamentos') renderLanTable();
-        if(view === 'plano') carregarContas();
-        if(view === 'dashboard') processarDashboard();
-    }
-
-    // Inicialização
-    window.onload = async () => {
-        setDatasPadrao();
+    if (!useAppwrite) localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+    await carregarContas();
+    showToast("Plano de contas atualizado");
+}
+async function excluirConta(id, code) {
+    if (!confirm(`Excluir conta ${code}?`)) return;
+    try {
+        if (useAppwrite) {
+            const movs = await db.listDocuments(DB_ID, COLL_MOV, [Query.equal('cat', code), Query.limit(1)]);
+            if (movs.total > 0) { showToast("Conta possui lançamentos", true); return; }
+            await db.deleteDocument(DB_ID, COLL_ACC, id);
+        } else {
+            if (localTransactions.some(t => t.cat === code)) { showToast("Conta com lançamentos", true); return; }
+            localAccounts = localAccounts.filter(a => a.$id !== id);
+            localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+        }
         await carregarContas();
-        await renderLanTable();
-        processarDashboard();
+        showToast("Conta excluída");
+    } catch (err) { showToast("Erro: " + err.message, true); }
+}
+
+// ==================== LANÇAMENTOS ====================
+document.getElementById('form-lan').onsubmit = async (e) => {
+    e.preventDefault();
+    const codConta = document.getElementById('l-conta').value;
+    const conta = cacheAcc.find(a => a.code === codConta);
+    if (!conta) { showToast("Conta inválida", true); return; }
+    const payload = {
+        data: document.getElementById('l-data').value,
+        desc: document.getElementById('l-desc').value,
+        tipo: conta.nature,
+        cat: conta.code,
+        nomecat: conta.description,
+        cod: conta.code,
+        descricao: document.getElementById('l-desc').value,
+        valor: parseFloat(document.getElementById('l-valor').value),
+        unidade: document.getElementById('l-uni').value,
+        contaDebito: (conta.nature === 'recebimento') ? conta.code : '',
+        contaCredito: (conta.nature === 'custo') ? conta.code : ''
     };
+    if (!payload.data || !payload.desc || isNaN(payload.valor) || payload.valor <= 0) {
+        showToast("Preencha todos os campos corretamente", true); return;
+    }
+    updateLoader(50);
+    try {
+        if (useAppwrite) await db.createDocument(DB_ID, COLL_MOV, ID.unique(), payload);
+        else {
+            payload.$id = Date.now().toString();
+            localTransactions.unshift(payload);
+            localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
+        }
+        showToast("Lançamento salvo");
+        document.getElementById('form-lan').reset();
+        document.getElementById('l-data').value = new Date().toISOString().split('T')[0];
+        await carregarLan();
+        atualizarDashboard();
+    } catch (err) { showToast("Erro: " + err.message, true); }
+    updateLoader(100);
+};
+async function carregarLan() {
+    let transacoes = [];
+    if (useAppwrite) {
+        const res = await db.listDocuments(DB_ID, COLL_MOV, [Query.orderDesc('data'), Query.limit(100)]);
+        transacoes = res.documents;
+    } else transacoes = localTransactions;
+    const tbody = document.querySelector('#tab-lan tbody');
+    tbody.innerHTML = transacoes.map(m => `
+        <tr>
+            <td>${m.data}</td><td>${m.nomecat}</td><td>${m.desc}</td>
+            <td style="color:${m.tipo === 'recebimento' ? 'green' : 'red'}">R$ ${m.valor.toFixed(2)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="excluirLan('${m.$id}')"><i class="fas fa-trash"></i></button></td>
+        </tr>
+    `).join('');
+}
+async function excluirLan(id) {
+    if (!confirm("Excluir lançamento?")) return;
+    if (useAppwrite) await db.deleteDocument(DB_ID, COLL_MOV, id);
+    else {
+        localTransactions = localTransactions.filter(t => t.$id !== id);
+        localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
+    }
+    await carregarLan();
+    atualizarDashboard();
+    showToast("Excluído");
+}
+
+// ==================== DASHBOARD ====================
+async function atualizarDashboard() {
+    let transacoes = [];
+    if (useAppwrite) {
+        const res = await db.listDocuments(DB_ID, COLL_MOV, [Query.limit(5000)]);
+        transacoes = res.documents;
+    } else transacoes = localTransactions;
+    let receitas = 0, despesas = 0;
+    transacoes.forEach(t => {
+        if (t.tipo === 'recebimento') receitas += t.valor;
+        else if (t.tipo === 'custo' || t.tipo === 'estoque') despesas += t.valor;
+    });
+    document.getElementById('dash-stats').innerHTML = `
+        <div class="stat-card"><h3>Receitas</h3><div class="value">R$ ${receitas.toFixed(2)}</div></div>
+        <div class="stat-card"><h3>Despesas</h3><div class="value">R$ ${despesas.toFixed(2)}</div></div>
+        <div class="stat-card"><h3>Resultado</h3><div class="value">R$ ${(receitas - despesas).toFixed(2)}</div></div>
+    `;
+    const ctx = document.getElementById('chartDash').getContext('2d');
+    if (chartDash) chartDash.destroy();
+    chartDash = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: ['Receitas', 'Despesas'], datasets: [{ label: 'R$', data: [receitas, despesas], backgroundColor: ['#22c55e', '#ef4444'], borderRadius: 8 }] }
+    });
+}
+
+// ==================== DRE ====================
+async function gerarDRE() {
+    let transacoes = [];
+    if (useAppwrite) {
+        const res = await db.listDocuments(DB_ID, COLL_MOV, [Query.limit(5000)]);
+        transacoes = res.documents;
+    } else transacoes = localTransactions;
+    const uni = document.getElementById('dre-uni').value;
+    const ini = document.getElementById('dre-ini').value || '2000-01-01';
+    const fim = document.getElementById('dre-fim').value || '2099-12-31';
+    let receitas = 0, custos = 0, grupos = {};
+    for (let t of transacoes) {
+        if (t.data < ini || t.data > fim) continue;
+        if (uni !== 'Todas' && t.unidade !== uni) continue;
+        if (t.tipo === 'recebimento') receitas += t.valor;
+        else if (t.tipo === 'custo' || t.tipo === 'estoque') custos += t.valor;
+        if (!grupos[t.cat]) grupos[t.cat] = { desc: t.nomecat, valor: 0, tipo: t.tipo };
+        grupos[t.cat].valor += t.valor;
+    }
+    let html = `<tr style="background:#f1f5f9; font-weight:bold"><td>(+) RECEITAS OPERACIONAIS</td><td>---</td></tr>`;
+    for (let g of Object.values(grupos)) if (g.tipo === 'recebimento') html += `<tr><td style="padding-left:20px">${g.desc}</td><td>R$ ${g.valor.toFixed(2)}</td></tr>`;
+    html += `<tr style="background:#f1f5f9; font-weight:bold"><td>(-) CUSTOS E ESTOQUES</td><td>---</td></tr>`;
+    for (let g of Object.values(grupos)) if (g.tipo === 'custo' || g.tipo === 'estoque') html += `<tr><td style="padding-left:20px">${g.desc}</td><td style="color:var(--danger)">R$ ${g.valor.toFixed(2)}</td></tr>`;
+    html += `<tr style="background:var(--dark); color:white; font-weight:bold"><td>RESULTADO DO EXERCÍCIO</td><td>R$ ${(receitas - custos).toFixed(2)}</td></tr>`;
+    document.getElementById('dre-corpo').innerHTML = html;
+    if (chartDRE) chartDRE.destroy();
+    chartDRE = new Chart(document.getElementById('chartDRE'), {
+        type: 'doughnut',
+        data: { labels: ['Receitas', 'Custos/Estoque'], datasets: [{ data: [receitas, custos], backgroundColor: ['#22c55e', '#ef4444'] }] }
+    });
+}
+
+// ==================== INICIALIZAÇÃO ====================
+async function init() {
+    setDatasPadrao();
+    await carregarContas();
+    await carregarLan();
+    await atualizarDashboard();
+}
+function setDatasPadrao() {
+    const hoje = new Date().toISOString().split('T')[0];
+    const primeiroDia = hoje.substring(0,8)+'01';
+    ['l-data', 'dre-ini', 'dash-ini'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = primeiroDia; });
+    if(document.getElementById('dre-fim')) document.getElementById('dre-fim').value = hoje;
+}
+init();
 </script>
 </body>
 </html>
