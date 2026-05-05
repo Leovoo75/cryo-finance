@@ -29,17 +29,18 @@
         input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background: #f8fafc; text-align: left; padding: 12px; border-bottom: 2px solid var(--border); font-size: 11px; text-transform: uppercase; color: #64748b; }
-        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
         .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; font-size: 12px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-sm { padding: 5px 10px; font-size: 11px; }
+        .btn-warning { background: #f59e0b; color: white; }
         .status { padding: 4px 8px; border-radius: 20px; font-size: 10px; font-weight: bold; display: inline-block; }
         .status-recebimento { background: #dcfce7; color: #166534; }
         .status-custo { background: #fee2e2; color: #991b1b; }
         .status-estoque { background: #e0f2fe; color: #0369a1; }
         .status-ativo { background: #f1f5f9; color: #475569; }
-        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 20px; border-radius: 16px; border-left: 5px solid var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .stat-card h3 { font-size: 12px; color: #64748b; margin-bottom: 5px; }
         .stat-card .value { font-size: 28px; font-weight: 800; }
@@ -55,6 +56,9 @@
             main { padding: 15px; }
         }
         .table-responsive { overflow-x: auto; }
+        .filters-bar { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
+        .filters-bar > div { flex: 1; min-width: 150px; }
+        .edit-mode input, .edit-mode select { margin: 2px 0; padding: 6px; }
     </style>
 </head>
 <body>
@@ -72,15 +76,27 @@
     <!-- Dashboard -->
     <section id="view-dash" class="view active">
         <h2>Dashboard Financeiro</h2>
+        <div class="card">
+            <div class="filters-bar">
+                <div><label>Unidade</label><select id="dash-uni"><option value="Todas">Todas</option><option>Santos</option><option>Camaçari</option></select></div>
+                <div><label>Início</label><input type="date" id="dash-ini"></div>
+                <div><label>Fim</label><input type="date" id="dash-fim"></div>
+                <div><button class="btn btn-primary" onclick="atualizarDashboard()"><i class="fas fa-sync"></i> Atualizar</button></div>
+            </div>
+        </div>
         <div class="dash-grid" id="dash-stats"></div>
         <div class="card"><canvas id="chartDash" height="100"></canvas></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="card"><h3>Resultado: Santos</h3><canvas id="chartSantos" height="150"></canvas></div>
+            <div class="card"><h3>Resultado: Camaçari</h3><canvas id="chartCamacari" height="150"></canvas></div>
+        </div>
     </section>
 
     <!-- Plano de Contas -->
     <section id="view-plano" class="view">
         <div style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <h2>Plano de Contas</h2>
-            <button class="btn btn-primary" onclick="seedPlanoDeContas()"><i class="fas fa-database"></i> Carregar Padrão</button>
+            <button class="btn btn-primary" onclick="seedPlanoCompleto()"><i class="fas fa-database"></i> Carregar Plano Completo</button>
         </div>
         <div class="card">
             <form id="form-conta" class="grid-form" onsubmit="event.preventDefault(); criarConta();">
@@ -90,14 +106,14 @@
                 <div><button type="submit" class="btn btn-primary">Adicionar Conta</button></div>
             </form>
         </div>
-        <div class="card"><div class="table-responsive"><table><thead><tr><th>Código</th><th>Descrição</th><th>Natureza</th><th>Ações</th></tr></thead><tbody id="lista-contas"></tbody></table></div></div>
+        <div class="card"><div class="table-responsive"><table id="tabela-contas"><thead><tr><th>Código</th><th>Descrição</th><th>Natureza</th><th>Ações</th></tr></thead><tbody id="lista-contas"></tbody></table></div></div>
     </section>
 
     <!-- Lançamentos -->
     <section id="view-lan" class="view">
-        <h2>Novo Lançamento</h2>
+        <h2>Lançamentos</h2>
         <div class="card">
-            <form id="form-lan" class="grid-form">
+            <form id="form-lan" class="grid-form" onsubmit="event.preventDefault(); criarLan();">
                 <div><label>Data</label><input type="date" id="l-data" required></div>
                 <div><label>Unidade</label><select id="l-uni"><option>Santos</option><option>Camaçari</option></select></div>
                 <div><label>Conta</label><select id="l-conta" required></select></div>
@@ -107,8 +123,14 @@
             </form>
         </div>
         <div class="card">
-            <h3>Movimentações Recentes</h3>
-            <div class="table-responsive"><table id="tab-lan"><thead><tr><th>Data</th><th>Conta</th><th>Descrição</th><th>Valor</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+            <div class="filters-bar">
+                <div><label>Data Início</label><input type="date" id="filter-data-ini"></div>
+                <div><label>Data Fim</label><input type="date" id="filter-data-fim"></div>
+                <div><label>Conta</label><select id="filter-conta"><option value="">Todas</option></select></div>
+                <div><button class="btn btn-primary" onclick="carregarLan()"><i class="fas fa-search"></i> Filtrar</button></div>
+            </div>
+            <h3>Movimentações</h3>
+            <div class="table-responsive"><table id="tab-lan"><thead><tr><th>Data</th><th>Unidade</th><th>Conta</th><th>Descrição</th><th>Valor</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
         </div>
     </section>
 
@@ -116,7 +138,7 @@
     <section id="view-dre" class="view">
         <h2>Demonstrativo de Resultados</h2>
         <div class="card">
-            <div class="grid-form">
+            <div class="filters-bar">
                 <div><label>Unidade</label><select id="dre-uni"><option value="Todas">Todas</option><option>Santos</option><option>Camaçari</option></select></div>
                 <div><label>Data Início</label><input type="date" id="dre-ini"></div>
                 <div><label>Data Fim</label><input type="date" id="dre-fim"></div>
@@ -138,27 +160,130 @@ const COLL_ACC = 'accounts';
 const COLL_MOV = 'movimentacoes';
 
 let cacheAcc = [];
-let chartDash = null, chartDRE = null;
-let useAppwrite = true;  // fallback automático para localStorage
+let chartDash = null, chartSantos = null, chartCamacari = null, chartDRE = null;
+let useAppwrite = true;
 
-// Dados locais
+// Fallback localStorage
 let localAccounts = JSON.parse(localStorage.getItem('cryo_accounts')) || [];
 let localTransactions = JSON.parse(localStorage.getItem('cryo_transactions')) || [];
 
-// Plano padrão
-const PLANO_PADRAO = [
+// ==================== PLANO DE CONTAS COMPLETO (mais de 100 contas) ====================
+const PLANO_COMPLETO = [
+    {code: "1", desc: "ATIVO", nature: "ativo"},
+    {code: "1.1", desc: "ATIVO CIRCULANTE", nature: "ativo"},
+    {code: "1.1.1", desc: "Caixa e Equivalentes de Caixa", nature: "ativo"},
     {code: "1.1.1.01", desc: "Caixa Geral Cartão", nature: "ativo"},
-    {code: "1.1.1.02", desc: "Fundo de caixa (dinheiro)", nature: "ativo"},
+    {code: "1.1.1.02", desc: "Fundo de caixa (dinheiro em espécie)", nature: "ativo"},
+    {code: "1.1.2", desc: "Contas a Receber - Pendentes fora fluxo de caixa", nature: "ativo"},
+    {code: "1.1.2.01", desc: "Valor Recebido da Mechatronics", nature: "recebimento"},
+    {code: "1.1.2.02", desc: "Valor Recebido de Camaçari", nature: "recebimento"},
+    {code: "1.1.2.03", desc: "Valor Pago a Mechatronics", nature: "custo"},
+    {code: "1.1.2.04", desc: "Valor Pago a Camaçari", nature: "custo"},
+    {code: "1.1.3", desc: "Estoque (controle independente)", nature: "estoque"},
     {code: "1.1.3.01", desc: "Mercadorias", nature: "estoque"},
     {code: "1.1.3.02", desc: "Equipamentos", nature: "estoque"},
+    {code: "1.1.3.03", desc: "Insumos", nature: "estoque"},
+    {code: "1.1.4", desc: "Outros Créditos", nature: "ativo"},
+    {code: "1.1.4.01", desc: "Títulos a Receber", nature: "ativo"},
+    {code: "1.1.4.02", desc: "Impostos a Recuperar", nature: "ativo"},
+    {code: "1.1.4.03", desc: "Outros Valores a Receber", nature: "ativo"},
+    {code: "1.3", desc: "ATIVO NÃO CIRCULANTE", nature: "ativo"},
+    {code: "1.3.1", desc: "Realizável a Longo Prazo", nature: "ativo"},
+    {code: "1.3.1.01", desc: "Contas a Receber", nature: "ativo"},
+    {code: "1.3.1.02", desc: "(-) Perdas Estimadas com Créditos de Liquidação Duvidosa", nature: "ativo"},
+    {code: "1.3.2", desc: "Investimentos", nature: "ativo"},
+    {code: "1.3.2.01", desc: "Participações Societárias", nature: "ativo"},
+    {code: "1.3.2.02", desc: "Outros Investimentos", nature: "ativo"},
+    {code: "1.3.3", desc: "Imobilizado (controle independente)", nature: "ativo"},
+    {code: "1.3.3.01", desc: "Terrenos", nature: "ativo"},
+    {code: "1.3.3.02", desc: "Edificações", nature: "ativo"},
+    {code: "1.3.3.03", desc: "Máquinas e Equipamentos", nature: "ativo"},
+    {code: "1.3.3.04", desc: "Veículos", nature: "ativo"},
+    {code: "1.3.3.05", desc: "Móveis e Utensílios", nature: "ativo"},
+    {code: "1.3.3.06", desc: "(-) Depreciação Acumulada", nature: "ativo"},
+    {code: "1.3.4", desc: "Intangível", nature: "ativo"},
+    {code: "1.3.4.01", desc: "Softwares", nature: "ativo"},
+    {code: "2", desc: "PASSIVO E PATRIMÔNIO LÍQUIDO", nature: "ativo"},
+    {code: "2.1", desc: "PASSIVO CIRCULANTE (contas a pagar)", nature: "ativo"},
+    {code: "2.1.1", desc: "Fornecedores", nature: "ativo"},
+    {code: "2.1.1.01", desc: "Fornecedores Nacionais", nature: "ativo"},
+    {code: "2.1.1.02", desc: "Fornecedores Internacionais", nature: "ativo"},
+    {code: "2.1.2", desc: "Empréstimos e Financiamentos", nature: "ativo"},
+    {code: "2.1.2.01", desc: "Empréstimos Bancários", nature: "ativo"},
+    {code: "2.1.2.02", desc: "Financiamentos", nature: "ativo"},
+    {code: "2.1.3", desc: "Obrigações Fiscais", nature: "ativo"},
+    {code: "2.1.3.01", desc: "SIMPLES NACIONAL (DAS e Honorários)", nature: "ativo"},
+    {code: "2.1.3.02", desc: "IRPJ", nature: "ativo"},
+    {code: "2.1.3.03", desc: "CSLL", nature: "ativo"},
+    {code: "2.1.3.04", desc: "PIS", nature: "ativo"},
+    {code: "2.1.3.05", desc: "COFINS", nature: "ativo"},
+    {code: "2.1.3.06", desc: "ISSQN a Recolher", nature: "ativo"},
+    {code: "2.1.3.07", desc: "INSS imposto a Recolher", nature: "ativo"},
+    {code: "2.1.4", desc: "Obrigações Trabalhistas e Sociais", nature: "ativo"},
+    {code: "2.1.4.01", desc: "Salários a Pagar", nature: "ativo"},
+    {code: "2.1.4.02", desc: "FGTS a Recolher", nature: "ativo"},
+    {code: "2.1.4.03", desc: "INSS dos Segurados a Recolher", nature: "ativo"},
+    {code: "2.1.4.04", desc: "Horas Extras", nature: "ativo"},
+    {code: "2.1.4.05", desc: "Bonus de Viagem", nature: "ativo"},
+    {code: "2.1.4.06", desc: "13º salário", nature: "ativo"},
+    {code: "2.1.4.07", desc: "Férias", nature: "ativo"},
+    {code: "2.1.4.08", desc: "PLR", nature: "ativo"},
+    {code: "2.1.4.09", desc: "Outros - Freelancer , Plano de saúde, ASOs, VT, VR, NRs", nature: "ativo"},
+    {code: "2.1.4.10", desc: "Extras Fora Folha", nature: "ativo"},
+    {code: "2.1.4.11", desc: "Salarios, FGTS, INSS, Plano de Saude colaboradores Mecha", nature: "ativo"},
+    {code: "2.1.5", desc: "Contas a Pagar", nature: "ativo"},
+    {code: "2.1.5.01", desc: "Telefone a Pagar", nature: "ativo"},
+    {code: "2.1.5.02", desc: "Energia a Pagar", nature: "ativo"},
+    {code: "2.1.5.03", desc: "Agua a Pagar", nature: "ativo"},
+    {code: "2.1.5.04", desc: "Aluguel a Pagar", nature: "ativo"},
+    {code: "2.1.6", desc: "Provisões", nature: "ativo"},
+    {code: "2.1.6.01", desc: "Provisão de Férias", nature: "ativo"},
+    {code: "2.1.6.02", desc: "Provisão de 13º Salário", nature: "ativo"},
+    {code: "2.1.6.03", desc: "Provisão de Encargos Sociais sobre Férias", nature: "ativo"},
+    {code: "2.2", desc: "PASSIVO NÃO CIRCULANTE", nature: "ativo"},
+    {code: "2.2.1.01", desc: "Financiamentos Banco A", nature: "ativo"},
+    {code: "2.2.2.01", desc: "Empréstimos de Sócios", nature: "ativo"},
+    {code: "2.3", desc: "PATRIMÔNIO LÍQUIDO", nature: "ativo"},
+    {code: "2.3.1.01", desc: "Capital Subscrito", nature: "ativo"},
+    {code: "2.3.1.02", desc: "(-) Capital a Integralizar", nature: "ativo"},
+    {code: "2.3.2.01", desc: "Reservas de Capital", nature: "ativo"},
+    {code: "2.3.2.02", desc: "Reservas de Lucros", nature: "ativo"},
+    {code: "2.3.3.01", desc: "Lucros Acumulados", nature: "ativo"},
+    {code: "2.3.3.02", desc: "(-) Prejuízos Acumulados", nature: "ativo"},
+    {code: "3", desc: "RECEITAS, CUSTOS E DESPESAS", nature: "ativo"},
+    {code: "3.1", desc: "RECEITAS", nature: "recebimento"},
+    {code: "3.1.1", desc: "Receitas de Venda", nature: "recebimento"},
     {code: "3.1.1.01", desc: "Venda de Produtos", nature: "recebimento"},
-    {code: "3.1.1.03", desc: "Venda de Serviços (Frotas)", nature: "recebimento"},
+    {code: "3.1.1.02", desc: "Venda de Mercadorias", nature: "recebimento"},
+    {code: "3.1.1.03", desc: "Venda de Serviços (frotas)", nature: "recebimento"},
+    {code: "3.1.1.04", desc: "(-) Deduções de Tributos", nature: "recebimento"},
+    {code: "3.1.2.01", desc: "Receitas de Aplicações Financeiras", nature: "recebimento"},
+    {code: "3.1.2.02", desc: "Juros Ativos", nature: "recebimento"},
+    {code: "3.1.3.01", desc: "Receitas de Venda de Imobilizado", nature: "recebimento"},
+    {code: "3.1.3.02", desc: "Receitas de Venda de Investimentos", nature: "recebimento"},
+    {code: "3.1.3.03", desc: "Outras Receitas", nature: "recebimento"},
+    {code: "3.2", desc: "CUSTOS E DESPESAS", nature: "custo"},
+    {code: "3.2.1", desc: "Custos dos Produtos e Serviços", nature: "custo"},
     {code: "3.2.1.01", desc: "Custos dos Insumos", nature: "custo"},
     {code: "3.2.1.02", desc: "Custos da Mão de Obra", nature: "custo"},
-    {code: "3.2.2.03", desc: "Honorários Contabilidade", nature: "custo"}
+    {code: "3.2.1.03", desc: "Custos EPI", nature: "custo"},
+    {code: "3.2.1.04", desc: "Outros Custos", nature: "custo"},
+    {code: "3.2.1.05", desc: "Baixas de Estoque", nature: "custo"},
+    {code: "3.2.2", desc: "Despesas Operacionais", nature: "custo"},
+    {code: "3.2.2.01", desc: "Despesas Administrativas", nature: "custo"},
+    {code: "3.2.2.02", desc: "Despesas com Viagens", nature: "custo"},
+    {code: "3.2.2.03", desc: "Honorários Contabilidade", nature: "custo"},
+    {code: "3.2.2.04", desc: "Despesas com correios", nature: "custo"},
+    {code: "3.2.2.05", desc: "Despesas com frete", nature: "custo"},
+    {code: "3.2.2.06", desc: "Outras Despesas Gerais", nature: "custo"},
+    {code: "3.2.3.01", desc: "Juros Passivos", nature: "custo"},
+    {code: "3.2.3.02", desc: "Outras Despesas Financeiras", nature: "custo"},
+    {code: "3.2.4.01", desc: "Despesas com Baixa de Imobilizado", nature: "custo"},
+    {code: "3.2.4.02", desc: "Despesas com Baixa de Investimentos", nature: "custo"},
+    {code: "3.2.4.03", desc: "Outras Despesas", nature: "custo"}
 ];
 
-// ==================== AUXILIARES ====================
+// ==================== FUNÇÕES AUXILIARES ====================
 function showToast(msg, isError = false) {
     const toast = document.createElement('div');
     toast.className = 'toast';
@@ -174,7 +299,7 @@ function navTo(id) {
     document.getElementById(id).classList.add('active');
     event.currentTarget.classList.add('active');
     if (id === 'view-dash') atualizarDashboard();
-    if (id === 'view-lan') carregarLan();
+    if (id === 'view-lan') { carregarLan(); carregarFiltroContas(); }
     if (id === 'view-plano') carregarContas();
 }
 
@@ -184,16 +309,12 @@ async function carregarContas() {
         if (useAppwrite) {
             const res = await db.listDocuments(DB_ID, COLL_ACC, [Query.limit(500)]);
             cacheAcc = res.documents;
-            if (cacheAcc.length === 0 && confirm("Nenhuma conta encontrada. Deseja carregar o plano padrão?")) await seedPlanoDeContas();
+            if (cacheAcc.length === 0) await seedPlanoCompleto();
         } else {
             cacheAcc = localAccounts;
-            if (cacheAcc.length === 0 && confirm("Nenhuma conta local. Carregar padrão?")) {
-                localAccounts = PLANO_PADRAO.map((p, i) => ({ $id: i.toString(), code: p.code, description: p.desc, nature: p.nature }));
-                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
-                cacheAcc = localAccounts;
-            }
+            if (cacheAcc.length === 0) await seedPlanoCompleto();
         }
-        renderizarContas();
+        renderListaContas();
         popularSelectContas();
     } catch (err) {
         console.warn("Appwrite falhou, usando localStorage", err);
@@ -201,13 +322,17 @@ async function carregarContas() {
         await carregarContas();
     }
 }
-function renderizarContas() {
+function renderListaContas() {
     const tbody = document.getElementById('lista-contas');
     tbody.innerHTML = cacheAcc.map(acc => `
         <tr>
-            <td>${acc.code}</td><td>${acc.description}</td>
+            <td>${acc.code}</td>
+            <td>${acc.description}</td>
             <td><span class="status status-${acc.nature}">${acc.nature}</span></td>
-            <td><button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}')"><i class="fas fa-trash"></i></button></td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="editarConta('${acc.$id}')"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}')"><i class="fas fa-trash"></i></button>
+            </td>
         </tr>
     `).join('');
 }
@@ -230,8 +355,10 @@ async function criarConta() {
     document.getElementById('form-conta').reset();
     await carregarContas();
 }
-async function seedPlanoDeContas() {
-    for (const item of PLANO_PADRAO) {
+async function seedPlanoCompleto() {
+    if (!confirm("Isso irá inserir o plano de contas completo (mais de 100 contas). Continuar?")) return;
+    updateLoader(20);
+    for (const item of PLANO_COMPLETO) {
         if (useAppwrite) {
             const exists = cacheAcc.some(a => a.code === item.code);
             if (!exists) await db.createDocument(DB_ID, COLL_ACC, ID.unique(), { code: item.code, description: item.desc, nature: item.nature });
@@ -242,28 +369,46 @@ async function seedPlanoDeContas() {
     }
     if (!useAppwrite) localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
     await carregarContas();
-    showToast("Plano de contas atualizado");
+    showToast("Plano de contas completo carregado!");
+    updateLoader(100);
 }
 async function excluirConta(id, code) {
     if (!confirm(`Excluir conta ${code}?`)) return;
-    try {
+    if (useAppwrite) {
+        const movs = await db.listDocuments(DB_ID, COLL_MOV, [Query.equal('cat', code), Query.limit(1)]);
+        if (movs.total > 0) { showToast("Conta possui lançamentos", true); return; }
+        await db.deleteDocument(DB_ID, COLL_ACC, id);
+    } else {
+        if (localTransactions.some(t => t.cat === code)) { showToast("Conta com lançamentos", true); return; }
+        localAccounts = localAccounts.filter(a => a.$id !== id);
+        localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+    }
+    await carregarContas();
+    showToast("Conta excluída");
+}
+function editarConta(id) {
+    const conta = cacheAcc.find(a => a.$id === id);
+    if (!conta) return;
+    const novoCode = prompt("Novo código:", conta.code);
+    const novoDesc = prompt("Nova descrição:", conta.description);
+    const novaNature = prompt("Nova natureza (recebimento/custo/estoque/ativo):", conta.nature);
+    if (novoCode && novoDesc && novaNature) {
         if (useAppwrite) {
-            const movs = await db.listDocuments(DB_ID, COLL_MOV, [Query.equal('cat', code), Query.limit(1)]);
-            if (movs.total > 0) { showToast("Conta possui lançamentos", true); return; }
-            await db.deleteDocument(DB_ID, COLL_ACC, id);
+            db.updateDocument(DB_ID, COLL_ACC, id, { code: novoCode, description: novoDesc, nature: novaNature }).then(() => carregarContas());
         } else {
-            if (localTransactions.some(t => t.cat === code)) { showToast("Conta com lançamentos", true); return; }
-            localAccounts = localAccounts.filter(a => a.$id !== id);
-            localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+            const index = localAccounts.findIndex(a => a.$id === id);
+            if (index !== -1) {
+                localAccounts[index] = { ...localAccounts[index], code: novoCode, description: novoDesc, nature: novaNature };
+                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+                carregarContas();
+            }
         }
-        await carregarContas();
-        showToast("Conta excluída");
-    } catch (err) { showToast("Erro: " + err.message, true); }
+        showToast("Conta atualizada");
+    }
 }
 
 // ==================== LANÇAMENTOS ====================
-document.getElementById('form-lan').onsubmit = async (e) => {
-    e.preventDefault();
+async function criarLan() {
     const codConta = document.getElementById('l-conta').value;
     const conta = cacheAcc.find(a => a.code === codConta);
     if (!conta) { showToast("Conta inválida", true); return; }
@@ -298,19 +443,29 @@ document.getElementById('form-lan').onsubmit = async (e) => {
         atualizarDashboard();
     } catch (err) { showToast("Erro: " + err.message, true); }
     updateLoader(100);
-};
+}
 async function carregarLan() {
     let transacoes = [];
     if (useAppwrite) {
-        const res = await db.listDocuments(DB_ID, COLL_MOV, [Query.orderDesc('data'), Query.limit(100)]);
+        const res = await db.listDocuments(DB_ID, COLL_MOV, [Query.orderDesc('data'), Query.limit(500)]);
         transacoes = res.documents;
     } else transacoes = localTransactions;
+    // Aplicar filtros
+    const ini = document.getElementById('filter-data-ini').value;
+    const fim = document.getElementById('filter-data-fim').value;
+    const contaFiltro = document.getElementById('filter-conta').value;
+    if (ini) transacoes = transacoes.filter(t => t.data >= ini);
+    if (fim) transacoes = transacoes.filter(t => t.data <= fim);
+    if (contaFiltro) transacoes = transacoes.filter(t => t.cat === contaFiltro);
     const tbody = document.querySelector('#tab-lan tbody');
     tbody.innerHTML = transacoes.map(m => `
         <tr>
-            <td>${m.data}</td><td>${m.nomecat}</td><td>${m.desc}</td>
+            <td>${m.data}</td><td>${m.unidade}</td><td>${m.nomecat}</td><td>${m.desc}</td>
             <td style="color:${m.tipo === 'recebimento' ? 'green' : 'red'}">R$ ${m.valor.toFixed(2)}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="excluirLan('${m.$id}')"><i class="fas fa-trash"></i></button></td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="editarLan('${m.$id}')"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="excluirLan('${m.$id}')"><i class="fas fa-trash"></i></button>
+            </td>
         </tr>
     `).join('');
 }
@@ -325,6 +480,32 @@ async function excluirLan(id) {
     atualizarDashboard();
     showToast("Excluído");
 }
+function editarLan(id) {
+    let transacao;
+    if (useAppwrite) {
+        // Buscar localmente (já em cache) ou fazer consulta
+        transacao = localTransactions.find(t => t.$id === id);
+        if (!transacao) { showToast("Edição apenas para localStorage no momento", true); return; }
+    } else transacao = localTransactions.find(t => t.$id === id);
+    if (!transacao) return;
+    const novaData = prompt("Nova data (YYYY-MM-DD):", transacao.data);
+    const novaDesc = prompt("Nova descrição:", transacao.desc);
+    const novoValor = parseFloat(prompt("Novo valor:", transacao.valor));
+    if (novaData && novaDesc && !isNaN(novoValor)) {
+        transacao.data = novaData;
+        transacao.desc = novaDesc;
+        transacao.valor = novoValor;
+        if (useAppwrite) db.updateDocument(DB_ID, COLL_MOV, id, { data: novaData, desc: novaDesc, valor: novoValor });
+        else localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
+        carregarLan();
+        atualizarDashboard();
+        showToast("Lançamento atualizado");
+    }
+}
+function carregarFiltroContas() {
+    const select = document.getElementById('filter-conta');
+    select.innerHTML = '<option value="">Todas</option>' + cacheAcc.map(acc => `<option value="${acc.code}">${acc.code} - ${acc.description}</option>`).join('');
+}
 
 // ==================== DASHBOARD ====================
 async function atualizarDashboard() {
@@ -333,22 +514,43 @@ async function atualizarDashboard() {
         const res = await db.listDocuments(DB_ID, COLL_MOV, [Query.limit(5000)]);
         transacoes = res.documents;
     } else transacoes = localTransactions;
-    let receitas = 0, despesas = 0;
+    const unidadeFiltro = document.getElementById('dash-uni').value;
+    const ini = document.getElementById('dash-ini').value || '2000-01-01';
+    const fim = document.getElementById('dash-fim').value || '2099-12-31';
+    let totals = { Santos: { r:0, c:0 }, Camaçari: { r:0, c:0 }, Geral: { r:0, c:0 } };
     transacoes.forEach(t => {
-        if (t.tipo === 'recebimento') receitas += t.valor;
-        else if (t.tipo === 'custo' || t.tipo === 'estoque') despesas += t.valor;
+        if (t.data < ini || t.data > fim) return;
+        if (unidadeFiltro !== 'Todas' && t.unidade !== unidadeFiltro) return;
+        const nature = t.tipo;
+        const unidade = t.unidade || 'Santos';
+        if (nature === 'recebimento') {
+            totals[unidade].r += t.valor;
+            totals.Geral.r += t.valor;
+        } else if (nature === 'custo' || nature === 'estoque') {
+            totals[unidade].c += t.valor;
+            totals.Geral.c += t.valor;
+        }
     });
+    let exibeR = (unidadeFiltro === 'Todas') ? totals.Geral.r : totals[unidadeFiltro]?.r || 0;
+    let exibeC = (unidadeFiltro === 'Todas') ? totals.Geral.c : totals[unidadeFiltro]?.c || 0;
     document.getElementById('dash-stats').innerHTML = `
-        <div class="stat-card"><h3>Receitas</h3><div class="value">R$ ${receitas.toFixed(2)}</div></div>
-        <div class="stat-card"><h3>Despesas</h3><div class="value">R$ ${despesas.toFixed(2)}</div></div>
-        <div class="stat-card"><h3>Resultado</h3><div class="value">R$ ${(receitas - despesas).toFixed(2)}</div></div>
+        <div class="stat-card"><h3>Receitas</h3><div class="value">R$ ${exibeR.toFixed(2)}</div></div>
+        <div class="stat-card"><h3>Despesas</h3><div class="value">R$ ${exibeC.toFixed(2)}</div></div>
+        <div class="stat-card"><h3>Resultado</h3><div class="value">R$ ${(exibeR - exibeC).toFixed(2)}</div></div>
     `;
-    const ctx = document.getElementById('chartDash').getContext('2d');
+    const ctxGeral = document.getElementById('chartDash').getContext('2d');
     if (chartDash) chartDash.destroy();
-    chartDash = new Chart(ctx, {
+    chartDash = new Chart(ctxGeral, {
         type: 'bar',
-        data: { labels: ['Receitas', 'Despesas'], datasets: [{ label: 'R$', data: [receitas, despesas], backgroundColor: ['#22c55e', '#ef4444'], borderRadius: 8 }] }
+        data: { labels: ['Receitas', 'Despesas'], datasets: [{ label: 'Valores', data: [totals.Geral.r, totals.Geral.c], backgroundColor: ['#22c55e', '#ef4444'], borderRadius: 8 }] }
     });
+    // Gráficos por unidade
+    const ctxSantos = document.getElementById('chartSantos').getContext('2d');
+    if (chartSantos) chartSantos.destroy();
+    chartSantos = new Chart(ctxSantos, { type: 'bar', data: { labels: ['Receita', 'Despesa'], datasets: [{ data: [totals.Santos.r, totals.Santos.c], backgroundColor: ['#22c55e','#ef4444'] }] } });
+    const ctxCam = document.getElementById('chartCamacari').getContext('2d');
+    if (chartCamacari) chartCamacari.destroy();
+    chartCamacari = new Chart(ctxCam, { type: 'bar', data: { labels: ['Receita', 'Despesa'], datasets: [{ data: [totals.Camaçari.r, totals.Camaçari.c], backgroundColor: ['#22c55e','#ef4444'] }] } });
 }
 
 // ==================== DRE ====================
@@ -393,8 +595,8 @@ async function init() {
 function setDatasPadrao() {
     const hoje = new Date().toISOString().split('T')[0];
     const primeiroDia = hoje.substring(0,8)+'01';
-    ['l-data', 'dre-ini', 'dash-ini'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = primeiroDia; });
-    if(document.getElementById('dre-fim')) document.getElementById('dre-fim').value = hoje;
+    ['l-data', 'dash-ini', 'dre-ini', 'filter-data-ini'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = primeiroDia; });
+    ['dash-fim', 'dre-fim', 'filter-data-fim'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = hoje; });
 }
 init();
 </script>
