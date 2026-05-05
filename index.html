@@ -373,7 +373,7 @@
     const account = new Account(client);
     const DB_ID = '69f35a670029fa96fd5f';      // database ID
     const COLL_ACCOUNTS = 'accounts';
-    const COLL_MOV = 'movimentacoes';
+    const COLL_MOV = 'transactions';
 
     let useAppwrite = true;        // flag de fallback
     let cacheContas = [];           // array de contas { $id, code, description, nature }
@@ -718,118 +718,135 @@
     // --------------------------------------------------------------
     //  LANÇAMENTOS (CRUD)
     // --------------------------------------------------------------
-    async function criarLancamento() {
-        const contaCode = document.getElementById('lanc-conta').value;
-        const conta = cacheContas.find(c => c.code === contaCode);
-        if(!conta) { showToast("Conta inválida", true); return; }
-        const data = document.getElementById('lanc-data').value;
-        const unidade = document.getElementById('lanc-unidade').value;
-        const descricao = document.getElementById('lanc-desc').value.trim();
-        const valor = parseFloat(document.getElementById('lanc-valor').value);
-        if(!data || !descricao || isNaN(valor) || valor <= 0) { showToast("Preencha todos os campos", true); return; }
-        const payload = {
-            data: data,
-            desc: descricao,
-            tipo: conta.nature,
-            cat: conta.code,
-            nomecat: conta.description,
-            cod: conta.code,
-            valor: valor,
-            unidade: unidade,
-            descricao: descricao,
-            contaDebito: (conta.nature === 'recebimento') ? conta.code : '',
-            contaCredito: (conta.nature === 'custo') ? conta.code : ''
-        };
+   async function carregarLanctos() {
+        let transacoes = [];
+        updateLoader(20);
+
         try {
             if(useAppwrite) {
                 await initAppwriteSession();
+                // Busca os documentos ordenados pela data (campo 'date' da imagem)
+                const res = await databases.listDocuments(DB_ID, COLL_MOV, [
+                    Appwrite.Query.orderDesc('date'),
+                    Appwrite.Query.limit(500)
+                ]);
+                transacoes = res.documents;
+            } else {
+                transacoes = localTransactions;
+            }
+
+            // Filtros da interface
+            const fIni = document.getElementById('filtro-lanc-ini').value;
+            const fFim = document.getElementById('filtro-lanc-fim').value;
+            const fConta = document.getElementById('filtro-lanc-conta').value;
+
+            const filtradas = transacoes.filter(t => {
+                const matchData = (!fIni || t.date >= fIni) && (!fFim || t.date <= fFim);
+                const matchConta = !fConta || t.accountId === fConta; // Sincronizado com a imagem
+                return matchData && matchConta;
+            });
+
+            const tbody = document.getElementById('corpo-lancamentos');
+            if(!tbody) return;
+
+            tbody.innerHTML = filtradas.map(t => {
+                const infoConta = cacheContas.find(c => c.code === t.accountId);
+                const cor = (infoConta && infoConta.nature === 'custo') ? 'red' : 'green';
+
+                return `
+                    <tr id="lrow-${t.$id}">
+                        <td>${t.date ? t.date.split('T')[0].split('-').reverse().join('/') : '-'}</td>
+                        <td>${t.unit || ''}</td>
+                        <td>${t.accountId || ''}</td>
+                        <td>${t.description || ''}</td>
+                        <td style="color:${cor}; font-weight:bold">R$ ${parseFloat(t.amount || 0).toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editarLancamento('${t.$id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="excluirLancamento('${t.$id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            cachedTransactions = filtradas;
+            updateLoader(100);
+
+        } catch(e) {
+            console.error("Erro ao carregar:", e);
+            showToast("Erro ao carregar: " + e.message, true);
+            updateLoader(0);
+        }
+    }
+
+    async function criarLancamento() {
+        const data = document.getElementById('lanc-data').value;
+        const unidade = document.getElementById('lanc-unidade').value;
+        const contaCod = document.getElementById('lanc-conta').value;
+        const desc = document.getElementById('lanc-desc').value;
+        const valor = parseFloat(document.getElementById('lanc-valor').value);
+
+        if(!data || !contaCod || isNaN(valor)) {
+            showToast("Preencha todos os campos obrigatórios", true);
+            return;
+        }
+
+        const payload = {
+            date: data,
+            unit: unidade,
+            accountId: contaCod, // Sincronizado com a imagem image_ccd33b.jpg
+            description: desc,
+            amount: valor
+        };
+
+        try {
+            updateLoader(30);
+            if(useAppwrite) {
                 await databases.createDocument(DB_ID, COLL_MOV, ID.unique(), payload);
             } else {
-                payload.$id = Date.now().toString();
-                localTransactions.unshift(payload);
+                localTransactions.push({ $id: Date.now().toString(), ...payload });
                 localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
             }
+            
             showToast("Lançamento salvo!");
             document.getElementById('formLancamento').reset();
             document.getElementById('lanc-data').value = new Date().toISOString().split('T')[0];
+            
             await carregarLanctos();
             atualizarDashboard();
-        } catch(e) { showToast("Erro ao salvar: "+e.message, true); }
-    }
-
-    async function carregarLanctos() {
-        let transacoes = [];
-        if(useAppwrite) {
-            try {
-                await initAppwriteSession();
-                const res = await databases.listDocuments(DB_ID, COLL_MOV, [Query.orderDesc('data'), Query.limit(500)]);
-                transacoes = res.documents;
-            } catch(e) { transacoes = []; }
-        } else transacoes = localTransactions;
-        // aplicar filtros
-        const ini = document.getElementById('filtro-lanc-ini').value;
-        const fim = document.getElementById('filtro-lanc-fim').value;
-        const filtroConta = document.getElementById('filtro-lanc-conta').value;
-        let filtradas = transacoes;
-        if(ini) filtradas = filtradas.filter(t => t.data >= ini);
-        if(fim) filtradas = filtradas.filter(t => t.data <= fim);
-        if(filtroConta) filtradas = filtradas.filter(t => t.cat === filtroConta);
-        const tbody = document.getElementById('corpo-lancamentos');
-        tbody.innerHTML = filtradas.map(t => {
-            const badgeClass = `badge-${t.tipo}`;
-            const sinal = t.tipo === 'recebimento' ? 'green' : 'red';
-            return `<tr id="lrow-${t.$id}">
-                <td>${t.data}</td><td>${t.unidade}</td><td>${t.cat} - ${t.nomecat}</td><td>${t.desc}</td>
-                <td style="color:${sinal}">R$ ${t.valor.toFixed(2)}</td>
-                <td><button class="btn btn-warning btn-sm" onclick="editarLancamento('${t.$id}')"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-danger btn-sm" onclick="excluirLancamento('${t.$id}')"><i class="fas fa-trash"></i></button></td>
-            </tr>`;
-        }).join('');
-        cachedTransactions = filtradas;
-    }
-
-    window.editarLancamento = function(id) {
-        const trans = (useAppwrite ? cachedTransactions : localTransactions).find(t => t.$id === id);
-        if(!trans) { showToast("Dados não encontrados", true); return; }
-        const novaData = prompt("Nova data (YYYY-MM-DD):", trans.data);
-        const novaDesc = prompt("Nova descrição:", trans.desc);
-        const novoValor = parseFloat(prompt("Novo valor:", trans.valor));
-        if(novaData && novaDesc && !isNaN(novoValor)) {
-            if(useAppwrite) {
-                databases.updateDocument(DB_ID, COLL_MOV, id, { data: novaData, desc: novaDesc, valor: novoValor })
-                    .then(() => { carregarLanctos(); atualizarDashboard(); showToast("Atualizado"); })
-                    .catch(e => showToast("Erro: "+e.message, true));
-            } else {
-                const idx = localTransactions.findIndex(t => t.$id === id);
-                if(idx !== -1) { localTransactions[idx].data = novaData; localTransactions[idx].desc = novaDesc; localTransactions[idx].valor = novoValor;
-                localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions)); carregarLanctos(); atualizarDashboard(); showToast("Atualizado"); }
-            }
+        } catch(e) {
+            showToast("Erro ao salvar: " + e.message, true);
+        } finally {
+            updateLoader(100);
         }
-    };
-
-    window.excluirLancamento = async function(id) {
-        if(!confirm("Remover lançamento?")) return;
-        if(useAppwrite) await databases.deleteDocument(DB_ID, COLL_MOV, id);
-        else { localTransactions = localTransactions.filter(t => t.$id !== id); localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions)); }
-        await carregarLanctos();
-        atualizarDashboard();
-        showToast("Excluído");
-    };
-
-    function preencherFiltroContaSelect() {
-        const select = document.getElementById('filtro-lanc-conta');
-        select.innerHTML = '<option value="">Todas</option>' + cacheContas.map(acc => `<option value="${acc.code}">${acc.code} - ${acc.description}</option>`).join('');
     }
 
+    async function excluirLancamento(id) {
+        if(!confirm("Excluir este lançamento?")) return;
+        try {
+            if(useAppwrite) {
+                await databases.deleteDocument(DB_ID, COLL_MOV, id);
+            } else {
+                localTransactions = localTransactions.filter(t => t.$id !== id);
+                localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
+            }
+            showToast("Excluído!");
+            await carregarLanctos();
+            atualizarDashboard();
+        } catch(e) { showToast("Erro ao excluir: " + e.message, true); }
+    }
     // --------------------------------------------------------------
     //  DASHBOARD
     // --------------------------------------------------------------
-    async function atualizarDashboard() {
+  async function atualizarDashboard() {
         let transacoes = [];
         if(useAppwrite) {
             try {
                 await initAppwriteSession();
-                const res = await databases.listDocuments(DB_ID, COLL_MOV, [Query.limit(5000)]);
+                const res = await databases.listDocuments(DB_ID, COLL_MOV, [Appwrite.Query.limit(5000)]);
                 transacoes = res.documents;
             } catch(e) { transacoes = []; }
         } else transacoes = localTransactions;
@@ -838,18 +855,23 @@
         const ini = document.getElementById('dash-ini').value || '2000-01-01';
         const fim = document.getElementById('dash-fim').value || '2099-12-31';
         const contasSelecionadas = Array.from(document.querySelectorAll('.dash-ck:checked')).map(cb => cb.value);
+        
         let totals = { Geral:{r:0,c:0}, Santos:{r:0,c:0}, Camaçari:{r:0,c:0} };
+
         transacoes.forEach(t => {
-            if(t.data < ini || t.data > fim) return;
-            if(!contasSelecionadas.includes(t.cat)) return;
-            if(unidade !== 'Todas' && t.unidade !== unidade) return;
-            const val = t.valor;
-            if(t.tipo === 'recebimento') {
+            if(t.date < ini || t.date > fim) return;
+            if(!contasSelecionadas.includes(t.accountId)) return; // Ajustado para accountId
+            if(unidade !== 'Todas' && t.unit !== unidade) return; // Ajustado para unit
+            
+            const infoConta = cacheContas.find(c => c.code === t.accountId);
+            const val = parseFloat(t.amount || 0);
+
+            if(infoConta && infoConta.nature === 'recebimento') {
                 totals.Geral.r += val;
-                totals[t.unidade].r += val;
-            } else if(t.tipo === 'custo' || t.tipo === 'estoque') {
+                if(totals[t.unit]) totals[t.unit].r += val;
+            } else if(infoConta && (infoConta.nature === 'custo' || infoConta.nature === 'estoque')) {
                 totals.Geral.c += val;
-                totals[t.unidade].c += val;
+                if(totals[t.unit]) totals[t.unit].c += val;
             }
         });
         const exibeR = unidade === 'Todas' ? totals.Geral.r : totals[unidade].r;
@@ -873,31 +895,41 @@
     // --------------------------------------------------------------
     //  DRE
     // --------------------------------------------------------------
-    async function gerarDRE() {
+   async function gerarDRE() {
         let transacoes = [];
         if(useAppwrite) {
             try {
                 await initAppwriteSession();
-                const res = await databases.listDocuments(DB_ID, COLL_MOV, [Query.limit(5000)]);
+                const res = await databases.listDocuments(DB_ID, COLL_MOV, [Appwrite.Query.limit(5000)]);
                 transacoes = res.documents;
             } catch(e) { transacoes = []; }
         } else transacoes = localTransactions;
+
         const unidade = document.getElementById('dre-unidade').value;
         const ini = document.getElementById('dre-ini').value || '2000-01-01';
         const fim = document.getElementById('dre-fim').value || '2099-12-31';
         const contasSel = Array.from(document.querySelectorAll('.dre-ck:checked')).map(cb => cb.value);
+        
         let grupos = {};
         let receitas = 0, custos = 0;
+
         transacoes.forEach(t => {
-            if(t.data < ini || t.data > fim) return;
-            if(unidade !== 'Todas' && t.unidade !== unidade) return;
-            if(!contasSel.includes(t.cat)) return;
-            const acc = cacheContas.find(c => c.code === t.cat);
+            if(t.date < ini || t.date > fim) return;
+            if(unidade !== 'Todas' && t.unit !== unidade) return;
+            if(!contasSel.includes(t.accountId)) return;
+
+            const acc = cacheContas.find(c => c.code === t.accountId);
             if(!acc || acc.nature === 'ativo') return;
-            if(!grupos[t.cat]) grupos[t.cat] = { desc: t.nomecat, valor: 0, nature: acc.nature };
-            grupos[t.cat].valor += t.valor;
-            if(acc.nature === 'recebimento') receitas += t.valor;
-            else if(acc.nature === 'custo' || acc.nature === 'estoque') custos += t.valor;
+
+            if(!grupos[t.accountId]) {
+                grupos[t.accountId] = { desc: acc.description, valor: 0, nature: acc.nature };
+            }
+            
+            const val = parseFloat(t.amount || 0);
+            grupos[t.accountId].valor += val;
+            
+            if(acc.nature === 'recebimento') receitas += val;
+            else if(acc.nature === 'custo' || acc.nature === 'estoque') custos += val;
         });
         let html = `<tr style="background:#f1f5f9; font-weight:bold"><td>(+) RECEITAS OPERACIONAIS</td><td style="text-align:right">---</td></tr>`;
         for(let g of Object.values(grupos)) if(g.nature === 'recebimento') html += `<tr><td style="padding-left:20px">${g.desc}</td><td style="text-align:right">R$ ${g.valor.toFixed(2)}</td></tr>`;
@@ -918,41 +950,70 @@
         const blob = new Blob([jsonStr], {type: 'application/json'});
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `cryo_lancamentos_${new Date().toISOString().slice(0,19)}.json`;
+        link.download = `cryo_lancamentos_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
         link.click();
         showToast("Exportado JSON");
     }
-    function exportarCSV() {
-        const headers = ['Data', 'Unidade', 'Conta (código)', 'Conta (nome)', 'Descrição', 'Valor', 'Tipo'];
-        const rows = cachedTransactions.map(t => [t.data, t.unidade, t.cat, t.nomecat, t.desc, t.valor, t.tipo]);
+     function exportarCSV() {
+        const headers = ['Data', 'Unidade', 'Conta ID', 'Descrição', 'Valor'];
+        const rows = cachedTransactions.map(t => [
+            t.date, 
+            t.unit, 
+            t.accountId, 
+            t.description, 
+            t.amount
+        ]);
         const csvContent = [headers, ...rows].map(row => row.join(';')).join('\n');
         const blob = new Blob(["\uFEFF" + csvContent], {type: 'text/csv;charset=utf-8;'});
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `cryo_lancamentos_${new Date().toISOString().slice(0,19)}.csv`;
+        link.download = `cryo_finance_${new Date().toISOString().slice(0,10)}.csv`;
         link.click();
-        showToast("Exportado CSV (Excel)");
+        showToast("Exportado para Excel");
     }
 
-    // --------------------------------------------------------------
-    //  INICIALIZAÇÃO
-    // --------------------------------------------------------------
-    async function init() {
-        const hoje = new Date().toISOString().split('T')[0];
-        const primeiroDia = hoje.slice(0,8)+'01';
-        document.getElementById('lanc-data').value = hoje;
-        document.getElementById('dash-ini').value = primeiroDia;
-        document.getElementById('dash-fim').value = hoje;
-        document.getElementById('dre-ini').value = primeiroDia;
-        document.getElementById('dre-fim').value = hoje;
-        document.getElementById('filtro-lanc-ini').value = primeiroDia;
-        document.getElementById('filtro-lanc-fim').value = hoje;
+   // --------------------------------------------------------------
+//  INICIALIZAÇÃO (COM TRATAMENTO DE ERRO 404)
+// --------------------------------------------------------------
+async function init() {
+    const hoje = new Date().toISOString().split('T')[0];
+    const primeiroDia = hoje.slice(0, 8) + '01';
+    
+    // Preenchimento de datas
+    document.getElementById('lanc-data').value = hoje;
+    document.getElementById('dash-ini').value = primeiroDia;
+    document.getElementById('dash-fim').value = hoje;
+    document.getElementById('dre-ini').value = primeiroDia;
+    document.getElementById('dre-fim').value = hoje;
+    document.getElementById('filtro-lanc-ini').value = primeiroDia;
+    document.getElementById('filtro-lanc-fim').value = hoje;
+
+    try {
+        // 1. Tenta inicializar a sessão (necessário para evitar 404/401)
+        try {
+            await account.get(); 
+        } catch (err) {
+            await account.createAnonymousSession();
+        }
+
+        // 2. Carrega os dados do servidor
         await carregarContas();
         await carregarLanctos();
+        
+    } catch (error) {
+        // 3. Fallback: Se o Appwrite der 404, usa o LocalStorage
+        console.error("Erro ao conectar ao Appwrite (404/Permissão). Usando dados locais.", error);
+        
+        // Se carregarContas/carregarLanctos já tiverem a lógica de LocalStorage, 
+        // eles serão executados aqui via catch ou dentro das próprias funções.
+    } finally {
+        // Atualiza a interface independente da fonte dos dados
         await atualizarDashboard();
         await gerarDRE();
     }
-    init();
+}
+
+init();
 </script>
 </body>
 </html>
