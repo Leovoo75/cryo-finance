@@ -596,19 +596,21 @@ window.editarContaInline = function(id, el) {
       `;
 };
 window.salvarEdicaoConta = async function(id) {
+    // Captura os valores dos inputs específicos desta linha
     const payload = {
         code: document.getElementById(`edit-code-${id}`).value,
-        description: document.getElementById(`edit-desc-${id}`).value
+        description: document.getElementById(`edit-desc-${id}`).value,
+        nature: document.getElementById(`edit-nature-${id}`).value // Captura a Natureza editada
     };
     
     try {
         updateLoader(50);
-        // Atualiza o documento exato no Appwrite usando o ID único
+        // Envia para o Appwrite
         await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, payload);
-        showToast("Conta atualizada com sucesso!");
-        await carregarContas(); // Recarrega a lista
+        showToast("Conta e Natureza atualizadas com sucesso!");
+        await carregarContas(); // Recarrega a tabela
     } catch(e) {
-        showToast("Erro ao salvar: " + e.message, true);
+        showToast("Erro ao guardar: " + e.message, true);
     } finally {
         updateLoader(100);
     }
