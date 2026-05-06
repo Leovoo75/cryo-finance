@@ -520,26 +520,29 @@
 
     async function carregarContas() {
     try {
-        updateLoader(30); // Feedback visual
+        updateLoader(30); 
         if(useAppwrite) {
             await initAppwriteSession();
-            // Adicionado: Query.orderAsc para manter a hierarquia contábil
             const res = await databases.listDocuments(DB_ID, COLL_ACCOUNTS, [
-                Query.limit(500),
-                Query.orderAsc("code") 
+                Query.limit(500)
             ]);
-            cacheContas = res.documents;
+            // O trecho deve entrar aqui para ordenar os dados vindos da nuvem
+            cacheContas = res.documents.sort((a, b) => {
+                return a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' });
+            });
             
-            // NOVO: Atualiza o backup local com os dados frescos da nuvem
             localStorage.setItem('cryo_accounts', JSON.stringify(cacheContas));
             
             if(cacheContas.length === 0) await resetarPlanoPadrao();
         } else {
-            cacheContas = localAccounts;
+            // O trecho também entra aqui para ordenar os dados vindos do LocalStorage
+            cacheContas = localAccounts.sort((a, b) => {
+                return a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' });
+            });
             if(cacheContas.length === 0) await resetarPlanoPadrao();
         }
 
-        // Executa a atualização da interface
+        // Agora a interface receberá os dados já ordenados
         renderTabelaContas();
         popularSelectsConta();
         montarFiltrosCheckbox();
@@ -548,8 +551,9 @@
     } catch(err) {
         console.warn("Appwrite falhou, usando localStorage", err);
         useAppwrite = false;
-        // Tenta recuperar do localAccounts imediatamente em vez de recursão infinita
-        cacheContas = localAccounts;
+        cacheContas = localAccounts.sort((a, b) => {
+            return a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' });
+        });
         renderTabelaContas();
         popularSelectsConta();
         montarFiltrosCheckbox();
