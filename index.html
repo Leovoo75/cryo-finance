@@ -568,23 +568,27 @@
                 <td class="cont-desc">${acc.description}</td>
                 <td><span class="badge badge-${acc.nature}">${acc.nature}</span></td>
                 <td>
-                    <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this)"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this, event)"><i class="fas fa-edit"></i></button>
                     <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}')"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `).join('');
     }
 
- window.editarContaInline = function(id, el) {
-    // 1. Busca os dados reais diretamente na memória (cache) pelo ID único
+ window.editarContaInline = function(id, el, event) {
+    // 1. Previne comportamentos inesperados do navegador
+    if(event) event.preventDefault();
+
+    // 2. Busca os dados estritamente pelo ID único no cache (Verdade absoluta dos dados)
     const acc = cacheContas.find(a => a.$id === id);
     if (!acc) return;
 
-    // 2. Localiza a linha (TR) exata onde o botão foi clicado
-    const row = el.closest('tr'); 
+    // 3. Localiza a TR (linha) exata através do botão que disparou o evento
+    const row = el.closest('tr');
     if (!row) return;
 
-    // 3. Transforma as células desta linha específica em campos de edição
+    // 4. Transforma as células desta linha específica
+    // Usamos IDs internos únicos concatenados com o ID do banco para evitar conflitos CSS
     row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:100px">`;
     row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`;
     
@@ -595,12 +599,12 @@
     
     row.cells[2].innerHTML = `<select id="edit-nature-${id}">${options}</select>`;
     
-    // 4. Altera os botões para Salvar e Cancelar (X)
+    // 5. Botões de ação
     row.cells[3].innerHTML = `
         <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔ Salvar</button>
-        <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()" title="Cancelar">✖</button>
+        <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()">✖</button>
     `;
-}
+};
     window.salvarEdicaoConta = async function(id) {
         const newCode = document.getElementById(`edit-code-${id}`).value;
         const newDesc = document.getElementById(`edit-desc-${id}`).value;
