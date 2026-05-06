@@ -375,7 +375,7 @@
     const COLL_ACCOUNTS = 'accounts';
     const COLL_MOV = 'transactions';
 
-    let useAppwrite = true;        // flag de fallback
+    let useAppwrite = false;        // flag de fallback
     let cacheContas = [];           // array de contas { $id, code, description, nature }
     let cachedTransactions = [];    // cache para uso rápido
     let chartGeral = null, chartSantos = null, chartCamacari = null, chartDRE = null;
@@ -584,25 +584,42 @@
     }
 
     async function carregarContas() {
-        try {
-            if(useAppwrite) {
-                await initAppwriteSession();
-                const res = await databases.listDocuments(DB_ID, COLL_ACCOUNTS, [Query.limit(500)]);
-                cacheContas = res.documents;
-                if(cacheContas.length === 0) await resetarPlanoPadrao();
-            } else {
-                cacheContas = localAccounts;
-                if(cacheContas.length === 0) await resetarPlanoPadrao();
-            }
-            renderTabelaContas();
-            popularSelectsConta();
-            montarFiltrosCheckbox();
-        } catch(err) {
-            console.warn("Appwrite falhou, usando localStorage", err);
-            useAppwrite = false;
-            await carregarContas();
+    try {
+        updateLoader(30); // Feedback visual
+        if(useAppwrite) {
+            await initAppwriteSession();
+            // Adicionado: Query.orderAsc para manter a hierarquia contábil
+            const res = await databases.listDocuments(DB_ID, COLL_ACCOUNTS, [
+                Query.limit(500),
+                Query.orderAsc("code") 
+            ]);
+            cacheContas = res.documents;
+            
+            // NOVO: Atualiza o backup local com os dados frescos da nuvem
+            localStorage.setItem('cryo_accounts', JSON.stringify(cacheContas));
+            
+            if(cacheContas.length === 0) await resetarPlanoPadrao();
+        } else {
+            cacheContas = localAccounts;
+            if(cacheContas.length === 0) await resetarPlanoPadrao();
         }
+
+        // Executa a atualização da interface
+        renderTabelaContas();
+        popularSelectsConta();
+        montarFiltrosCheckbox();
+        updateLoader(100);
+
+    } catch(err) {
+        console.warn("Appwrite falhou, usando localStorage", err);
+        useAppwrite = false;
+        // Tenta recuperar do localAccounts imediatamente em vez de recursão infinita
+        cacheContas = localAccounts;
+        renderTabelaContas();
+        popularSelectsConta();
+        montarFiltrosCheckbox();
     }
+}
 
     function renderTabelaContas() {
         const tbody = document.getElementById('lista-contas');
@@ -838,6 +855,64 @@
             atualizarDashboard();
         } catch(e) { showToast("Erro ao excluir: " + e.message, true); }
     }
+
+// --- Adicione este bloco após a função excluirLancamento ---
+
+    window.editarLancamento = function(id) {
+        const row = document.getElementById(`lrow-${id}`);
+        const t = cachedTransactions.find(item => item.$id === id);
+        if (!t) return;
+
+        // Transforma as células em campos de input
+        row.cells[0].innerHTML = `<input type="date" id="edit-l-date-${id}" value="${t.date.split('T')[0]}">`;
+        row.cells[1].innerHTML = `
+            <select id="edit-l-unit-${id}">
+                <option ${t.unit === 'Santos' ? 'selected' : ''}>Santos</option>
+                <option ${t.unit === 'Camaçari' ? 'selected' : ''}>Camaçari</option>
+            </select>`;
+        
+        const optionsConta = cacheContas.map(acc => 
+            `<option value="${acc.code}" ${acc.code === t.accountId ? 'selected' : ''}>${acc.code}</option>`
+        ).join('');
+        
+        row.cells[2].innerHTML = `<select id="edit-l-acc-${id}">${optionsConta}</select>`;
+        row.cells[3].innerHTML = `<input type="text" id="edit-l-desc-${id}" value="${t.description}">`;
+        row.cells[4].innerHTML = `<input type="number" step="0.01" id="edit-l-val-${id}" value="${t.amount}">`;
+        
+        // Troca os botões de ação
+        row.cells[5].innerHTML = `
+            <button class="btn btn-primary btn-sm" onclick="salvarEdicaoLancamento('${id}')">✔</button>
+            <button class="btn btn-danger btn-sm" onclick="carregarLanctos()">✖</button>
+        `;
+    };
+
+    window.salvarEdicaoLancamento = async function(id) {
+        const payload = {
+            date: document.getElementById(`edit-l-date-${id}`).value,
+            unit: document.getElementById(`edit-l-unit-${id}`).value,
+            accountId: document.getElementById(`edit-l-acc-${id}`).value,
+            description: document.getElementById(`edit-l-desc-${id}`).value,
+            amount: parseFloat(document.getElementById(`edit-l-val-${id}`).value)
+        };
+
+        try {
+            updateLoader(40);
+            if(useAppwrite) {
+                await databases.updateDocument(DB_ID, COLL_MOV, id, payload);
+            } else {
+                const idx = localTransactions.findIndex(t => t.$id === id);
+                if(idx !== -1) localTransactions[idx] = { ...localTransactions[idx], ...payload };
+                localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
+            }
+            showToast("Lançamento atualizado!");
+            await carregarLanctos();
+            atualizarDashboard();
+        } catch(e) {
+            showToast("Erro ao editar: " + e.message, true);
+        } finally {
+            updateLoader(100);
+        }
+    };
     // --------------------------------------------------------------
     //  DASHBOARD
     // --------------------------------------------------------------
