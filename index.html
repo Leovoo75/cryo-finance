@@ -575,53 +575,71 @@
         `).join('');
     }
 
- window.editarContaInline = function(id, el, event) {
-    // 1. Previne comportamentos inesperados do navegador
+window.editarContaInline = function(id, el, event) {
     if(event) event.preventDefault();
 
-    // 2. Busca os dados estritamente pelo ID único no cache (Verdade absoluta dos dados)
+    // 1. Localiza os dados reais no cache pelo ID único do Appwrite
     const acc = cacheContas.find(a => a.$id === id);
     if (!acc) return;
 
-    // 3. Localiza a TR (linha) exata através do botão que disparou o evento
+    // 2. Localiza a linha física na tabela
     const row = el.closest('tr');
     if (!row) return;
 
-    // 4. Transforma as células desta linha específica
-    // Usamos IDs internos únicos concatenados com o ID do banco para evitar conflitos CSS
-    row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:100px">`;
-    row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`;
+    // 3. Substitui o conteúdo das células por inputs (Liberando para edição)
+    // Usamos IDs dinâmicos baseados no 'id' do documento para não haver conflito
+    row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" class="form-control-sm" style="width:100px">`;
+    row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" class="form-control-sm" style="width:100%">`;
     
     const natures = ['recebimento', 'custo', 'estoque', 'ativo'];
     let options = natures.map(n => 
         `<option value="${n}" ${acc.nature === n ? 'selected' : ''}>${n}</option>`
     ).join('');
     
-    row.cells[2].innerHTML = `<select id="edit-nature-${id}">${options}</select>`;
+    row.cells[2].innerHTML = `<select id="edit-nature-${id}" class="form-control-sm">${options}</select>`;
     
-    // 5. Botões de ação
+    // 4. Troca os botões de Ação para Salvar/Cancelar
     row.cells[3].innerHTML = `
-        <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔ Salvar</button>
-        <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()">✖</button>
+        <div style="display:flex; gap:5px">
+            <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')" title="Salvar">
+                <i class="fas fa-check"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()" title="Cancelar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
     `;
 };
     window.salvarEdicaoConta = async function(id) {
-        const newCode = document.getElementById(`edit-code-${id}`).value;
-        const newDesc = document.getElementById(`edit-desc-${id}`).value;
-        const newNature = document.getElementById(`edit-nature-${id}`).value;
-        try {
-            if(useAppwrite) {
-                await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, { code: newCode, description: newDesc, nature: newNature });
-            } else {
-                const idx = localAccounts.findIndex(a => a.$id === id);
-                if(idx !== -1) localAccounts[idx] = { ...localAccounts[idx], code: newCode, description: newDesc, nature: newNature };
+    // Captura os valores dos campos que foram abertos na linha
+    const updatedData = {
+        code: document.getElementById(`edit-code-${id}`).value,
+        description: document.getElementById(`edit-desc-${id}`).value,
+        nature: document.getElementById(`edit-nature-${id}`).value
+    };
+
+    try {
+        updateLoader(50);
+        if(useAppwrite) {
+            // A mágica acontece aqui: updateDocument substitui, não cria novo.
+            await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, updatedData);
+        } else {
+            // Lógica para LocalStorage (Offline)
+            const idx = localAccounts.findIndex(a => a.$id === id);
+            if(idx !== -1) {
+                localAccounts[idx] = { ...localAccounts[idx], ...updatedData };
                 localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
             }
-            showToast("Conta atualizada");
-            await carregarContas();
-            carregarLanctos(); // atualiza selects
-        } catch(e) { showToast("Erro ao editar: "+e.message, true); }
-    };
+        }
+        
+        showToast("Conta atualizada com sucesso!");
+        await carregarContas(); // Recarrega a tabela com os novos dados
+    } catch (e) {
+        showToast("Erro ao salvar edição: " + e.message, true);
+    } finally {
+        updateLoader(100);
+    }
+};
 
     window.excluirConta = async function(id, code) {
         if(!confirm(`Excluir conta ${code}?`)) return;
