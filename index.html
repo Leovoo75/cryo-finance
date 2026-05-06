@@ -569,7 +569,9 @@
                 <td><span class="badge badge-${acc.nature}">${acc.nature}</span></td>
                 <td>
                     <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this, event)"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}')"><i class="fas fa-trash"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}')">
+                <i class="fas fa-trash"></i>
+                </button>
                 </td>
             </tr>
         `).join('');
@@ -578,18 +580,15 @@
 window.editarContaInline = function(id, el) {
     const acc = cacheContas.find(a => a.$id === id);
     if (!acc) return;
-
     const row = el.closest('tr');
     if (!row) return;
 
+    // Criamos IDs de input que incluem o ID único do Appwrite
     row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:100px">`;
     row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`;
     
     const natures = ['recebimento', 'custo', 'estoque', 'ativo'];
-    let options = natures.map(n => 
-        `<option value="${n}" ${acc.nature === n ? 'selected' : ''}>${n}</option>`
-    ).join('');
-    
+    let options = natures.map(n => `<option value="${n}" ${acc.nature === n ? 'selected' : ''}>${n}</option>`).join('');
     row.cells[2].innerHTML = `<select id="edit-nature-${id}">${options}</select>`;
     
     row.cells[3].innerHTML = `
@@ -598,6 +597,7 @@ window.editarContaInline = function(id, el) {
     `;
 };
 window.salvarEdicaoConta = async function(id) {
+    // Captura os dados dos inputs criados dinamicamente na linha
     const payload = {
         code: document.getElementById(`edit-code-${id}`).value,
         description: document.getElementById(`edit-desc-${id}`).value,
@@ -605,8 +605,9 @@ window.salvarEdicaoConta = async function(id) {
     };
 
     try {
+        updateLoader(40);
         if(useAppwrite) {
-            // Isso garante que NUNCA duplique a linha [cite: 633]
+            // O uso de updateDocument com o ID GARANTE que não haverá duplicação
             await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, payload);
         } else {
             const idx = localAccounts.findIndex(a => a.$id === id);
@@ -616,27 +617,37 @@ window.salvarEdicaoConta = async function(id) {
             }
         }
         showToast("Conta atualizada!");
-        await carregarContas();
-    } catch(e) {
-        showToast("Erro: " + e.message, true);
+        await carregarContas(); // Recarrega a lista limpa e ordenada
+    } catch(e) { 
+        showToast("Erro ao editar: " + e.message, true); 
+    } finally {
+        updateLoader(100);
     }
 };
-    window.excluirConta = async function(id, code) {
-        if(!confirm(`Excluir conta ${code}?`)) return;
-        try {
-            if(useAppwrite) {
-                const movs = await databases.listDocuments(DB_ID, COLL_MOV, [Query.equal('cat', code), Query.limit(1)]);
-                if(movs.total > 0) { showToast("Não é possível excluir: existem lançamentos vinculados", true); return; }
-                await databases.deleteDocument(DB_ID, COLL_ACCOUNTS, id);
-            } else {
-                if(localTransactions.some(t => t.cat === code)) { showToast("Conta com lançamentos", true); return; }
-                localAccounts = localAccounts.filter(a => a.$id !== id);
-                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+   window.excluirConta = async function(id, code) {
+    if(!confirm(`Excluir APENAS a conta ${code}?`)) return;
+    try {
+        if(useAppwrite) {
+            // CORREÇÃO: Usar 'accountId' (campo real do banco) em vez de 'cat'
+            const movs = await databases.listDocuments(DB_ID, COLL_MOV, [
+                Appwrite.Query.equal('accountId', code), 
+                Appwrite.Query.limit(1)
+            ]);
+            if(movs.total > 0) { 
+                showToast("Não é possível excluir: existem lançamentos vinculados", true); 
+                return; 
             }
-            await carregarContas();
-            showToast("Conta removida");
-        } catch(e) { showToast("Erro: "+e.message, true); }
-    };
+            // EXCLUSÃO PELO ID ÚNICO (Garante que só uma linha seja apagada)
+            await databases.deleteDocument(DB_ID, COLL_ACCOUNTS, id);
+        } else {
+            // Filtro rígido por ID no LocalStorage
+            localAccounts = localAccounts.filter(a => a.$id !== id);
+            localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+        }
+        showToast("Conta removida");
+        await carregarContas();
+    } catch(e) { showToast("Erro ao excluir: " + e.message, true); }
+};
 
     async function criarConta() {
         const code = document.getElementById('novo-codigo').value.trim();
