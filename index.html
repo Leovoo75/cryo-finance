@@ -575,26 +575,35 @@
         `).join('');
     }
 
-    window.editarContaInline = function(id) {
-        const row = document.getElementById(`row-${id}`);
-        const codigoCel = row.cells[0];
-        const descCel = row.cells[1];
-        const natureSpan = row.cells[2].querySelector('span');
-        const currentCode = codigoCel.innerText;
-        const currentDesc = descCel.innerText;
-        const currentNature = natureSpan.innerText;
-        codigoCel.innerHTML = `<input type="text" id="edit-code-${id}" value="${currentCode}" style="width:100px">`;
-        descCel.innerHTML = `<input type="text" id="edit-desc-${id}" value="${currentDesc}" style="width:100%">`;
-        natureSpan.innerHTML = `<select id="edit-nature-${id}">
-            <option value="recebimento" ${currentNature==='recebimento'?'selected':''}>Recebimento</option>
-            <option value="custo" ${currentNature==='custo'?'selected':''}>Custo</option>
-            <option value="estoque" ${currentNature==='estoque'?'selected':''}>Estoque</option>
-            <option value="ativo" ${currentNature==='ativo'?'selected':''}>Ativo</option>
-        </select>`;
-        const acoesCel = row.cells[3];
-        acoesCel.innerHTML = `<button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔ Salvar</button>`;
-    };
+ window.editarContaInline = function(id) {
+    // 1. Busca os dados reais diretamente na memória (cache)
+    const acc = cacheContas.find(a => a.$id === id);
+    if (!acc) {
+        showToast("Erro: Conta não encontrada no cache", true);
+        return;
+    }
 
+    const row = document.getElementById(`row-${id}`);
+    if (!row) return;
+
+    // 2. Transforma as células em inputs usando os dados do cache e não o texto da tela
+    row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:100px">`;
+    row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`;
+    
+    // 3. Monta o select de natureza comparando com o valor real do cache
+    const natures = ['recebimento', 'custo', 'estoque', 'ativo'];
+    let options = natures.map(n => 
+        `<option value="${n}" ${acc.nature === n ? 'selected' : ''}>${n}</option>`
+    ).join('');
+    
+    row.cells[2].innerHTML = `<select id="edit-nature-${id}">${options}</select>`;
+    
+    // 4. Atualiza os botões de ação
+    row.cells[3].innerHTML = `
+        <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔ Salvar</button>
+        <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()" title="Cancelar">✖</button>
+    `;
+};
     window.salvarEdicaoConta = async function(id) {
         const newCode = document.getElementById(`edit-code-${id}`).value;
         const newDesc = document.getElementById(`edit-desc-${id}`).value;
