@@ -576,60 +576,51 @@
     }
 
 window.editarContaInline = function(id, el) {
-    // 1. Busca os dados reais no cache pelo ID único do Appwrite [cite: 626]
     const acc = cacheContas.find(a => a.$id === id);
-    if (!acc) return; [cite: 627]
+    if (!acc) return;
 
-    // 2. Encontra a linha (TR) exata onde o botão foi clicado 
     const row = el.closest('tr');
-    if (!row) return; [cite: 628]
+    if (!row) return;
 
-    // 3. Substitui o texto pelas caixas de edição na mesma linha [cite: 628, 629, 631]
-    row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:100px">`; [cite: 628]
-    row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`; [cite: 629]
+    row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:100px">`;
+    row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`;
     
-    const natures = ['recebimento', 'custo', 'estoque', 'ativo']; [cite: 629]
+    const natures = ['recebimento', 'custo', 'estoque', 'ativo'];
     let options = natures.map(n => 
         `<option value="${n}" ${acc.nature === n ? 'selected' : ''}>${n}</option>`
-    ).join(''); [cite: 630]
+    ).join('');
     
-    row.cells[2].innerHTML = `<select id="edit-nature-${id}">${options}</select>`; [cite: 631]
+    row.cells[2].innerHTML = `<select id="edit-nature-${id}">${options}</select>`;
     
-    // 4. Muda os botões para "Salvar" e "Cancelar" [cite: 631]
     row.cells[3].innerHTML = `
         <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔</button>
         <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()">✖</button>
-    `; [cite: 631]
+    `;
 };
- window.salvarEdicaoConta = async function(id) {
-    // Pega os novos valores digitados na linha aberta [cite: 632, 633]
+window.salvarEdicaoConta = async function(id) {
     const payload = {
-        code: document.getElementById(`edit-code-${id}`).value, [cite: 632]
-        description: document.getElementById(`edit-desc-${id}`).value, [cite: 633]
-        nature: document.getElementById(`edit-nature-${id}`).value [cite: 633]
+        code: document.getElementById(`edit-code-${id}`).value,
+        description: document.getElementById(`edit-desc-${id}`).value,
+        nature: document.getElementById(`edit-nature-${id}`).value
     };
 
     try {
-        updateLoader(40);
         if(useAppwrite) {
-            // O comando 'updateDocument' é o que impede a duplicação 
-            await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, payload); [cite: 633]
+            // Isso garante que NUNCA duplique a linha [cite: 633]
+            await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, payload);
         } else {
-            const idx = localAccounts.findIndex(a => a.$id === id); [cite: 634]
+            const idx = localAccounts.findIndex(a => a.$id === id);
             if(idx !== -1) {
-                localAccounts[idx] = { ...localAccounts[idx], ...payload }; [cite: 635]
-                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts)); [cite: 635]
+                localAccounts[idx] = { ...localAccounts[idx], ...payload };
+                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
             }
         }
         showToast("Conta atualizada!");
-        await carregarContas(); // Recarrega a tabela limpa [cite: 636]
+        await carregarContas();
     } catch(e) {
-        showToast("Erro ao editar: " + e.message, true); [cite: 637]
-    } finally {
-        updateLoader(100);
+        showToast("Erro: " + e.message, true);
     }
 };
-
     window.excluirConta = async function(id, code) {
         if(!confirm(`Excluir conta ${code}?`)) return;
         try {
@@ -736,10 +727,9 @@ window.editarContaInline = function(id, el) {
                         <td>
                             <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this)">
                                 <i class="fas fa-edit"></i>
-                            </button> [cite: 625]
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="excluirLancamento('${t.$id}')">
-                                <i class="fas fa-trash"></i>
+                               <i class="fas fa-edit"></i>
                             </button>
                         </td>
                     </tr>
