@@ -575,67 +575,56 @@
         `).join('');
     }
 
-window.editarContaInline = function(id, el, event) {
-    if(event) event.preventDefault();
-
-    // 1. Localiza os dados reais no cache pelo ID único do Appwrite
+window.editarContaInline = function(id, el) {
+    // 1. Busca os dados reais no cache pelo ID único do Appwrite [cite: 626]
     const acc = cacheContas.find(a => a.$id === id);
-    if (!acc) return;
+    if (!acc) return; [cite: 627]
 
-    // 2. Localiza a linha física na tabela
+    // 2. Encontra a linha (TR) exata onde o botão foi clicado 
     const row = el.closest('tr');
-    if (!row) return;
+    if (!row) return; [cite: 628]
 
-    // 3. Substitui o conteúdo das células por inputs (Liberando para edição)
-    // Usamos IDs dinâmicos baseados no 'id' do documento para não haver conflito
-    row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" class="form-control-sm" style="width:100px">`;
-    row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" class="form-control-sm" style="width:100%">`;
+    // 3. Substitui o texto pelas caixas de edição na mesma linha [cite: 628, 629, 631]
+    row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:100px">`; [cite: 628]
+    row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`; [cite: 629]
     
-    const natures = ['recebimento', 'custo', 'estoque', 'ativo'];
+    const natures = ['recebimento', 'custo', 'estoque', 'ativo']; [cite: 629]
     let options = natures.map(n => 
         `<option value="${n}" ${acc.nature === n ? 'selected' : ''}>${n}</option>`
-    ).join('');
+    ).join(''); [cite: 630]
     
-    row.cells[2].innerHTML = `<select id="edit-nature-${id}" class="form-control-sm">${options}</select>`;
+    row.cells[2].innerHTML = `<select id="edit-nature-${id}">${options}</select>`; [cite: 631]
     
-    // 4. Troca os botões de Ação para Salvar/Cancelar
+    // 4. Muda os botões para "Salvar" e "Cancelar" [cite: 631]
     row.cells[3].innerHTML = `
-        <div style="display:flex; gap:5px">
-            <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')" title="Salvar">
-                <i class="fas fa-check"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()" title="Cancelar">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
+        <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔</button>
+        <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()">✖</button>
+    `; [cite: 631]
 };
-    window.salvarEdicaoConta = async function(id) {
-    // Captura os valores dos campos que foram abertos na linha
-    const updatedData = {
-        code: document.getElementById(`edit-code-${id}`).value,
-        description: document.getElementById(`edit-desc-${id}`).value,
-        nature: document.getElementById(`edit-nature-${id}`).value
+ window.salvarEdicaoConta = async function(id) {
+    // Pega os novos valores digitados na linha aberta [cite: 632, 633]
+    const payload = {
+        code: document.getElementById(`edit-code-${id}`).value, [cite: 632]
+        description: document.getElementById(`edit-desc-${id}`).value, [cite: 633]
+        nature: document.getElementById(`edit-nature-${id}`).value [cite: 633]
     };
 
     try {
-        updateLoader(50);
+        updateLoader(40);
         if(useAppwrite) {
-            // A mágica acontece aqui: updateDocument substitui, não cria novo.
-            await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, updatedData);
+            // O comando 'updateDocument' é o que impede a duplicação 
+            await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, payload); [cite: 633]
         } else {
-            // Lógica para LocalStorage (Offline)
-            const idx = localAccounts.findIndex(a => a.$id === id);
+            const idx = localAccounts.findIndex(a => a.$id === id); [cite: 634]
             if(idx !== -1) {
-                localAccounts[idx] = { ...localAccounts[idx], ...updatedData };
-                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+                localAccounts[idx] = { ...localAccounts[idx], ...payload }; [cite: 635]
+                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts)); [cite: 635]
             }
         }
-        
-        showToast("Conta atualizada com sucesso!");
-        await carregarContas(); // Recarrega a tabela com os novos dados
-    } catch (e) {
-        showToast("Erro ao salvar edição: " + e.message, true);
+        showToast("Conta atualizada!");
+        await carregarContas(); // Recarrega a tabela limpa [cite: 636]
+    } catch(e) {
+        showToast("Erro ao editar: " + e.message, true); [cite: 637]
     } finally {
         updateLoader(100);
     }
@@ -745,8 +734,9 @@ window.editarContaInline = function(id, el, event) {
                         <td>${t.description || ''}</td>
                         <td style="color:${cor}; font-weight:bold">R$ ${parseFloat(t.amount || 0).toFixed(2)}</td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="editarLancamento('${t.$id}')">
+                            <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this)">
                                 <i class="fas fa-edit"></i>
+                            </button> [cite: 625]
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="excluirLancamento('${t.$id}')">
                                 <i class="fas fa-trash"></i>
