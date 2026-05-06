@@ -856,63 +856,71 @@
         } catch(e) { showToast("Erro ao excluir: " + e.message, true); }
     }
 
+// Função auxiliar necessária para a sua alteração funcionar
+function montarSelectContasEdit(id, atual) {
+    let options = cacheContas.map(acc => 
+        `<option value="${acc.code}" ${acc.code === atual ? 'selected' : ''}>${acc.code}</option>`
+    ).join('');
+    return `<select id="edit-l-acc-${id}">${options}</select>`;
+}
+
 // --- Adicione este bloco após a função excluirLancamento ---
 
-    window.editarLancamento = function(id) {
-        const row = document.getElementById(`lrow-${id}`);
-        const t = cachedTransactions.find(item => item.$id === id);
-        if (!t) return;
+  window.editarLancamento = function(id) {
+    const row = document.getElementById(`lrow-${id}`);
+    const t = cachedTransactions.find(item => item.$id === id);
+    if (!t) return;
 
-        // Transforma as células em campos de input
-        row.cells[0].innerHTML = `<input type="date" id="edit-l-date-${id}" value="${t.date.split('T')[0]}">`;
-        row.cells[1].innerHTML = `
-            <select id="edit-l-unit-${id}">
-                <option ${t.unit === 'Santos' ? 'selected' : ''}>Santos</option>
-                <option ${t.unit === 'Camaçari' ? 'selected' : ''}>Camaçari</option>
-            </select>`;
+    // Data
+    row.cells[0].innerHTML = `<input type="date" id="edit-l-date-${id}" value="${t.date.split('T')[0]}">`;
+    
+    // Unidade (O que faltava!)
+    row.cells[1].innerHTML = `
+        <select id="edit-l-unit-${id}">
+            <option value="Santos" ${t.unit === 'Santos' ? 'selected' : ''}>Santos</option>
+            <option value="Camaçari" ${t.unit === 'Camaçari' ? 'selected' : ''}>Camaçari</option>
+        </select>`;
         
-        const optionsConta = cacheContas.map(acc => 
-            `<option value="${acc.code}" ${acc.code === t.accountId ? 'selected' : ''}>${acc.code}</option>`
-        ).join('');
+    row.cells[2].innerHTML = montarSelectContasEdit(id, t.accountId); 
+    row.cells[3].innerHTML = `<input type="text" id="edit-l-desc-${id}" value="${t.description}">`;
+    row.cells[4].innerHTML = `<input type="number" step="0.01" id="edit-l-val-${id}" value="${t.amount}">`;
         
-        row.cells[2].innerHTML = `<select id="edit-l-acc-${id}">${optionsConta}</select>`;
-        row.cells[3].innerHTML = `<input type="text" id="edit-l-desc-${id}" value="${t.description}">`;
-        row.cells[4].innerHTML = `<input type="number" step="0.01" id="edit-l-val-${id}" value="${t.amount}">`;
-        
-        // Troca os botões de ação
-        row.cells[5].innerHTML = `
-            <button class="btn btn-primary btn-sm" onclick="salvarEdicaoLancamento('${id}')">✔</button>
-            <button class="btn btn-danger btn-sm" onclick="carregarLanctos()">✖</button>
-        `;
+    row.cells[5].innerHTML = `
+        <button class="btn btn-primary btn-sm" onclick="salvarEdicaoLancamento('${id}')">✔</button>
+        <button class="btn btn-danger btn-sm" onclick="carregarLanctos()">✖</button>
+    `;
+};
+
+   window.salvarEdicaoLancamento = async function(id) {
+    const payload = {
+        date: document.getElementById(`edit-l-date-${id}`).value,
+        unit: document.getElementById(`edit-l-unit-${id}`).value,
+        accountId: document.getElementById(`edit-l-acc-${id}`).value,
+        description: document.getElementById(`edit-l-desc-${id}`).value,
+        amount: parseFloat(document.getElementById(`edit-l-val-${id}`).value)
     };
 
-    window.salvarEdicaoLancamento = async function(id) {
-        const payload = {
-            date: document.getElementById(`edit-l-date-${id}`).value,
-            unit: document.getElementById(`edit-l-unit-${id}`).value,
-            accountId: document.getElementById(`edit-l-acc-${id}`).value,
-            description: document.getElementById(`edit-l-desc-${id}`).value,
-            amount: parseFloat(document.getElementById(`edit-l-val-${id}`).value)
-        };
-
-        try {
-            updateLoader(40);
-            if(useAppwrite) {
-                await databases.updateDocument(DB_ID, COLL_MOV, id, payload);
-            } else {
-                const idx = localTransactions.findIndex(t => t.$id === id);
-                if(idx !== -1) localTransactions[idx] = { ...localTransactions[idx], ...payload };
+    try {
+        updateLoader(40);
+        if(useAppwrite) {
+            // O uso de updateDocument garante que NÃO haverá duplicação
+            await databases.updateDocument(DB_ID, COLL_MOV, id, payload);
+        } else {
+            const idx = localTransactions.findIndex(t => t.$id === id);
+            if(idx !== -1) {
+                localTransactions[idx] = { ...localTransactions[idx], ...payload };
                 localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
             }
-            showToast("Lançamento atualizado!");
-            await carregarLanctos();
-            atualizarDashboard();
-        } catch(e) {
-            showToast("Erro ao editar: " + e.message, true);
-        } finally {
-            updateLoader(100);
         }
-    };
+        showToast("Lançamento atualizado!");
+        await carregarLanctos();
+        atualizarDashboard();
+    } catch(e) {
+        showToast("Erro ao editar: " + e.message, true);
+    } finally {
+        updateLoader(100);
+    }
+};
     // --------------------------------------------------------------
     //  DASHBOARD
     // --------------------------------------------------------------
