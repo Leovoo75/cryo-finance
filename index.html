@@ -585,17 +585,17 @@
     function renderTabelaContas() {
         const tbody = document.getElementById('lista-contas');
         tbody.innerHTML = cacheContas.map((acc, index) => `
-    <tr id="row-${acc.$id}">
+        <tr id="row-${acc.$id}">
         <td style="color:#94a3b8"><b>${index + 1}</b></td> <!-- Índice Único Visual -->
         <td class="cont-codigo">${acc.code}</td>
         <td class="cont-desc">${acc.description}</td>
-        <td><span class="badge badge-${acc.nature}">${acc.nature}</span></td>
+        <td><span class="badge badge-${acc.account_type || acc.nature}">${acc.account_type || acc.nature}</span></td>
         <td>
             <!-- O 'this' aqui é o segredo para não editar a linha errada -->
-            <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this)">
+            <button class="btn btn-warning btn-sm" onclick="editarLancamento('${t.$id}')">
                 <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}', ${index + 1})">
+            <button class="btn btn-danger btn-sm" onclick="excluirLancamento('${t.$id}')">
                 <i class="fas fa-trash"></i>
             </button>
         </td>
@@ -604,26 +604,32 @@
     }
 
 window.editarContaInline = function(id, el) {
-    const row = el.closest('tr'); // Seleção física garantida da linha clicada
+    const row = el.closest('tr');
     const acc = cacheContas.find(a => a.$id === id);
     
-    // Transformamos apenas as células DESTA linha em inputs
     row.cells[1].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:80px">`;
     row.cells[2].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`;
     
-    // Mudamos os botões daquela linha para Confirmar/Cancelar
+    // Adicionamos o Select na célula 3 para editar o tipo de conta
+    row.cells[3].innerHTML = `
+        <select id="edit-nature-${id}" style="font-size:11px;">
+            <option value="recebimento" ${(acc.account_type === 'recebimento' || acc.nature === 'recebimento') ? 'selected' : ''}>Recebimento</option>
+            <option value="custo" ${(acc.account_type === 'custo' || acc.nature === 'custo') ? 'selected' : ''}>Custo</option>
+            <option value="estoque" ${(acc.account_type === 'estoque' || acc.nature === 'estoque') ? 'selected' : ''}>Estoque</option>
+            <option value="ativo" ${(acc.account_type === 'ativo' || acc.nature === 'ativo') ? 'selected' : ''}>Ativo</option>
+        </select>`;
+    
     row.cells[4].innerHTML = `
         <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔</button>
-        <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()">✖</button>
-      `;
+        <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()">✖</button>`;
 };
 window.salvarEdicaoConta = async function(id) {
     // Captura os valores dos inputs específicos desta linha
     const payload = {
-        code: document.getElementById(`edit-code-${id}`).value,
-        description: document.getElementById(`edit-desc-${id}`).value,
-        nature: document.getElementById(`edit-nature-${id}`).value // Captura a Natureza editada
-    };
+    code: document.getElementById(`edit-code-${id}`).value,
+    description: document.getElementById(`edit-desc-${id}`).value,
+    account_type: document.getElementById(`edit-nature-${id}`).value // Nome da coluna no Appwrite
+};
     
     try {
         updateLoader(50);
@@ -639,7 +645,7 @@ window.salvarEdicaoConta = async function(id) {
 };
    window.excluirConta = async function(id, code, index) {
     // 1. Verifica se a conta possui lançamentos (Regra de Negócio)
-    const temVinculo = cachedTransactions.some(t => t.accountId === code);
+    const temVinculo = cachedTransactions.some(t => t.account_id === code);
     
     if(temVinculo) {
         showToast(`Erro: A conta ${code} possui lançamentos e não pode ser excluída!`, true);
@@ -732,7 +738,7 @@ window.salvarEdicaoConta = async function(id) {
 
             const filtradas = transacoes.filter(t => {
                 const matchData = (!fIni || t.date >= fIni) && (!fFim || t.date <= fFim);
-                const matchConta = !fConta || t.accountId === fConta; // Sincronizado com a imagem
+                const matchConta = !fConta || t.account_id === fConta; // Sincronizado com a imagem
                 return matchData && matchConta;
             });
 
@@ -740,22 +746,22 @@ window.salvarEdicaoConta = async function(id) {
             if(!tbody) return;
 
             tbody.innerHTML = filtradas.map(t => {
-                const infoConta = cacheContas.find(c => c.code === t.accountId);
+                const infoConta = cacheContas.find(c => c.code === t.account_id);
                 const cor = (infoConta && infoConta.nature === 'custo') ? 'red' : 'green';
 
                 return `
                     <tr id="lrow-${t.$id}">
                         <td>${t.date ? t.date.split('T')[0].split('-').reverse().join('/') : '-'}</td>
                         <td>${t.unit || ''}</td>
-                        <td>${t.accountId || ''}</td>
+                        <td>${t.account_id || ''}</td>
                         <td>${t.description || ''}</td>
                         <td style="color:${cor}; font-weight:bold">R$ ${parseFloat(t.amount || 0).toFixed(2)}</td>
                         <td>
                             <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this)">
-                                <i class="fas fa-edit"></i>
+                             <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="excluirLancamento('${t.$id}')">
-                               <i class="fas fa-edit"></i>
+                             <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
@@ -790,7 +796,7 @@ window.salvarEdicaoConta = async function(id) {
     const payload = {
         date: data,
         unit: unidade,
-        accountId: contaCod, 
+        account_id: contaCod, 
         description: desc,
         amount: valor,
         tipo: infoConta ? infoConta.nature : 'custo', // Natureza da conta
@@ -860,7 +866,7 @@ function montarSelectContasEdit(id, atual) {
             <option value="Camaçari" ${t.unit === 'Camaçari' ? 'selected' : ''}>Camaçari</option>
         </select>`;
         
-    row.cells[2].innerHTML = montarSelectContasEdit(id, t.accountId); 
+    row.cells[2].innerHTML = montarSelectContasEdit(id, t.account_id); 
     row.cells[3].innerHTML = `<input type="text" id="edit-l-desc-${id}" value="${t.description}">`;
     row.cells[4].innerHTML = `<input type="number" step="0.01" id="edit-l-val-${id}" value="${t.amount}">`;
         
@@ -874,7 +880,7 @@ function montarSelectContasEdit(id, atual) {
     const payload = {
         date: document.getElementById(`edit-l-date-${id}`).value,
         unit: document.getElementById(`edit-l-unit-${id}`).value,
-        accountId: document.getElementById(`edit-l-acc-${id}`).value,
+        account_id: document.getElementById(`edit-l-acc-${id}`).value,
         description: document.getElementById(`edit-l-desc-${id}`).value,
         amount: parseFloat(document.getElementById(`edit-l-val-${id}`).value)
     };
@@ -922,10 +928,10 @@ function montarSelectContasEdit(id, atual) {
 
         transacoes.forEach(t => {
     if(t.date < ini || t.date > fim) return;
-    if(!contasSelecionadas.includes(t.accountId)) return; 
+    if(!contasSelecionadas.includes(t.account_id)) return; 
     if(unidade !== 'Todas' && t.unit !== unidade) return; 
     
-    const infoConta = cacheContas.find(c => c.code === t.accountId);
+    const infoConta = cacheContas.find(c => c.code === t.account_id);
     const val = parseFloat(t.amount || 0);
 
     // --- NOVA LÓGICA ESTRUTURADA ---
@@ -988,17 +994,17 @@ function montarSelectContasEdit(id, atual) {
     transacoes.forEach(t => {
         if (t.date < ini || t.date > fim) return;
         if (unidade !== 'Todas' && t.unit !== unidade) return;
-        if (!contasSel.includes(t.accountId)) return;
+        if (!contasSel.includes(t.account_id)) return;
 
-        const acc = cacheContas.find(c => c.code === t.accountId);
+        const acc = cacheContas.find(c => c.code === t.account_id);
         if (!acc || acc.nature === 'ativo') return; // Ativos são ignorados no DRE
 
-        if (!grupos[t.accountId]) {
-            grupos[t.accountId] = { desc: acc.description, valor: 0, nature: acc.nature };
+        if (!grupos[t.account_id]) {
+            grupos[t.account_id] = { desc: acc.description, valor: 0, nature: acc.nature };
         }
         
         const val = parseFloat(t.amount || 0);
-        grupos[t.accountId].valor += val;
+        grupos[t.account_id].valor += val;
         
         // Lógica financeira: Estoque aparece na lista, mas não abate do lucro operacional
         if (acc.nature === 'recebimento') {
@@ -1060,7 +1066,7 @@ function montarSelectContasEdit(id, atual) {
         const rows = cachedTransactions.map(t => [
             t.date, 
             t.unit, 
-            t.accountId, 
+            t.account_id, 
             t.description, 
             t.amount
         ]);
