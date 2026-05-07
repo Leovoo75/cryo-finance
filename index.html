@@ -247,6 +247,28 @@
             .grid-form { grid-template-columns: 1fr; }
         }
         .editing-row input, .editing-row select { width: auto; min-width: 80px; margin: 2px; }
+@media print {
+            /* Esconde elementos desnecessários no relatório PDF */
+            aside, .mobile-header, .btn, .grid-form, .brand, nav, .close-menu {
+                display: none !important;
+            }
+            /* Expande o conteúdo para ocupar a página inteira */
+            main { 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                width: 100% !important; 
+                overflow: visible !important;
+            }
+            /* Ajusta os cards para visualização em papel */
+            .card { 
+                box-shadow: none !important; 
+                border: 1px solid #e2e8f0 !important; 
+                break-inside: avoid; 
+            }
+            /* Garante que o fundo fique branco para economizar tinta/toner */
+            body { background: white !important; }
+        }
+        /* --- FIM DO BLOCO DE IMPRESSÃO --- */
     </style>
 </head>
 <body>
@@ -616,12 +638,24 @@ window.salvarEdicaoConta = async function(id) {
     }
 };
    window.excluirConta = async function(id, code, index) {
-    // Agora o utilizador sabe exatamente qual linha está a apagar
+    // 1. Verifica se a conta possui lançamentos (Regra de Negócio)
+    const temVinculo = cachedTransactions.some(t => t.accountId === code);
+    
+    if(temVinculo) {
+        showToast(`Erro: A conta ${code} possui lançamentos e não pode ser excluída!`, true);
+        return; // Bloqueia a exclusão
+    }
+
     if(!confirm(`Deseja excluir o item #${index} (Código: ${code})?`)) return;
 
     try {
         updateLoader(40);
-        await databases.deleteDocument(DB_ID, COLL_ACCOUNTS, id);
+        if(useAppwrite) {
+            await databases.deleteDocument(DB_ID, COLL_ACCOUNTS, id);
+        } else {
+            localAccounts = localAccounts.filter(a => a.$id !== id);
+            localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+        }
         showToast("Conta removida!");
         await carregarContas();
     } catch(e) {
@@ -738,47 +772,53 @@ window.salvarEdicaoConta = async function(id) {
         }
     }
 
-    async function criarLancamento() {
-        const data = document.getElementById('lanc-data').value;
-        const unidade = document.getElementById('lanc-unidade').value;
-        const contaCod = document.getElementById('lanc-conta').value;
-        const desc = document.getElementById('lanc-desc').value;
-        const valor = parseFloat(document.getElementById('lanc-valor').value);
+   async function criarLancamento() {
+    const data = document.getElementById('lanc-data').value;
+    const unidade = document.getElementById('lanc-unidade').value;
+    const contaCod = document.getElementById('lanc-conta').value;
+    const desc = document.getElementById('lanc-desc').value;
+    const valor = parseFloat(document.getElementById('lanc-valor').value);
 
-        if(!data || !contaCod || isNaN(valor)) {
-            showToast("Preencha todos os campos obrigatórios", true);
-            return;
-        }
+    const infoConta = cacheContas.find(c => c.code === contaCod); // Busca metadados da conta
 
-        const payload = {
-            date: data,
-            unit: unidade,
-            accountId: contaCod, // Sincronizado com a imagem image_ccd33b.jpg
-            description: desc,
-            amount: valor
-        };
-
-        try {
-            updateLoader(30);
-            if(useAppwrite) {
-                await databases.createDocument(DB_ID, COLL_MOV, ID.unique(), payload);
-            } else {
-                localTransactions.push({ $id: Date.now().toString(), ...payload });
-                localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
-            }
-            
-            showToast("Lançamento salvo!");
-            document.getElementById('formLancamento').reset();
-            document.getElementById('lanc-data').value = new Date().toISOString().split('T')[0];
-            
-            await carregarLanctos();
-            atualizarDashboard();
-        } catch(e) {
-            showToast("Erro ao salvar: " + e.message, true);
-        } finally {
-            updateLoader(100);
-        }
+    if(!data || !contaCod || isNaN(valor)) {
+        showToast("Preencha todos os campos obrigatórios", true);
+        return;
     }
+
+    // Payload expandido conforme exigência do prompt
+    const payload = {
+        date: data,
+        unit: unidade,
+        accountId: contaCod, 
+        description: desc,
+        amount: valor,
+        tipo: infoConta ? infoConta.nature : 'custo', // Natureza da conta
+        cat: contaCod, // Código da categoria
+        nomecat: infoConta ? infoConta.description : '', // Nome da categoria
+        cod: contaCod, // Código repetido solicitado
+        contaDebito: contaCod, // Campo obrigatório da estrutura
+        contaCredito: "1.1.1.01", // Exemplo: Caixa Geral
+        descricao: desc // Campo extra de descrição
+    };
+
+    try {
+        updateLoader(30);
+        if(useAppwrite) {
+            await databases.createDocument(DB_ID, COLL_MOV, ID.unique(), payload);
+        } else {
+            localTransactions.push({ $id: Date.now().toString(), ...payload });
+            localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
+        }
+        showToast("Lançamento salvo!");
+        document.getElementById('formLancamento').reset();
+        await carregarLanctos();
+    } catch(e) {
+        showToast("Erro ao salvar: " + e.message, true);
+    } finally {
+        updateLoader(100);
+    }
+}
 
     async function excluirLancamento(id) {
         if(!confirm("Excluir este lançamento?")) return;
@@ -881,21 +921,27 @@ function montarSelectContasEdit(id, atual) {
         let totals = { Geral:{r:0,c:0}, Santos:{r:0,c:0}, Camaçari:{r:0,c:0} };
 
         transacoes.forEach(t => {
-            if(t.date < ini || t.date > fim) return;
-            if(!contasSelecionadas.includes(t.accountId)) return; // Ajustado para accountId
-            if(unidade !== 'Todas' && t.unit !== unidade) return; // Ajustado para unit
-            
-            const infoConta = cacheContas.find(c => c.code === t.accountId);
-            const val = parseFloat(t.amount || 0);
+    if(t.date < ini || t.date > fim) return;
+    if(!contasSelecionadas.includes(t.accountId)) return; 
+    if(unidade !== 'Todas' && t.unit !== unidade) return; 
+    
+    const infoConta = cacheContas.find(c => c.code === t.accountId);
+    const val = parseFloat(t.amount || 0);
 
-            if(infoConta && infoConta.nature === 'recebimento') {
-                totals.Geral.r += val;
-                if(totals[t.unit]) totals[t.unit].r += val;
-            } else if(infoConta && (infoConta.nature === 'custo' || infoConta.nature === 'estoque')) {
-                totals.Geral.c += val;
-                if(totals[t.unit]) totals[t.unit].c += val;
-            }
-        });
+    // --- NOVA LÓGICA ESTRUTURADA ---
+    if(infoConta) {
+        if(infoConta.nature === 'recebimento') {
+            totals.Geral.r += val;
+            if(totals[t.unit]) totals[t.unit].r += val;
+        } 
+        else if(infoConta.nature === 'custo') {
+            // Apenas 'custo' subtrai do resultado financeiro.
+            // 'estoque' e 'ativo' são ignorados neste cálculo.
+            totals.Geral.c += val;
+            if(totals[t.unit]) totals[t.unit].c += val;
+        }
+    }
+});
         const exibeR = unidade === 'Todas' ? totals.Geral.r : totals[unidade].r;
         const exibeC = unidade === 'Todas' ? totals.Geral.c : totals[unidade].c;
         document.getElementById('dash-stats').innerHTML = `
@@ -918,50 +964,83 @@ function montarSelectContasEdit(id, atual) {
     //  DRE
     // --------------------------------------------------------------
    async function gerarDRE() {
-        let transacoes = [];
-        if(useAppwrite) {
-            try {
-                await initAppwriteSession();
-                const res = await databases.listDocuments(DB_ID, COLL_MOV, [Appwrite.Query.limit(5000)]);
-                transacoes = res.documents;
-            } catch(e) { transacoes = []; }
-        } else transacoes = localTransactions;
-
-        const unidade = document.getElementById('dre-unidade').value;
-        const ini = document.getElementById('dre-ini').value || '2000-01-01';
-        const fim = document.getElementById('dre-fim').value || '2099-12-31';
-        const contasSel = Array.from(document.querySelectorAll('.dre-ck:checked')).map(cb => cb.value);
-        
-        let grupos = {};
-        let receitas = 0, custos = 0;
-
-        transacoes.forEach(t => {
-            if(t.date < ini || t.date > fim) return;
-            if(unidade !== 'Todas' && t.unit !== unidade) return;
-            if(!contasSel.includes(t.accountId)) return;
-
-            const acc = cacheContas.find(c => c.code === t.accountId);
-            if(!acc || acc.nature === 'ativo') return;
-
-            if(!grupos[t.accountId]) {
-                grupos[t.accountId] = { desc: acc.description, valor: 0, nature: acc.nature };
-            }
-            
-            const val = parseFloat(t.amount || 0);
-            grupos[t.accountId].valor += val;
-            
-            if(acc.nature === 'recebimento') receitas += val;
-            else if(acc.nature === 'custo' || acc.nature === 'estoque') custos += val;
-        });
-        let html = `<tr style="background:#f1f5f9; font-weight:bold"><td>(+) RECEITAS OPERACIONAIS</td><td style="text-align:right">---</td></tr>`;
-        for(let g of Object.values(grupos)) if(g.nature === 'recebimento') html += `<tr><td style="padding-left:20px">${g.desc}</td><td style="text-align:right">R$ ${g.valor.toFixed(2)}</td></tr>`;
-        html += `<tr style="background:#f1f5f9; font-weight:bold"><td>(-) CUSTOS E ESTOQUES</td><td style="text-align:right">---</td></tr>`;
-        for(let g of Object.values(grupos)) if(g.nature === 'custo' || g.nature === 'estoque') html += `<tr><td style="padding-left:20px">${g.desc}</td><td style="text-align:right; color:var(--danger)">R$ ${g.valor.toFixed(2)}</td></tr>`;
-        html += `<tr style="background:var(--dark); color:white; font-weight:bold"><td>RESULTADO DO EXERCÍCIO</td><td style="text-align:right">R$ ${(receitas - custos).toFixed(2)}</td></tr>`;
-        document.getElementById('dre-corpo').innerHTML = html;
-        if(chartDRE) chartDRE.destroy();
-        chartDRE = new Chart(document.getElementById('chartDRE'), { type:'doughnut', data:{ labels:['Receitas','Custos/Estoque'], datasets:[{ data:[receitas, custos], backgroundColor:['#22c55e','#ef4444'] }] } });
+    let transacoes = [];
+    if (useAppwrite) {
+        try {
+            await initAppwriteSession();
+            const res = await databases.listDocuments(DB_ID, COLL_MOV, [Appwrite.Query.limit(5000)]);
+            transacoes = res.documents;
+        } catch (e) { 
+            transacoes = []; 
+        }
+    } else {
+        transacoes = localTransactions;
     }
+
+    const unidade = document.getElementById('dre-unidade').value;
+    const ini = document.getElementById('dre-ini').value || '2000-01-01';
+    const fim = document.getElementById('dre-fim').value || '2099-12-31';
+    const contasSel = Array.from(document.querySelectorAll('.dre-ck:checked')).map(cb => cb.value);
+
+    let grupos = {};
+    let receitas = 0, custos = 0;
+
+    transacoes.forEach(t => {
+        if (t.date < ini || t.date > fim) return;
+        if (unidade !== 'Todas' && t.unit !== unidade) return;
+        if (!contasSel.includes(t.accountId)) return;
+
+        const acc = cacheContas.find(c => c.code === t.accountId);
+        if (!acc || acc.nature === 'ativo') return; // Ativos são ignorados no DRE
+
+        if (!grupos[t.accountId]) {
+            grupos[t.accountId] = { desc: acc.description, valor: 0, nature: acc.nature };
+        }
+        
+        const val = parseFloat(t.amount || 0);
+        grupos[t.accountId].valor += val;
+        
+        // Lógica financeira: Estoque aparece na lista, mas não abate do lucro operacional
+        if (acc.nature === 'recebimento') {
+            receitas += val;
+        } else if (acc.nature === 'custo') {
+            custos += val;
+        }
+    }); // Fim do forEach corrigido
+
+    // Montagem do HTML da Tabela
+    let html = `<tr style="background:#f1f5f9; font-weight:bold"><td>(+) RECEITAS OPERACIONAIS</td><td style="text-align:right">---</td></tr>`;
+    for (let g of Object.values(grupos)) {
+        if (g.nature === 'recebimento') {
+            html += `<tr><td style="padding-left:20px">${g.desc}</td><td style="text-align:right">R$ ${g.valor.toFixed(2)}</td></tr>`;
+        }
+    }
+
+    html += `<tr style="background:#f1f5f9; font-weight:bold"><td>(-) CUSTOS E ESTOQUES</td><td style="text-align:right">---</td></tr>`;
+    for (let g of Object.values(grupos)) {
+        if (g.nature === 'custo' || g.nature === 'estoque') {
+            const cor = g.nature === 'estoque' ? 'var(--primary)' : 'var(--danger)';
+            html += `<tr><td style="padding-left:20px">${g.desc}</td><td style="text-align:right; color:${cor}">R$ ${g.valor.toFixed(2)}</td></tr>`;
+        }
+    }
+
+    html += `<tr style="background:var(--dark); color:white; font-weight:bold"><td>RESULTADO DO EXERCÍCIO (LUCRO/PREJUÍZO)</td><td style="text-align:right">R$ ${(receitas - custos).toFixed(2)}</td></tr>`;
+    
+    document.getElementById('dre-corpo').innerHTML = html;
+
+    // Atualização do Gráfico
+    if (chartDRE) chartDRE.destroy();
+    chartDRE = new Chart(document.getElementById('chartDRE'), { 
+        type: 'doughnut', 
+        data: { 
+            labels: ['Receitas', 'Custos'], 
+            datasets: [{ 
+                data: [receitas, custos], 
+                backgroundColor: ['#22c55e', '#ef4444'] 
+            }] 
+        } 
+    });
+}
 
     // --------------------------------------------------------------
     //  EXPORTAÇÕES
