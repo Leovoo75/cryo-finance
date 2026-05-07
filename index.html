@@ -426,7 +426,7 @@
         if(btn) btn.classList.add('active');
         if(window.innerWidth <= 768) toggleSidebar();
         if(viewId === 'view-dash') atualizarDashboard();
-        if(viewId === 'view-lanc') { carregarLanctos(); preencherFiltroContaSelect(); }
+        if(viewId === 'view-lanc') { carregarLanctos(); popularSelectsConta(); }
         if(viewId === 'view-plano') carregarContas();
         if(viewId === 'view-dre') gerarDRE();
     }
@@ -757,7 +757,7 @@ window.salvarEdicaoConta = async function(id) {
                         <td>${t.description || ''}</td>
                         <td style="color:${cor}; font-weight:bold">R$ ${parseFloat(t.amount || 0).toFixed(2)}</td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this)">
+                            <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}', ${index + 1})">
                              <i class="fas fa-edit"></i>
                             </button>
                             <button class="btn btn-danger btn-sm" onclick="excluirLancamento('${t.$id}')">
