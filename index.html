@@ -8,64 +8,245 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* (estilos iguais ao código anterior, omitidos por brevidade, mas mantidos) */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-        :root { --primary: #00a859; --dark: #0f2419; --danger: #ef4444; --border: #e2e8f0; --bg: #f8fafc; --sidebar-w: 260px; }
+        :root {
+            --primary: #00a859;
+            --dark: #0f2419;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+            --bg: #f8fafc;
+            --sidebar-w: 260px;
+        }
         body { background: var(--bg); display: flex; height: 100vh; overflow: hidden; }
-        aside { width: var(--sidebar-w); background: var(--dark); color: white; display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 1000; }
-        .brand { padding: 24px 20px; font-size: 1.4rem; font-weight: 800; border-bottom: 1px solid #1d402f; color: var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        /* Sidebar */
+        aside {
+            width: var(--sidebar-w);
+            background: var(--dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        }
+        .brand {
+            padding: 24px 20px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            border-bottom: 1px solid #1d402f;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         .close-menu { display: none; cursor: pointer; font-size: 1.4rem; }
         nav { flex: 1; padding: 16px 0; }
-        .menu-btn { width: 100%; padding: 14px 24px; border: none; background: none; color: #94a3b8; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 14px; font-size: 0.95rem; font-weight: 500; transition: 0.2s; }
+        .menu-btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            background: none;
+            color: #94a3b8;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: 0.2s;
+        }
         .menu-btn i { width: 24px; }
         .menu-btn:hover, .menu-btn.active { background: #1a3528; color: white; }
         .menu-btn.active { border-left: 4px solid var(--primary); }
-        main { flex: 1; overflow-y: auto; padding: 24px; }
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
         .view { display: none; }
         .view.active { display: block; animation: fadeIn 0.25s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
-        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-items: end; }
-        label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px; }
-        input, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; background: white; }
+        /* Cards e formulários */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .grid-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            align-items: end;
+        }
+        label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #64748b;
+            display: block;
+            margin-bottom: 6px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            background: white;
+        }
+        /* Filtros estilo Excel */
         .excel-filter { position: relative; }
-        .filter-box { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; height: 42px; }
-        .filter-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--border); border-radius: 12px; z-index: 1000; max-height: 260px; overflow-y: auto; margin-top: 5px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .filter-box {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 42px;
+        }
+        .filter-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            z-index: 1000;
+            max-height: 260px;
+            overflow-y: auto;
+            margin-top: 5px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
         .filter-options.show { display: block; }
-        .opt { padding: 8px 12px; display: flex; align-items: center; gap: 10px; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
+        .opt {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            border-bottom: 1px solid #f1f5f9;
+        }
         .opt label { margin: 0; font-weight: normal; text-transform: none; cursor: pointer; }
+        /* Tabelas */
         .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
-        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
-        th { background: #f8fafc; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; }
-        .btn { padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+        }
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        th {
+            background: #f8fafc;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 700;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-sm { padding: 4px 10px; font-size: 11px; }
         .btn-warning { background: #f59e0b; color: white; }
-        .badge { padding: 4px 10px; border-radius: 30px; font-size: 11px; font-weight: 700; display: inline-block; }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
         .badge-recebimento { background: #dcfce7; color: #166534; }
         .badge-custo { background: #fee2e2; color: #991b1b; }
         .badge-estoque { background: #e0f2fe; color: #0369a1; }
         .badge-ativo { background: #f1f5f9; color: #475569; }
-        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px; margin-bottom: 24px; }
-        .stat-card { background: white; padding: 20px; border-radius: 20px; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        /* Dashboard */
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
         .stat-card h4 { font-size: 12px; color: #64748b; margin-bottom: 8px; }
         .stat-card .value { font-size: 28px; font-weight: 800; }
-        .flex-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 40px; font-size: 13px; z-index: 9999; animation: fadeOut 3s forwards; }
+        .flex-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        /* Toasts e loader */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            z-index: 9999;
+            animation: fadeOut 3s forwards;
+        }
         @keyframes fadeOut { 0% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
-        #loader { position: fixed; top: 0; left: 0; width: 0; height: 3px; background: var(--primary); z-index: 10000; transition: width 0.2s; }
-        .mobile-header { display: none; background: var(--dark); color: white; padding: 14px 20px; justify-content: space-between; align-items: center; }
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--primary);
+            z-index: 10000;
+            transition: width 0.2s;
+        }
+        /* Responsive */
+        .mobile-header {
+            display: none;
+            background: var(--dark);
+            color: white;
+            padding: 14px 20px;
+            justify-content: space-between;
+            align-items: center;
+        }
         @media (max-width: 768px) {
             aside { position: fixed; left: 0; top: 0; height: 100vh; transform: translateX(-100%); }
             aside.open { transform: translateX(0); }
             .close-menu { display: block; }
             .mobile-header { display: flex; }
-            main { padding: 16px; }
+            main { padding: 16px; margin-top: 0; }
             .flex-charts { grid-template-columns: 1fr; }
             .grid-form { grid-template-columns: 1fr; }
         }
+        .editing-row input, .editing-row select { width: auto; min-width: 80px; margin: 2px; }
     </style>
 </head>
 <body>
@@ -87,6 +268,7 @@
     </nav>
 </aside>
 <main>
+    <!-- DASHBOARD -->
     <section id="view-dash" class="view active">
         <h2>Dashboard Financeiro</h2>
         <div class="card">
@@ -110,6 +292,7 @@
         </div>
     </section>
 
+    <!-- PLANO DE CONTAS -->
     <section id="view-plano" class="view">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
             <h2>Plano de Contas</h2>
@@ -124,10 +307,11 @@
             </form>
         </div>
         <div class="card">
-            <div class="table-responsive"><table id="tabela-planocontas"><thead><tr><th>#</th><th>Código</th><th>Descrição</th><th>Natureza</th><th>Ações</th></tr></thead><tbody id="lista-contas"></tbody></table></div>
+            <div class="table-responsive"><table id="tabela-planocontas"><thead><tr><th>Código</th><th>Descrição</th><th>Natureza</th><th>Ações</th></tr></thead><tbody id="lista-contas"></tbody></table></div>
         </div>
     </section>
 
+    <!-- LANÇAMENTOS -->
     <section id="view-lanc" class="view">
         <h2>Lançamentos Financeiros</h2>
         <div class="card">
@@ -146,7 +330,7 @@
                 <div><label>Data Fim</label><input type="date" id="filtro-lanc-fim"></div>
                 <div><label>Conta</label><select id="filtro-lanc-conta"><option value="">Todas</option></select></div>
                 <div><button class="btn btn-primary" onclick="carregarLanctos()"><i class="fas fa-search"></i> Filtrar</button></div>
-                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <div class="btn-group" style="display: flex; gap: 8px; justify-content: flex-end;">
                     <button class="btn btn-primary" onclick="exportarJSON()"><i class="fas fa-file-code"></i> JSON</button>
                     <button class="btn btn-primary" onclick="exportarCSV()"><i class="fas fa-file-excel"></i> Excel</button>
                     <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-file-pdf"></i> PDF</button>
@@ -156,6 +340,7 @@
         </div>
     </section>
 
+    <!-- DRE -->
     <section id="view-dre" class="view">
         <h2>Demonstrativo de Resultados (DRE)</h2>
         <div class="card">
@@ -179,22 +364,29 @@
 </main>
 
 <script>
+    // --------------------------------------------------------------
+    //  CONFIGURAÇÃO INICIAL - APPWRITE + LOCALSTORAGE FALLBACK
+    // --------------------------------------------------------------
     const { Client, Databases, ID, Query, Account } = Appwrite;
     const client = new Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setProject('69f35a44003278bff900');
     const databases = new Databases(client);
     const account = new Account(client);
-    const DB_ID = '69f35a670029fa96fd5f';
+    const DB_ID = '69f35a670029fa96fd5f';      // database ID
     const COLL_ACCOUNTS = 'accounts';
     const COLL_MOV = 'transactions';
 
-    let useAppwrite = true;
-    let cacheContas = [];
-    let cachedTransactions = [];
+    let useAppwrite = false;        // flag de fallback
+    let cacheContas = [];           // array de contas { $id, code, description, nature }
+    let cachedTransactions = [];    // cache para uso rápido
     let chartGeral = null, chartSantos = null, chartCamacari = null, chartDRE = null;
+    
+    // Dados locais (fallback)
     let localAccounts = JSON.parse(localStorage.getItem('cryo_accounts')) || [];
     let localTransactions = JSON.parse(localStorage.getItem('cryo_transactions')) || [];
 
-    // -------------------- AUXILIARES --------------------
+    // --------------------------------------------------------------
+    //  AUXILIARES GLOBAIS
+    // --------------------------------------------------------------
     function showToast(msg, isError = false) {
         const toast = document.createElement('div');
         toast.className = 'toast';
@@ -228,150 +420,96 @@
         const checks = document.querySelectorAll(`.${prefix}-ck:checked`);
         const total = document.querySelectorAll(`.${prefix}-ck`).length;
         const txt = checks.length === total ? "Todas" : `${checks.length} conta(s)`;
-        const span = document.getElementById(`${prefix}-filtro-txt`);
-        if(span) span.innerText = txt;
+        document.getElementById(`${prefix}-filtro-txt`).innerText = txt;
     }
-    function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;') : ''; }
-    async function initAppwriteSession() { try { await account.get(); } catch { try { await account.createAnonymousSession(); } catch(e){} } }
 
-    // -------------------- PLANO DE CONTAS COMPLETO --------------------
+    // --------------------------------------------------------------
+    //  AUTO-AUTH (APPWRITE)
+    // --------------------------------------------------------------
+    async function initAppwriteSession() {
+        try {
+            await account.get();
+        } catch { 
+            try { await account.createAnonymousSession(); } catch(e) { console.warn("Sessão anônima falhou", e); }
+        }
+    }
+
+    // --------------------------------------------------------------
+    //  PLANO DE CONTAS (CRUD + SEEDER COMPLETO)
+    // --------------------------------------------------------------
     const PLANO_COMPLETO = [
-        {code:"1", desc:"ATIVO", nature:"ativo"},
-        {code:"1.1", desc:"ATIVO CIRCULANTE", nature:"ativo"},
-        {code:"1.1.1", desc:"Caixa e Equivalentes de Caixa", nature:"ativo"},
-        {code:"1.1.1.01", desc:"Caixa Geral Cartão", nature:"ativo"},
-        {code:"1.1.1.02", desc:"Fundo de caixa (dinheiro em espécie)", nature:"ativo"},
-        {code:"1.1.2", desc:"Contas a Receber - Pendentes fora fluxo de caixa", nature:"ativo"},
-        {code:"1.1.2.01", desc:"Valor Recebido da Mechatronics", nature:"recebimento"},
-        {code:"1.1.2.02", desc:"Valor Recebido de Camaçari", nature:"recebimento"},
-        {code:"1.1.2.03", desc:"Valor Pago a Mechatronics", nature:"custo"},
-        {code:"1.1.2.04", desc:"Valor Pago a Camaçari", nature:"custo"},
-        {code:"1.1.3", desc:"Estoque (controle independente)", nature:"estoque"},
-        {code:"1.1.3.01", desc:"Mercadorias", nature:"estoque"},
-        {code:"1.1.3.02", desc:"Equipamentos", nature:"estoque"},
-        {code:"1.1.3.03", desc:"Insumos", nature:"estoque"},
-        {code:"1.1.4", desc:"Outros Créditos", nature:"ativo"},
-        {code:"1.1.4.01", desc:"Títulos a Receber", nature:"ativo"},
-        {code:"1.1.4.02", desc:"Impostos a Recuperar", nature:"ativo"},
-        {code:"1.1.4.03", desc:"Outros Valores a Receber", nature:"ativo"},
-        {code:"1.3", desc:"ATIVO NÃO CIRCULANTE", nature:"ativo"},
-        {code:"1.3.1", desc:"Realizável a Longo Prazo", nature:"ativo"},
-        {code:"1.3.1.01", desc:"Contas a Receber", nature:"ativo"},
-        {code:"1.3.1.02", desc:"(-) Perdas Estimadas com Créditos de Liquidação Duvidosa", nature:"ativo"},
-        {code:"1.3.2", desc:"Investimentos", nature:"ativo"},
-        {code:"1.3.2.01", desc:"Participações Societárias (aumento de participação societária)", nature:"ativo"},
-        {code:"1.3.2.02", desc:"Outros Investimentos", nature:"ativo"},
-        {code:"1.3.3", desc:"Imobilizado (controle independente)", nature:"ativo"},
-        {code:"1.3.3.01", desc:"Terrenos", nature:"ativo"},
-        {code:"1.3.3.02", desc:"Edificações", nature:"ativo"},
-        {code:"1.3.3.03", desc:"Máquinas e Equipamentos", nature:"ativo"},
-        {code:"1.3.3.04", desc:"Veículos", nature:"ativo"},
-        {code:"1.3.3.05", desc:"Móveis e Utensílios", nature:"ativo"},
-        {code:"1.3.3.06", desc:"(-) Depreciação Acumulada", nature:"ativo"},
-        {code:"1.3.4", desc:"Intangível", nature:"ativo"},
-        {code:"1.3.4.01", desc:"Softwares", nature:"ativo"},
-        {code:"2", desc:"PASSIVO E PATRIMÔNIO LÍQUIDO", nature:"ativo"},
-        {code:"2.1", desc:"PASSIVO CIRCULANTE (contas a pagar)", nature:"ativo"},
-        {code:"2.1.1", desc:"Fornecedores", nature:"ativo"},
-        {code:"2.1.1.01", desc:"Fornecedores Nacionais", nature:"ativo"},
-        {code:"2.1.1.02", desc:"Fornecedores Internacionais", nature:"ativo"},
-        {code:"2.1.2", desc:"Empréstimos e Financiamentos", nature:"ativo"},
-        {code:"2.1.2.01", desc:"Empréstimos Bancários", nature:"ativo"},
-        {code:"2.1.2.02", desc:"Financiamentos", nature:"ativo"},
-        {code:"2.1.3", desc:"Obrigações Fiscais", nature:"ativo"},
-        {code:"2.1.3.01", desc:"SIMPLES NACIONAL (DAS e Honorários advogados)", nature:"ativo"},
-        {code:"2.1.3.02", desc:"IRPJ", nature:"ativo"},
-        {code:"2.1.3.03", desc:"CSLL", nature:"ativo"},
-        {code:"2.1.3.04", desc:"PIS", nature:"ativo"},
-        {code:"2.1.3.05", desc:"COFINS", nature:"ativo"},
-        {code:"2.1.3.06", desc:"ISSQN a Recolher", nature:"ativo"},
-        {code:"2.1.3.07", desc:"INSS imposto a Recolher", nature:"ativo"},
-        {code:"2.1.4", desc:"Obrigações Trabalhistas e Sociais", nature:"ativo"},
-        {code:"2.1.4.01", desc:"Salários a Pagar", nature:"ativo"},
-        {code:"2.1.4.02", desc:"FGTS a Recolher", nature:"ativo"},
-        {code:"2.1.4.03", desc:"INSS dos Segurados a Recolher", nature:"ativo"},
-        {code:"2.1.4.04", desc:"Horas Extras", nature:"ativo"},
-        {code:"2.1.4.05", desc:"Bonus de Viagem", nature:"ativo"},
-        {code:"2.1.4.06", desc:"13º salário", nature:"ativo"},
-        {code:"2.1.4.07", desc:"Férias", nature:"ativo"},
-        {code:"2.1.4.08", desc:"PLR", nature:"ativo"},
-        {code:"2.1.4.09", desc:"Outros - Freelancer , Plano de saúde, ASOs, VT, VR, NRs", nature:"ativo"},
-        {code:"2.1.4.10", desc:"Extras Fora Folha", nature:"ativo"},
-        {code:"2.1.4.11", desc:"Salarios, FGTS, INSS, Plano de Saude colabradores Mecha p/ Cryo", nature:"ativo"},
-        {code:"2.1.5", desc:"Contas a Pagar", nature:"ativo"},
-        {code:"2.1.5.01", desc:"Telefone a Pagar", nature:"ativo"},
-        {code:"2.1.5.02", desc:"Energia a Pagar", nature:"ativo"},
-        {code:"2.1.5.03", desc:"Agua a Pagar", nature:"ativo"},
-        {code:"2.1.5.04", desc:"Aluguel a Pagar", nature:"ativo"},
-        {code:"2.1.6", desc:"Provisões", nature:"ativo"},
-        {code:"2.1.6.01", desc:"Provisão de Férias", nature:"ativo"},
-        {code:"2.1.6.02", desc:"Provisão de 13º Salário", nature:"ativo"},
-        {code:"2.1.6.03", desc:"Provisão de Encargos Sociais sobre Férias e 13º Salário", nature:"ativo"},
-        {code:"2.2", desc:"PASSIVO NÃO CIRCULANTE", nature:"ativo"},
-        {code:"2.2.1", desc:"Financiamentos", nature:"ativo"},
-        {code:"2.2.1.01", desc:"Financiamentos Banco A", nature:"ativo"},
-        {code:"2.2.2", desc:"Outras Contas a Pagar", nature:"ativo"},
-        {code:"2.2.2.01", desc:"Empréstimos de Sócios (lançar pagamentos feitos Cryo Santos como retirada)", nature:"ativo"},
-        {code:"2.3", desc:"PATRIMÔNIO LÍQUIDO", nature:"ativo"},
-        {code:"2.3.1", desc:"Capital Social", nature:"ativo"},
-        {code:"2.3.1.01", desc:"Capital Subscrito", nature:"ativo"},
-        {code:"2.3.1.02", desc:"(-) Capital a Integralizar", nature:"ativo"},
-        {code:"2.3.2", desc:"Reservas", nature:"ativo"},
-        {code:"2.3.2.01", desc:"Reservas de Capital", nature:"ativo"},
-        {code:"2.3.2.02", desc:"Reservas de Lucros", nature:"ativo"},
-        {code:"2.3.3", desc:"Lucros/Prejuízos Acumulados (controle independente)", nature:"ativo"},
-        {code:"2.3.3.01", desc:"Lucros Acumulados", nature:"ativo"},
-        {code:"2.3.3.02", desc:"(-) Prejuízos Acumulados", nature:"ativo"},
-        {code:"3", desc:"RECEITAS, CUSTOS E DESPESAS (CONTAS DE RESULTADO)", nature:"ativo"},
-        {code:"3.1", desc:"RECEITAS", nature:"recebimento"},
-        {code:"3.1.1", desc:"Receitas de Venda", nature:"recebimento"},
-        {code:"3.1.1.01", desc:"Venda de Produtos", nature:"recebimento"},
-        {code:"3.1.1.02", desc:"Venda de Mercadorias", nature:"recebimento"},
-        {code:"3.1.1.03", desc:"Venda de Serviços (faturamento das frotas, valor recebidos mês)", nature:"recebimento"},
-        {code:"3.1.1.04", desc:"(-) Deduções de Tributos, Abatimentos e Devoluções", nature:"recebimento"},
-        {code:"3.1.2", desc:"Receitas Financeiras", nature:"recebimento"},
-        {code:"3.1.2.01", desc:"Receitas de Aplicações Financeiras", nature:"recebimento"},
-        {code:"3.1.2.02", desc:"Juros Ativos", nature:"recebimento"},
-        {code:"3.1.3", desc:"Outras Receitas Operacionais", nature:"recebimento"},
-        {code:"3.1.3.01", desc:"Receitas de Venda de Imobilizado", nature:"recebimento"},
-        {code:"3.1.3.02", desc:"Receitas de Venda de Investimentos", nature:"recebimento"},
-        {code:"3.1.3.03", desc:"Outras Receitas", nature:"recebimento"},
-        {code:"3.2", desc:"CUSTOS E DESPESAS", nature:"custo"},
-        {code:"3.2.1", desc:"Custos dos Produtos, Mercadorias e Serviços Vendidos", nature:"custo"},
-        {code:"3.2.1.01", desc:"Custos dos Insumos", nature:"custo"},
-        {code:"3.2.1.02", desc:"Custos da Mão de Obra", nature:"custo"},
-        {code:"3.2.1.03", desc:"Custos EPI", nature:"custo"},
-        {code:"3.2.1.04", desc:"Outros Custos (valores cobertos pelos orçamentos - materiais aplicados nas carretas)", nature:"custo"},
-        {code:"3.2.1.05", desc:"Baixas de Estoque", nature:"custo"},
-        {code:"3.2.2", desc:"Despesas Operacionais", nature:"custo"},
-        {code:"3.2.2.01", desc:"Despesas Administrativas (material escrit. Etc)", nature:"custo"},
-        {code:"3.2.2.02", desc:"Despesas com Viagens", nature:"custo"},
-        {code:"3.2.2.03", desc:"Despesas com honorários contabilidade", nature:"custo"},
-        {code:"3.2.2.04", desc:"Despesas com correios", nature:"custo"},
-        {code:"3.2.2.05", desc:"Despesas com frete", nature:"custo"},
-        {code:"3.2.2.06", desc:"Outras Despesas Gerais Incluindo propaganda)", nature:"custo"},
-        {code:"3.2.3", desc:"Despesas Financeiras", nature:"custo"},
-        {code:"3.2.3.01", desc:"Juros Passivos", nature:"custo"},
-        {code:"3.2.3.02", desc:"Outras Despesas Financeiras", nature:"custo"},
-        {code:"3.2.4", desc:"Outras Despesas Operacionais (baixas do capital social)", nature:"custo"},
-        {code:"3.2.4.01", desc:"Despesas com Baixa de Imobilizado", nature:"custo"},
-        {code:"3.2.4.02", desc:"Despesas com Baixa de Investimentos", nature:"custo"},
-        {code:"3.2.4.03", desc:"Outras Despesas", nature:"custo"}
-    ];
+    // 1 - ATIVO
+    {code:"1", desc:"ATIVO", nature:"ativo"},
+    {code:"1.1", desc:"ATIVO CIRCULANTE", nature:"ativo"},
+    {code:"1.1.1", desc:"Caixa e Equivalentes de Caixa", nature:"ativo"},
+    {code:"1.1.1.01", desc:"Caixa Geral Cartão", nature:"ativo"},
+    {code:"1.1.1.02", desc:"Fundo de caixa (dinheiro em espécie)", nature:"ativo"},
+    {code:"1.1.2", desc:"Contas a Receber", nature:"ativo"},
+    {code:"1.1.2.01", desc:"Valor Recebido da Mechatronics", nature:"recebimento"},
+    {code:"1.1.2.02", desc:"Valor Recebido de Camaçari", nature:"recebimento"},
+    {code:"1.1.2.03", desc:"Valor Pago a Mechatronics", nature:"custo"},
+    {code:"1.1.2.04", desc:"Valor Pago a Camaçari", nature:"custo"},
+    {code:"1.1.3", desc:"Estoque (controle independente)", nature:"estoque"},
+    {code:"1.1.3.01", desc:"Mercadorias", nature:"estoque"},
+    {code:"1.1.3.02", desc:"Equipamentos", nature:"estoque"},
+    {code:"1.1.3.03", desc:"Insumos", nature:"estoque"},
+    {code:"1.1.4", desc:"Outros Créditos", nature:"ativo"},
+    {code:"1.1.4.01", desc:"Títulos a Receber", nature:"ativo"},
+    {code:"1.3", desc:"ATIVO NÃO CIRCULANTE", nature:"ativo"},
+    {code:"1.3.3", desc:"Imobilizado", nature:"ativo"},
+    {code:"1.3.3.04", desc:"Veículos", nature:"ativo"},
+    {code:"1.3.4.01", desc:"Softwares", nature:"ativo"},
 
-    // -------------------- CRUD PLANO DE CONTAS --------------------
+    // 2 - PASSIVO
+    {code:"2", desc:"PASSIVO E PATRIMÔNIO LÍQUIDO", nature:"ativo"},
+    {code:"2.1", desc:"PASSIVO CIRCULANTE", nature:"ativo"},
+    {code:"2.1.1.01", desc:"Fornecedores Nacionais", nature:"ativo"},
+    {code:"2.1.3.01", desc:"SIMPLES NACIONAL (DAS e Honorários)", nature:"ativo"},
+    {code:"2.1.3.06", desc:"ISSQN a Recolher", nature:"ativo"},
+    {code:"2.1.4.01", desc:"Salários a Pagar", nature:"ativo"},
+    {code:"2.1.4.02", desc:"FGTS a Recolher", nature:"ativo"},
+    {code:"2.1.4.03", desc:"INSS a Recolher", nature:"ativo"},
+    {code:"2.1.4.09", desc:"Freelancer/Plano Saúde/ASOs/VT/VR", nature:"ativo"},
+    {code:"2.1.5.01", desc:"Telefone/Energia/Agua/Aluguel", nature:"ativo"},
+    {code:"2.2.2.01", desc:"Empréstimos de Sócios (Retirada Santos)", nature:"ativo"},
+    {code:"2.3.1.01", desc:"Capital Subscrito", nature:"ativo"},
+
+    // 3 - RESULTADO (DRE)
+    {code:"3", desc:"CONTAS DE RESULTADO", nature:"ativo"},
+    {code:"3.1", desc:"RECEITAS", nature:"recebimento"},
+    {code:"3.1.1.03", desc:"Venda de Serviços (Faturamento Frotas)", nature:"recebimento"},
+    {code:"3.1.2.01", desc:"Receitas de Aplicações Financeiras", nature:"recebimento"},
+    {code:"3.2", desc:"CUSTOS E DESPESAS", nature:"custo"},
+    {code:"3.2.1.01", desc:"Custos dos Insumos", nature:"custo"},
+    {code:"3.2.1.02", desc:"Custos da Mão de Obra", nature:"custo"},
+    {code:"3.2.1.04", desc:"Materiais Aplicados nas Carretas", nature:"custo"},
+    {code:"3.2.2.01", desc:"Despesas Administrativas", nature:"custo"},
+    {code:"3.2.2.02", desc:"Despesas com Viagens", nature:"custo"},
+    {code:"3.2.2.03", desc:"Honorários Contabilidade", nature:"custo"},
+    {code:"3.2.2.05", desc:"Despesas com Frete", nature:"custo"},
+    {code:"3.2.2.06", desc:"Outras Despesas/Propaganda", nature:"custo"},
+    {code:"3.2.3.01", desc:"Juros Passivos", nature:"custo"}
+];
+
     async function resetarPlanoPadrao() {
-        if(!confirm("Resetar plano de contas? Irá inserir todas as contas padrão (apenas as não existentes).")) return;
+        if(!confirm("Resetar plano de contas? Isso irá inserir todas as contas padrão (apenas as que não existirem).")) return;
         updateLoader(20);
         let inseridas = 0;
         for(let item of PLANO_COMPLETO) {
             const existe = cacheContas.some(c => c.code === item.code);
             if(!existe) {
                 try {
-                    if(useAppwrite) await databases.createDocument(DB_ID, COLL_ACCOUNTS, ID.unique(), { code: item.code, description: item.desc, nature: item.nature });
-                    else localAccounts.push({ $id: Date.now().toString(), code: item.code, description: item.desc, nature: item.nature });
+                    if(useAppwrite) {
+                        await databases.createDocument(DB_ID, COLL_ACCOUNTS, ID.unique(), {
+                            code: item.code,
+                            description: item.desc,
+                            nature: item.nature
+                        });
+                    } else {
+                        localAccounts.push({ $id: Date.now().toString(), code: item.code, description: item.desc, nature: item.nature });
+                    }
                     inseridas++;
-                } catch(e){}
+                } catch(e) { console.warn("Erro ao inserir", item.code, e); }
             }
         }
         if(!useAppwrite) localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
@@ -381,124 +519,131 @@
     }
 
     async function carregarContas() {
-        try {
-            updateLoader(30);
-            if(useAppwrite) {
-                await initAppwriteSession();
-                const res = await databases.listDocuments(DB_ID, COLL_ACCOUNTS, [Query.limit(500)]);
-                cacheContas = res.documents.sort((a,b) => a.code.localeCompare(b.code, undefined, {numeric:true}));
-                localStorage.setItem('cryo_accounts', JSON.stringify(cacheContas));
-                if(cacheContas.length === 0) await resetarPlanoPadrao();
-            } else {
-                cacheContas = localAccounts.sort((a,b) => a.code.localeCompare(b.code, undefined, {numeric:true}));
-                if(cacheContas.length === 0) await resetarPlanoPadrao();
-            }
-            renderTabelaContas();
-            popularSelectsConta();
-            montarFiltrosCheckbox();
-            updateLoader(100);
-        } catch(err) {
-            console.warn("Appwrite falhou, usando localStorage", err);
-            useAppwrite = false;
-            cacheContas = localAccounts.sort((a,b) => a.code.localeCompare(b.code, undefined, {numeric:true}));
-            renderTabelaContas();
-            popularSelectsConta();
-            montarFiltrosCheckbox();
+    try {
+        updateLoader(30); 
+        if(useAppwrite) {
+            await initAppwriteSession();
+            const res = await databases.listDocuments(DB_ID, COLL_ACCOUNTS, [
+                Query.limit(500)
+            ]);
+            // O trecho deve entrar aqui para ordenar os dados vindos da nuvem
+            cacheContas = res.documents.sort((a, b) => {
+                return a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' });
+            });
+            
+            localStorage.setItem('cryo_accounts', JSON.stringify(cacheContas));
+            
+            if(cacheContas.length === 0) await resetarPlanoPadrao();
+        } else {
+            // O trecho também entra aqui para ordenar os dados vindos do LocalStorage
+            cacheContas = localAccounts.sort((a, b) => {
+                return a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' });
+            });
+            if(cacheContas.length === 0) await resetarPlanoPadrao();
         }
+
+        // Agora a interface receberá os dados já ordenados
+        renderTabelaContas();
+        popularSelectsConta();
+        montarFiltrosCheckbox();
+        updateLoader(100);
+
+    } catch(err) {
+        console.warn("Appwrite falhou, usando localStorage", err);
+        useAppwrite = false;
+        cacheContas = localAccounts.sort((a, b) => {
+            return a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' });
+        });
+        renderTabelaContas();
+        popularSelectsConta();
+        montarFiltrosCheckbox();
     }
+}
 
     function renderTabelaContas() {
         const tbody = document.getElementById('lista-contas');
-        tbody.innerHTML = cacheContas.map((acc, idx) => `
-            <tr id="row-${acc.$id}">
-                <td>${idx+1}</td>
-                <td class="cont-codigo">${escapeHtml(acc.code)}</td>
-                <td class="cont-desc">${escapeHtml(acc.description)}</td>
-                <td><span class="badge badge-${acc.nature}">${acc.nature}</span></td>
-                <td>
-                    <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}')"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = cacheContas.map((acc, index) => `
+    <tr id="row-${acc.$id}">
+        <td style="color:#94a3b8"><b>${index + 1}</b></td> <!-- Índice Único Visual -->
+        <td class="cont-codigo">${acc.code}</td>
+        <td class="cont-desc">${acc.description}</td>
+        <td><span class="badge badge-${acc.nature}">${acc.nature}</span></td>
+        <td>
+            <!-- O 'this' aqui é o segredo para não editar a linha errada -->
+            <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this)">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}', ${index + 1})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+`).join('');
     }
 
-    window.editarContaInline = function(id) {
-        const row = document.getElementById(`row-${id}`);
-        const acc = cacheContas.find(a => a.$id === id);
-        if(!acc) return;
-        row.cells[1].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:100px">`;
-        row.cells[2].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="min-width:200px">`;
-        row.cells[3].innerHTML = `<select id="edit-nature-${id}">
-            <option value="recebimento" ${acc.nature==='recebimento'?'selected':''}>Recebimento</option>
-            <option value="custo" ${acc.nature==='custo'?'selected':''}>Custo</option>
-            <option value="estoque" ${acc.nature==='estoque'?'selected':''}>Estoque</option>
-            <option value="ativo" ${acc.nature==='ativo'?'selected':''}>Ativo</option>
-        </select>`;
-        row.cells[4].innerHTML = `<button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔</button>
-                                  <button class="btn btn-danger btn-sm" onclick="carregarContas()">✖</button>`;
+window.editarContaInline = function(id, el) {
+    const row = el.closest('tr'); // Seleção física garantida da linha clicada
+    const acc = cacheContas.find(a => a.$id === id);
+    
+    // Transformamos apenas as células DESTA linha em inputs
+    row.cells[1].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:80px">`;
+    row.cells[2].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`;
+    
+    // Mudamos os botões daquela linha para Confirmar/Cancelar
+    row.cells[4].innerHTML = `
+        <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔</button>
+        <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()">✖</button>
+      `;
+};
+window.salvarEdicaoConta = async function(id) {
+    // Captura os valores dos inputs específicos desta linha
+    const payload = {
+        code: document.getElementById(`edit-code-${id}`).value,
+        description: document.getElementById(`edit-desc-${id}`).value,
+        nature: document.getElementById(`edit-nature-${id}`).value // Captura a Natureza editada
     };
+    
+    try {
+        updateLoader(50);
+        // Envia para o Appwrite
+        await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, payload);
+        showToast("Conta e Natureza atualizadas com sucesso!");
+        await carregarContas(); // Recarrega a tabela
+    } catch(e) {
+        showToast("Erro ao guardar: " + e.message, true);
+    } finally {
+        updateLoader(100);
+    }
+};
+   window.excluirConta = async function(id, code, index) {
+    // Agora o utilizador sabe exatamente qual linha está a apagar
+    if(!confirm(`Deseja excluir o item #${index} (Código: ${code})?`)) return;
 
-    window.salvarEdicaoConta = async function(id) {
-        const newCode = document.getElementById(`edit-code-${id}`).value.trim();
-        const newDesc = document.getElementById(`edit-desc-${id}`).value.trim();
-        const newNature = document.getElementById(`edit-nature-${id}`).value;
-        if(!newCode || !newDesc) { showToast("Código e descrição obrigatórios", true); return; }
-        try {
-            updateLoader(50);
-            if(useAppwrite) await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, { code: newCode, description: newDesc, nature: newNature });
-            else {
-                const idx = localAccounts.findIndex(a => a.$id === id);
-                if(idx !== -1) { localAccounts[idx] = { ...localAccounts[idx], code: newCode, description: newDesc, nature: newNature };
-                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts)); }
-            }
-            showToast("Conta atualizada");
-            await carregarContas();
-        } catch(err) { showToast("Erro: "+err.message, true); }
-        finally { updateLoader(100); }
-    };
-
-    window.excluirConta = async function(id, code) {
-        if(!confirm(`Excluir conta "${code}"?`)) return;
-        let hasMov = false;
-        try {
-            if(useAppwrite) {
-                const movs = await databases.listDocuments(DB_ID, COLL_MOV, [Query.equal('account_id', code), Query.limit(1)]);
-                hasMov = movs.total > 0;
-            } else hasMov = localTransactions.some(t => t.account_id === code);
-        } catch(e) {}
-        if(hasMov) { showToast("Conta possui lançamentos, não pode ser excluída", true); return; }
-        try {
-            updateLoader(50);
-            if(useAppwrite) await databases.deleteDocument(DB_ID, COLL_ACCOUNTS, id);
-            else {
-                localAccounts = localAccounts.filter(a => a.$id !== id);
-                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
-            }
-            showToast("Conta excluída");
-            await carregarContas();
-        } catch(err) { showToast("Erro: "+err.message, true); }
-        finally { updateLoader(100); }
-    };
-
+    try {
+        updateLoader(40);
+        await databases.deleteDocument(DB_ID, COLL_ACCOUNTS, id);
+        showToast("Conta removida!");
+        await carregarContas();
+    } catch(e) {
+        showToast("Erro ao excluir: " + e.message, true);
+    } finally {
+        updateLoader(100);
+    }
+};
     async function criarConta() {
         const code = document.getElementById('novo-codigo').value.trim();
         const desc = document.getElementById('novo-desc').value.trim();
         const nature = document.getElementById('nova-natureza').value;
         if(!code || !desc) { showToast("Preencha código e descrição", true); return; }
-        if(cacheContas.some(c => c.code === code)) { showToast("Código já existe", true); return; }
-        try {
-            updateLoader(50);
-            if(useAppwrite) await databases.createDocument(DB_ID, COLL_ACCOUNTS, ID.unique(), { code, description: desc, nature });
-            else {
-                localAccounts.push({ $id: Date.now().toString(), code, description: desc, nature });
-                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
-            }
-            showToast("Conta criada");
-            document.getElementById('formNovaConta').reset();
-            await carregarContas();
-        } catch(err) { showToast("Erro: "+err.message, true); }
-        finally { updateLoader(100); }
+        if(useAppwrite) {
+            await databases.createDocument(DB_ID, COLL_ACCOUNTS, ID.unique(), { code, description: desc, nature });
+        } else {
+            localAccounts.push({ $id: Date.now().toString(), code, description: desc, nature });
+            localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+        }
+        showToast("Conta criada");
+        document.getElementById('formNovaConta').reset();
+        await carregarContas();
     }
 
     function popularSelectsConta() {
@@ -515,8 +660,10 @@
         if(!dashList) return;
         dashList.innerHTML = dreList.innerHTML = '';
         cacheContas.forEach(acc => {
-            dashList.innerHTML += `<div class="opt"><input type="checkbox" class="dash-ck" value="${acc.code}" checked onchange="atualizarTextoFiltro('dash')"> <label>${acc.code} - ${acc.description}</label></div>`;
-            dreList.innerHTML += `<div class="opt"><input type="checkbox" class="dre-ck" value="${acc.code}" checked onchange="atualizarTextoFiltro('dre')"> <label>${acc.code} - ${acc.description}</label></div>`;
+            const chk = `<div class="opt"><input type="checkbox" class="dash-ck" value="${acc.code}" checked onchange="atualizarTextoFiltro('dash')"> <label>${acc.code} - ${acc.description}</label></div>`;
+            const chk2 = `<div class="opt"><input type="checkbox" class="dre-ck" value="${acc.code}" checked onchange="atualizarTextoFiltro('dre')"> <label>${acc.code} - ${acc.description}</label></div>`;
+            dashList.innerHTML += chk;
+            dreList.innerHTML += chk2;
         });
         document.getElementById('dash-all').checked = true;
         document.getElementById('dre-all').checked = true;
@@ -524,128 +671,287 @@
         atualizarTextoFiltro('dre');
     }
 
-    // -------------------- LANÇAMENTOS --------------------
+    // --------------------------------------------------------------
+    //  LANÇAMENTOS (CRUD)
+    // --------------------------------------------------------------
+   async function carregarLanctos() {
+        let transacoes = [];
+        updateLoader(20);
+
+        try {
+            if(useAppwrite) {
+                await initAppwriteSession();
+                // Busca os documentos ordenados pela data (campo 'date' da imagem)
+                const res = await databases.listDocuments(DB_ID, COLL_MOV, [
+                    Appwrite.Query.orderDesc('date'),
+                    Appwrite.Query.limit(500)
+                ]);
+                transacoes = res.documents;
+            } else {
+                transacoes = localTransactions;
+            }
+
+            // Filtros da interface
+            const fIni = document.getElementById('filtro-lanc-ini').value;
+            const fFim = document.getElementById('filtro-lanc-fim').value;
+            const fConta = document.getElementById('filtro-lanc-conta').value;
+
+            const filtradas = transacoes.filter(t => {
+                const matchData = (!fIni || t.date >= fIni) && (!fFim || t.date <= fFim);
+                const matchConta = !fConta || t.accountId === fConta; // Sincronizado com a imagem
+                return matchData && matchConta;
+            });
+
+            const tbody = document.getElementById('corpo-lancamentos');
+            if(!tbody) return;
+
+            tbody.innerHTML = filtradas.map(t => {
+                const infoConta = cacheContas.find(c => c.code === t.accountId);
+                const cor = (infoConta && infoConta.nature === 'custo') ? 'red' : 'green';
+
+                return `
+                    <tr id="lrow-${t.$id}">
+                        <td>${t.date ? t.date.split('T')[0].split('-').reverse().join('/') : '-'}</td>
+                        <td>${t.unit || ''}</td>
+                        <td>${t.accountId || ''}</td>
+                        <td>${t.description || ''}</td>
+                        <td style="color:${cor}; font-weight:bold">R$ ${parseFloat(t.amount || 0).toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="excluirLancamento('${t.$id}')">
+                               <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            cachedTransactions = filtradas;
+            updateLoader(100);
+
+        } catch(e) {
+            console.error("Erro ao carregar:", e);
+            showToast("Erro ao carregar: " + e.message, true);
+            updateLoader(0);
+        }
+    }
+
     async function criarLancamento() {
         const data = document.getElementById('lanc-data').value;
-        const unit = document.getElementById('lanc-unidade').value;
-        const account_id = document.getElementById('lanc-conta').value;
-        const description = document.getElementById('lanc-desc').value.trim();
-        const amount = parseFloat(document.getElementById('lanc-valor').value);
-        if(!data || !account_id || !description || isNaN(amount) || amount<=0) { showToast("Preencha todos os campos", true); return; }
-        const payload = { date: data, unit, account_id, description, amount };
+        const unidade = document.getElementById('lanc-unidade').value;
+        const contaCod = document.getElementById('lanc-conta').value;
+        const desc = document.getElementById('lanc-desc').value;
+        const valor = parseFloat(document.getElementById('lanc-valor').value);
+
+        if(!data || !contaCod || isNaN(valor)) {
+            showToast("Preencha todos os campos obrigatórios", true);
+            return;
+        }
+
+        const payload = {
+            date: data,
+            unit: unidade,
+            accountId: contaCod, // Sincronizado com a imagem image_ccd33b.jpg
+            description: desc,
+            amount: valor
+        };
+
         try {
-            updateLoader(50);
-            if(useAppwrite) { await initAppwriteSession(); await databases.createDocument(DB_ID, COLL_MOV, ID.unique(), payload); }
-            else { payload.$id = Date.now().toString(); localTransactions.unshift(payload); localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions)); }
-            showToast("Lançamento salvo");
+            updateLoader(30);
+            if(useAppwrite) {
+                await databases.createDocument(DB_ID, COLL_MOV, ID.unique(), payload);
+            } else {
+                localTransactions.push({ $id: Date.now().toString(), ...payload });
+                localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
+            }
+            
+            showToast("Lançamento salvo!");
             document.getElementById('formLancamento').reset();
             document.getElementById('lanc-data').value = new Date().toISOString().split('T')[0];
+            
             await carregarLanctos();
             atualizarDashboard();
-        } catch(err) { showToast("Erro ao salvar: "+err.message, true); }
-        finally { updateLoader(100); }
+        } catch(e) {
+            showToast("Erro ao salvar: " + e.message, true);
+        } finally {
+            updateLoader(100);
+        }
     }
 
-    async function carregarLanctos() {
-        let transacoes = [];
-        if(useAppwrite) { try { await initAppwriteSession(); const res = await databases.listDocuments(DB_ID, COLL_MOV, [Query.orderDesc('date'), Query.limit(500)]); transacoes = res.documents; } catch(e){} }
-        else transacoes = localTransactions;
-        const ini = document.getElementById('filtro-lanc-ini').value;
-        const fim = document.getElementById('filtro-lanc-fim').value;
-        const filtroConta = document.getElementById('filtro-lanc-conta').value;
-        let filtradas = transacoes;
-        if(ini) filtradas = filtradas.filter(t => t.date >= ini);
-        if(fim) filtradas = filtradas.filter(t => t.date <= fim);
-        if(filtroConta) filtradas = filtradas.filter(t => t.account_id === filtroConta);
-        const tbody = document.getElementById('corpo-lancamentos');
-        tbody.innerHTML = filtradas.map(t => {
-            const conta = cacheContas.find(c => c.code === t.account_id);
-            const cor = (conta && (conta.nature === 'custo' || conta.nature === 'estoque')) ? 'red' : 'green';
-            return `<tr id="lrow-${t.$id}">
-                <td>${t.date}</td><td>${t.unit||''}</td><td>${t.account_id}</td><td>${t.description}</td>
-                <td style="color:${cor}">R$ ${(t.amount||0).toFixed(2)}</td>
-                <td><button class="btn btn-warning btn-sm" onclick="editarLancamento('${t.$id}')"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-danger btn-sm" onclick="excluirLancamento('${t.$id}')"><i class="fas fa-trash"></i></button></td>
-            <tr>`;
-        }).join('');
-        cachedTransactions = filtradas;
+    async function excluirLancamento(id) {
+        if(!confirm("Excluir este lançamento?")) return;
+        try {
+            if(useAppwrite) {
+                await databases.deleteDocument(DB_ID, COLL_MOV, id);
+            } else {
+                localTransactions = localTransactions.filter(t => t.$id !== id);
+                localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
+            }
+            showToast("Excluído!");
+            await carregarLanctos();
+            atualizarDashboard();
+        } catch(e) { showToast("Erro ao excluir: " + e.message, true); }
     }
 
-    window.editarLancamento = function(id) {
-        const t = cachedTransactions.find(t => t.$id === id);
-        if(!t) return;
-        const novaData = prompt("Nova data (YYYY-MM-DD):", t.date);
-        const novaDesc = prompt("Nova descrição:", t.description);
-        const novoValor = parseFloat(prompt("Novo valor:", t.amount));
-        if(novaData && novaDesc && !isNaN(novoValor)) {
-            if(useAppwrite) databases.updateDocument(DB_ID, COLL_MOV, id, { date: novaData, description: novaDesc, amount: novoValor }).then(()=>{ carregarLanctos(); atualizarDashboard(); showToast("Atualizado"); }).catch(e=>showToast("Erro: "+e.message,true));
-            else {
-                const idx = localTransactions.findIndex(tr => tr.$id === id);
-                if(idx!==-1) { localTransactions[idx].date = novaData; localTransactions[idx].description = novaDesc; localTransactions[idx].amount = novoValor; localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions)); carregarLanctos(); atualizarDashboard(); showToast("Atualizado"); }
+// Função auxiliar necessária para a sua alteração funcionar
+function montarSelectContasEdit(id, atual) {
+    let options = cacheContas.map(acc => 
+        `<option value="${acc.code}" ${acc.code === atual ? 'selected' : ''}>${acc.code}</option>`
+    ).join('');
+    return `<select id="edit-l-acc-${id}">${options}</select>`;
+}
+
+// --- Adicione este bloco após a função excluirLancamento ---
+
+  window.editarLancamento = function(id) {
+    const row = document.getElementById(`lrow-${id}`);
+    const t = cachedTransactions.find(item => item.$id === id);
+    if (!t) return;
+
+    // Data
+    row.cells[0].innerHTML = `<input type="date" id="edit-l-date-${id}" value="${t.date.split('T')[0]}">`;
+    
+    // Unidade (O que faltava!)
+    row.cells[1].innerHTML = `
+        <select id="edit-l-unit-${id}">
+            <option value="Santos" ${t.unit === 'Santos' ? 'selected' : ''}>Santos</option>
+            <option value="Camaçari" ${t.unit === 'Camaçari' ? 'selected' : ''}>Camaçari</option>
+        </select>`;
+        
+    row.cells[2].innerHTML = montarSelectContasEdit(id, t.accountId); 
+    row.cells[3].innerHTML = `<input type="text" id="edit-l-desc-${id}" value="${t.description}">`;
+    row.cells[4].innerHTML = `<input type="number" step="0.01" id="edit-l-val-${id}" value="${t.amount}">`;
+        
+    row.cells[5].innerHTML = `
+        <button class="btn btn-primary btn-sm" onclick="salvarEdicaoLancamento('${id}')">✔</button>
+        <button class="btn btn-danger btn-sm" onclick="carregarLanctos()">✖</button>
+    `;
+};
+
+   window.salvarEdicaoLancamento = async function(id) {
+    const payload = {
+        date: document.getElementById(`edit-l-date-${id}`).value,
+        unit: document.getElementById(`edit-l-unit-${id}`).value,
+        accountId: document.getElementById(`edit-l-acc-${id}`).value,
+        description: document.getElementById(`edit-l-desc-${id}`).value,
+        amount: parseFloat(document.getElementById(`edit-l-val-${id}`).value)
+    };
+
+    try {
+        updateLoader(40);
+        if(useAppwrite) {
+            // O uso de updateDocument garante que NÃO haverá duplicação
+            await databases.updateDocument(DB_ID, COLL_MOV, id, payload);
+        } else {
+            const idx = localTransactions.findIndex(t => t.$id === id);
+            if(idx !== -1) {
+                localTransactions[idx] = { ...localTransactions[idx], ...payload };
+                localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions));
             }
         }
-    };
-
-    window.excluirLancamento = async function(id) {
-        if(!confirm("Excluir lançamento?")) return;
-        if(useAppwrite) await databases.deleteDocument(DB_ID, COLL_MOV, id);
-        else { localTransactions = localTransactions.filter(t => t.$id !== id); localStorage.setItem('cryo_transactions', JSON.stringify(localTransactions)); }
+        showToast("Lançamento atualizado!");
         await carregarLanctos();
         atualizarDashboard();
-        showToast("Excluído");
-    };
-
-    function preencherFiltroContaSelect() {
-        const select = document.getElementById('filtro-lanc-conta');
-        if(select) select.innerHTML = '<option value="">Todas</option>' + cacheContas.map(acc => `<option value="${acc.code}">${acc.code} - ${acc.description}</option>`).join('');
+    } catch(e) {
+        showToast("Erro ao editar: " + e.message, true);
+    } finally {
+        updateLoader(100);
     }
-
-    // -------------------- DASHBOARD E DRE --------------------
-    async function atualizarDashboard() {
+};
+    // --------------------------------------------------------------
+    //  DASHBOARD
+    // --------------------------------------------------------------
+  async function atualizarDashboard() {
         let transacoes = [];
-        if(useAppwrite) { try { await initAppwriteSession(); const res = await databases.listDocuments(DB_ID, COLL_MOV, [Query.limit(5000)]); transacoes = res.documents; } catch(e){} }
-        else transacoes = localTransactions;
+        if(useAppwrite) {
+            try {
+                await initAppwriteSession();
+                const res = await databases.listDocuments(DB_ID, COLL_MOV, [Appwrite.Query.limit(5000)]);
+                transacoes = res.documents;
+            } catch(e) { transacoes = []; }
+        } else transacoes = localTransactions;
+
         const unidade = document.getElementById('dash-unidade').value;
         const ini = document.getElementById('dash-ini').value || '2000-01-01';
         const fim = document.getElementById('dash-fim').value || '2099-12-31';
-        const contasSel = Array.from(document.querySelectorAll('.dash-ck:checked')).map(cb => cb.value);
+        const contasSelecionadas = Array.from(document.querySelectorAll('.dash-ck:checked')).map(cb => cb.value);
+        
         let totals = { Geral:{r:0,c:0}, Santos:{r:0,c:0}, Camaçari:{r:0,c:0} };
+
         transacoes.forEach(t => {
             if(t.date < ini || t.date > fim) return;
-            if(!contasSel.includes(t.account_id)) return;
-            if(unidade !== 'Todas' && t.unit !== unidade) return;
-            const conta = cacheContas.find(c => c.code === t.account_id);
-            const val = t.amount || 0;
-            if(conta && conta.nature === 'recebimento') { totals.Geral.r += val; totals[t.unit].r += val; }
-            if(conta && (conta.nature === 'custo' || conta.nature === 'estoque')) { totals.Geral.c += val; totals[t.unit].c += val; }
+            if(!contasSelecionadas.includes(t.accountId)) return; // Ajustado para accountId
+            if(unidade !== 'Todas' && t.unit !== unidade) return; // Ajustado para unit
+            
+            const infoConta = cacheContas.find(c => c.code === t.accountId);
+            const val = parseFloat(t.amount || 0);
+
+            if(infoConta && infoConta.nature === 'recebimento') {
+                totals.Geral.r += val;
+                if(totals[t.unit]) totals[t.unit].r += val;
+            } else if(infoConta && (infoConta.nature === 'custo' || infoConta.nature === 'estoque')) {
+                totals.Geral.c += val;
+                if(totals[t.unit]) totals[t.unit].c += val;
+            }
         });
         const exibeR = unidade === 'Todas' ? totals.Geral.r : totals[unidade].r;
         const exibeC = unidade === 'Todas' ? totals.Geral.c : totals[unidade].c;
-        document.getElementById('dash-stats').innerHTML = `<div class="stat-card"><h4>Receitas</h4><div class="value">R$ ${exibeR.toFixed(2)}</div></div><div class="stat-card"><h4>Despesas</h4><div class="value">R$ ${exibeC.toFixed(2)}</div></div><div class="stat-card"><h4>Resultado</h4><div class="value">R$ ${(exibeR - exibeC).toFixed(2)}</div></div>`;
-        if(chartGeral) chartGeral.destroy(); chartGeral = new Chart(document.getElementById('chartGeral'), { type:'bar', data:{ labels:['Receitas','Despesas'], datasets:[{ label:'Consolidado', data:[totals.Geral.r, totals.Geral.c], backgroundColor:['#22c55e','#ef4444'] }] } });
-        if(chartSantos) chartSantos.destroy(); chartSantos = new Chart(document.getElementById('chartSantos'), { type:'bar', data:{ labels:['Receitas','Despesas'], datasets:[{ label:'Santos', data:[totals.Santos.r, totals.Santos.c], backgroundColor:['#22c55e','#ef4444'] }] } });
-        if(chartCamacari) chartCamacari.destroy(); chartCamacari = new Chart(document.getElementById('chartCamacari'), { type:'bar', data:{ labels:['Receitas','Despesas'], datasets:[{ label:'Camaçari', data:[totals.Camaçari.r, totals.Camaçari.c], backgroundColor:['#22c55e','#ef4444'] }] } });
+        document.getElementById('dash-stats').innerHTML = `
+            <div class="stat-card"><h4>Receitas</h4><div class="value">R$ ${exibeR.toFixed(2)}</div></div>
+            <div class="stat-card"><h4>Despesas</h4><div class="value">R$ ${exibeC.toFixed(2)}</div></div>
+            <div class="stat-card"><h4>Resultado</h4><div class="value">R$ ${(exibeR - exibeC).toFixed(2)}</div></div>
+        `;
+        const ctxG = document.getElementById('chartGeral').getContext('2d');
+        if(chartGeral) chartGeral.destroy();
+        chartGeral = new Chart(ctxG, { type:'bar', data:{ labels:['Receitas','Despesas'], datasets:[{ label:'Consolidado', data:[totals.Geral.r, totals.Geral.c], backgroundColor:['#22c55e','#ef4444'] }] } });
+        const ctxS = document.getElementById('chartSantos').getContext('2d');
+        if(chartSantos) chartSantos.destroy();
+        chartSantos = new Chart(ctxS, { type:'bar', data:{ labels:['Receitas','Despesas'], datasets:[{ label:'Santos', data:[totals.Santos.r, totals.Santos.c], backgroundColor:['#22c55e','#ef4444'] }] } });
+        const ctxC = document.getElementById('chartCamacari').getContext('2d');
+        if(chartCamacari) chartCamacari.destroy();
+        chartCamacari = new Chart(ctxC, { type:'bar', data:{ labels:['Receitas','Despesas'], datasets:[{ label:'Camaçari', data:[totals.Camaçari.r, totals.Camaçari.c], backgroundColor:['#22c55e','#ef4444'] }] } });
     }
 
-    async function gerarDRE() {
+    // --------------------------------------------------------------
+    //  DRE
+    // --------------------------------------------------------------
+   async function gerarDRE() {
         let transacoes = [];
-        if(useAppwrite) { try { await initAppwriteSession(); const res = await databases.listDocuments(DB_ID, COLL_MOV, [Query.limit(5000)]); transacoes = res.documents; } catch(e){} }
-        else transacoes = localTransactions;
+        if(useAppwrite) {
+            try {
+                await initAppwriteSession();
+                const res = await databases.listDocuments(DB_ID, COLL_MOV, [Appwrite.Query.limit(5000)]);
+                transacoes = res.documents;
+            } catch(e) { transacoes = []; }
+        } else transacoes = localTransactions;
+
         const unidade = document.getElementById('dre-unidade').value;
         const ini = document.getElementById('dre-ini').value || '2000-01-01';
         const fim = document.getElementById('dre-fim').value || '2099-12-31';
         const contasSel = Array.from(document.querySelectorAll('.dre-ck:checked')).map(cb => cb.value);
-        let grupos = {}, receitas = 0, custos = 0;
+        
+        let grupos = {};
+        let receitas = 0, custos = 0;
+
         transacoes.forEach(t => {
             if(t.date < ini || t.date > fim) return;
             if(unidade !== 'Todas' && t.unit !== unidade) return;
-            if(!contasSel.includes(t.account_id)) return;
-            const acc = cacheContas.find(c => c.code === t.account_id);
+            if(!contasSel.includes(t.accountId)) return;
+
+            const acc = cacheContas.find(c => c.code === t.accountId);
             if(!acc || acc.nature === 'ativo') return;
-            if(!grupos[t.account_id]) grupos[t.account_id] = { desc: acc.description, valor: 0, nature: acc.nature };
-            grupos[t.account_id].valor += t.amount;
-            if(acc.nature === 'recebimento') receitas += t.amount;
-            else if(acc.nature === 'custo' || acc.nature === 'estoque') custos += t.amount;
+
+            if(!grupos[t.accountId]) {
+                grupos[t.accountId] = { desc: acc.description, valor: 0, nature: acc.nature };
+            }
+            
+            const val = parseFloat(t.amount || 0);
+            grupos[t.accountId].valor += val;
+            
+            if(acc.nature === 'recebimento') receitas += val;
+            else if(acc.nature === 'custo' || acc.nature === 'estoque') custos += val;
         });
         let html = `<tr style="background:#f1f5f9; font-weight:bold"><td>(+) RECEITAS OPERACIONAIS</td><td style="text-align:right">---</td></tr>`;
         for(let g of Object.values(grupos)) if(g.nature === 'recebimento') html += `<tr><td style="padding-left:20px">${g.desc}</td><td style="text-align:right">R$ ${g.valor.toFixed(2)}</td></tr>`;
@@ -657,27 +963,79 @@
         chartDRE = new Chart(document.getElementById('chartDRE'), { type:'doughnut', data:{ labels:['Receitas','Custos/Estoque'], datasets:[{ data:[receitas, custos], backgroundColor:['#22c55e','#ef4444'] }] } });
     }
 
-    // -------------------- EXPORTAÇÕES --------------------
-    function exportarJSON() { const data = cachedTransactions; const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `cryo_lancamentos_${new Date().toISOString().slice(0,19)}.json`; link.click(); showToast("Exportado JSON"); }
-    function exportarCSV() { const headers = ['Data','Unidade','Conta','Descrição','Valor']; const rows = cachedTransactions.map(t => [t.date, t.unit, t.account_id, t.description, t.amount]); const csvContent = [headers, ...rows].map(row => row.join(';')).join('\n'); const blob = new Blob(["\uFEFF" + csvContent], {type:'text/csv;charset=utf-8;'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `cryo_lancamentos_${new Date().toISOString().slice(0,10)}.csv`; link.click(); showToast("Exportado CSV (Excel)"); }
+    // --------------------------------------------------------------
+    //  EXPORTAÇÕES
+    // --------------------------------------------------------------
+    function exportarJSON() {
+        const data = cachedTransactions;
+        const jsonStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonStr], {type: 'application/json'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `cryo_lancamentos_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+        link.click();
+        showToast("Exportado JSON");
+    }
+     function exportarCSV() {
+        const headers = ['Data', 'Unidade', 'Conta ID', 'Descrição', 'Valor'];
+        const rows = cachedTransactions.map(t => [
+            t.date, 
+            t.unit, 
+            t.accountId, 
+            t.description, 
+            t.amount
+        ]);
+        const csvContent = [headers, ...rows].map(row => row.join(';')).join('\n');
+        const blob = new Blob(["\uFEFF" + csvContent], {type: 'text/csv;charset=utf-8;'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `cryo_finance_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+        showToast("Exportado para Excel");
+    }
 
-    // -------------------- INICIALIZAÇÃO --------------------
-    async function init() {
-        const hoje = new Date().toISOString().split('T')[0];
-        const primeiroDia = hoje.slice(0,8)+'01';
-        document.getElementById('lanc-data').value = hoje;
-        document.getElementById('dash-ini').value = primeiroDia;
-        document.getElementById('dash-fim').value = hoje;
-        document.getElementById('dre-ini').value = primeiroDia;
-        document.getElementById('dre-fim').value = hoje;
-        document.getElementById('filtro-lanc-ini').value = primeiroDia;
-        document.getElementById('filtro-lanc-fim').value = hoje;
+   // --------------------------------------------------------------
+//  INICIALIZAÇÃO (COM TRATAMENTO DE ERRO 404)
+// --------------------------------------------------------------
+async function init() {
+    const hoje = new Date().toISOString().split('T')[0];
+    const primeiroDia = hoje.slice(0, 8) + '01';
+    
+    // Preenchimento de datas
+    document.getElementById('lanc-data').value = hoje;
+    document.getElementById('dash-ini').value = primeiroDia;
+    document.getElementById('dash-fim').value = hoje;
+    document.getElementById('dre-ini').value = primeiroDia;
+    document.getElementById('dre-fim').value = hoje;
+    document.getElementById('filtro-lanc-ini').value = primeiroDia;
+    document.getElementById('filtro-lanc-fim').value = hoje;
+
+    try {
+        // 1. Tenta inicializar a sessão (necessário para evitar 404/401)
+        try {
+            await account.get(); 
+        } catch (err) {
+            await account.createAnonymousSession();
+        }
+
+        // 2. Carrega os dados do servidor
         await carregarContas();
         await carregarLanctos();
+        
+    } catch (error) {
+        // 3. Fallback: Se o Appwrite der 404, usa o LocalStorage
+        console.error("Erro ao conectar ao Appwrite (404/Permissão). Usando dados locais.", error);
+        
+        // Se carregarContas/carregarLanctos já tiverem a lógica de LocalStorage, 
+        // eles serão executados aqui via catch ou dentro das próprias funções.
+    } finally {
+        // Atualiza a interface independente da fonte dos dados
         await atualizarDashboard();
         await gerarDRE();
     }
-    init();
+}
+
+init();
 </script>
 </body>
 </html>
