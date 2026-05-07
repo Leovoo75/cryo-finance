@@ -562,74 +562,103 @@
 
     function renderTabelaContas() {
         const tbody = document.getElementById('lista-contas');
-        tbody.innerHTML = cacheContas.map((acc, index) => `
-    <tr id="row-${acc.$id}">
-        <td style="color:#94a3b8"><b>${index + 1}</b></td> <!-- Índice Único Visual -->
-        <td class="cont-codigo">${acc.code}</td>
-        <td class="cont-desc">${acc.description}</td>
-        <td><span class="badge badge-${acc.nature}">${acc.nature}</span></td>
-        <td>
-            <!-- O 'this' aqui é o segredo para não editar a linha errada -->
-            <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this)">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}', ${index + 1})">
+        tbody.innerHTML = cacheContas.map(acc => `
+            <tr id="row-${acc.$id}">
+                <td class="cont-codigo">${acc.code}</td>
+                <td class="cont-desc">${acc.description}</td>
+                <td><span class="badge badge-${acc.nature}">${acc.nature}</span></td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="editarContaInline('${acc.$id}', this, event)"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirConta('${acc.$id}', '${acc.code}')">
                 <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    </tr>
-`).join('');
+                </button>
+                </td>
+            </tr>
+        `).join('');
     }
 
 window.editarContaInline = function(id, el) {
-    const row = el.closest('tr'); // Seleção física garantida da linha clicada
     const acc = cacheContas.find(a => a.$id === id);
+    if (!acc) return;
+
+    const row = el.closest('tr');
+    if (!row) return;
+
+    row.cells[0].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:100px">`;
+    row.cells[1].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`;
     
-    // Transformamos apenas as células DESTA linha em inputs
-    row.cells[1].innerHTML = `<input type="text" id="edit-code-${id}" value="${acc.code}" style="width:80px">`;
-    row.cells[2].innerHTML = `<input type="text" id="edit-desc-${id}" value="${acc.description}" style="width:100%">`;
+    const natures = ['recebimento', 'custo', 'estoque', 'ativo'];
+    let options = natures.map(n => 
+        `<option value="${n}" ${acc.nature === n ? 'selected' : ''}>${n}</option>`
+    ).join('');
     
-    // Mudamos os botões daquela linha para Confirmar/Cancelar
-    row.cells[4].innerHTML = `
+    row.cells[2].innerHTML = `<select id="edit-nature-${id}">${options}</select>`;
+    
+    row.cells[3].innerHTML = `
         <button class="btn btn-primary btn-sm" onclick="salvarEdicaoConta('${id}')">✔</button>
         <button class="btn btn-danger btn-sm" onclick="renderTabelaContas()">✖</button>
-      `;
+    `;
 };
 window.salvarEdicaoConta = async function(id) {
-    // Captura os valores dos inputs específicos desta linha
+    // Captura os dados dos inputs criados dinamicamente na linha
     const payload = {
         code: document.getElementById(`edit-code-${id}`).value,
         description: document.getElementById(`edit-desc-${id}`).value,
-        nature: document.getElementById(`edit-nature-${id}`).value // Captura a Natureza editada
+        nature: document.getElementById(`edit-nature-${id}`).value
     };
-    
-    try {
-        updateLoader(50);
-        // Envia para o Appwrite
-        await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, payload);
-        showToast("Conta e Natureza atualizadas com sucesso!");
-        await carregarContas(); // Recarrega a tabela
-    } catch(e) {
-        showToast("Erro ao guardar: " + e.message, true);
-    } finally {
-        updateLoader(100);
-    }
-};
-   window.excluirConta = async function(id, code, index) {
-    // Agora o utilizador sabe exatamente qual linha está a apagar
-    if(!confirm(`Deseja excluir o item #${index} (Código: ${code})?`)) return;
 
     try {
         updateLoader(40);
-        await databases.deleteDocument(DB_ID, COLL_ACCOUNTS, id);
-        showToast("Conta removida!");
-        await carregarContas();
-    } catch(e) {
-        showToast("Erro ao excluir: " + e.message, true);
+        if(useAppwrite) {
+            // O uso de updateDocument com o ID GARANTE que não haverá duplicação
+            await databases.updateDocument(DB_ID, COLL_ACCOUNTS, id, payload);
+        } else {
+            const idx = localAccounts.findIndex(a => a.$id === id);
+            if(idx !== -1) {
+                localAccounts[idx] = { ...localAccounts[idx], ...payload };
+                localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+            }
+        }
+        showToast("Conta atualizada!");
+        await carregarContas(); // Recarrega a lista limpa e ordenada
+    } catch(e) { 
+        showToast("Erro ao editar: " + e.message, true); 
     } finally {
         updateLoader(100);
     }
 };
+    window.excluirConta = async function(id, code) {
+    // Pedir confirmação específica pelo código para segurança
+    if(!confirm(`Excluir APENAS a conta ${code}?`)) return;
+    
+    try {
+        updateLoader(30);
+        if(useAppwrite) {
+            // Verifica se há lançamentos vinculados a este código exato no banco
+            const movs = await databases.listDocuments(DB_ID, COLL_MOV, [
+                Query.equal('accountId', code), 
+                Query.limit(1)
+            ]);
+            if(movs.total > 0) { 
+                showToast("Não é possível excluir: existem lançamentos vinculados", true); 
+                return; 
+            }
+            // EXCLUSÃO PELO ID ÚNICO (Impede apagar várias ao mesmo tempo)
+            await databases.deleteDocument(DB_ID, COLL_ACCOUNTS, id);
+        } else {
+            // Filtro rígido pelo ID no modo local
+            localAccounts = localAccounts.filter(a => a.$id !== id);
+            localStorage.setItem('cryo_accounts', JSON.stringify(localAccounts));
+        }
+        showToast("Conta removida com sucesso!");
+        await carregarContas();
+    } catch(e) { 
+        showToast("Erro: " + e.message, true); 
+    } finally {
+        updateLoader(100);
+    }
+};
+
     async function criarConta() {
         const code = document.getElementById('novo-codigo').value.trim();
         const desc = document.getElementById('novo-desc').value.trim();
